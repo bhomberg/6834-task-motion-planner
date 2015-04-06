@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <package>
-  <name>6834-task-motion-planner</name>
+  <name>task_motion_planner</name>
   <version>0.0.0</version>
   <description>The source code for pset 3 of 6.834.</description>
   <maintainer email="bhomberg@mit.edu">bhomberg</maintainer>
   <license>TODO</license>
 
   <!-- Use build_depend for packages you need at compile time: -->
-  <!--   <build_depend>message_generation</build_depend> -->
+  <build_depend>message_generation</build_depend>
   <!-- Use buildtool_depend for build tool packages: -->
   <!--   <buildtool_depend>catkin</buildtool_depend> -->
   <!-- Use run_depend for packages you need at runtime: -->
-  <!--   <run_depend>message_runtime</run_depend> -->
+  <run_depend>message_runtime</run_depend>
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
