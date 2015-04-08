@@ -10,9 +10,9 @@ def task_planner_client():
     try:
         task_server = rospy.ServiceProxy('task_server_service', task_service)
         msg = task_domain()
-        msg.num = 5
+        msg.task_file = 'problem0'
         resp1 = task_server(msg)
-        return resp1.plan.error
+        return resp1.plan.error, resp1.plan.file
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
