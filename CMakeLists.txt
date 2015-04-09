@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -47,8 +48,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
+   cylinder.msg
    motion_plan_parameters.msg
    motion_plan.msg
+   pose_gen.msg
    hl_plan.msg
    task_domain.msg
  )
@@ -58,6 +61,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    task_service.srv
    motion_service.srv
+   task_service.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -71,6 +75,7 @@ find_package(catkin REQUIRED COMPONENTS
  generate_messages(
    DEPENDENCIES
    std_msgs
+   geometry_msgs
 )
 
 ###################################
@@ -85,7 +90,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 6834-task-motion-planner
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime geometry_msgs
 #  DEPENDS system_lib
 )
 
