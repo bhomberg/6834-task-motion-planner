@@ -8,15 +8,7 @@ from task_motion_planner.msg import *
 MAX_TRAJ_COUNT = 999
 # TODO: if necessary, add in random seed for pose generators later
 
-def task_planner_client():
-    rospy.wait_for_service('task_server_service')
-    task_server = rospy.ServiceProxy('task_server_service', task_service)
-    msg = task_domain()
-    msg.task_file = 'problem0'
-    resp1 = task_server(msg)
-    return resp1.plan.error, resp1.plan.file
-
-def run_interface_layer(state, initialPose):
+def run_interface_layer(state, initialPose, task_server):
     initial_state = state
     step = None
     hlplan = None
@@ -24,7 +16,7 @@ def run_interface_layer(state, initialPose):
     pose1 = None
     sub = tryRefineClass()
     if hlplan == None:
-        hlplan = callTaskPlanner(state)
+        hlplan = callTaskPlanner(state, task_server)
         step = 1
         partialTraj = None
         pose1 = initialPose
@@ -37,7 +29,7 @@ def run_interface_layer(state, initialPose):
         while not success and trajCount < MAX_TRAJ_COUNT:
             (partialTraj, pose2, failStep, failCause) = sub.try_refine(pose1, hlplan, step, partialTraj, mode='partialTraj')
             state = stateUpdate(state, failCause, failStep)
-            (success, newPlan) = callTaskPlanner(state)
+            (success, newPlan) = callTaskPlanner(state, task_server)
             if success:
                 hlplan = hlplan[0:failStep] + newPlan
                 pose1 = pose2
@@ -50,9 +42,18 @@ def run_interface_layer(state, initialPose):
         pose1 = initialPose
 
 
-def callTaskPlanner(state):
+def callTaskPlanner(state, task_server):
     # plan is an array of tuples, let's say, where the first thing is the action and the rest are objects it acts on
-    return plan
+    msg = task_domain()
+    # output state to file
+    msg.task_file = 'state'
+    resp = task_server(msg)
+    # parse plan file into appropriate action tuple
+    plan = []
+    f = open(resp.plan.file)
+    for line in f:
+        plan.append(tuple(line.rsplit(' ')))
+    return (resp.plan.error, plan)
 
 def stateUpdate(state, failCause, failStep):
     return state
@@ -102,5 +103,9 @@ class tryRefineClass:
                     return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2))
 
 if __name__ == "__main__":
-    run_interface_layer()
+    rospy.wait_for_service('task_server_service')
+    task_server = rospy.ServiceProxy('task_server_service', task_service)
+    state = None
+    initialPose = None
+    run_interface_layer(state, initialPose, task_server)
  
