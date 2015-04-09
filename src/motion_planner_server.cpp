@@ -31,10 +31,11 @@ bool get_motion_plan(task_motion_planner::motion_service::Request &req, task_mot
             sensor_msgs::JointState joint_state;
             sensor_msgs::MultiDOFJointState multi_dof_joint_state;
             
-            // Extract last point in the planned trajectory]
+            // Extract last joint trajectory in the robot trajectory
             trajectory_msgs::JointTrajectory last_joint_step = res.plan.trajectory.trajectory.back().joint_trajectory;
             trajectory_msgs::MultiDOFJointTrajectory last_multi_dof_joint_step = res.plan.trajectory.trajectory.back().multi_dof_joint_trajectory;
             
+            // Extract last position of each joint in the joint trajectories
             joint_state.name = last_joint_step.joint_names;
             for (int j = 0; j < joint_state.name.size(); j++) {
                 joint_state.position.push_back(last_joint_step.points[j].positions.back());
@@ -47,6 +48,7 @@ bool get_motion_plan(task_motion_planner::motion_service::Request &req, task_mot
                 multi_dof_joint_state.transforms.push_back(last_multi_dof_joint_step.points[j].transforms.back());
             }
         
+            // Update current state for next planned action
             curr_state.joint_state = joint_state;
             curr_state.multi_dof_joint_state = multi_dof_joint_state;
         } 
