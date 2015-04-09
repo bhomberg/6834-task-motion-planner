@@ -9,8 +9,17 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
+  moveit_msgs
+  moveit_core 
+  moveit_ros_planning 
+  moveit_ros_planning_interface
+  cmake_modules
   message_generation
 )
+
+find_package(Boost REQUIRED system filesystem date_time thread)
+
+find_package(Eigen REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -76,6 +85,10 @@ find_package(catkin REQUIRED COMPONENTS
    DEPENDENCIES
    std_msgs
    geometry_msgs
+<<<<<<< HEAD
+=======
+   moveit_msgs
+>>>>>>> 6d2ab3fa5f3e9b37766523a0c9445e62cbe00f8e
 )
 
 ###################################
@@ -90,7 +103,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 6834-task-motion-planner
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime geometry_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs moveit_msgs message_runtime moveit_core moveit_ros_planning_interface
 #  DEPENDS system_lib
 )
 
@@ -101,9 +114,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(SYSTEM ${Boost_INCLUDE_DIR} ${EIGEN_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS})
+link_directories(${catkin_LIBRARY_DIRS})
 
 ## Declare a cpp library
 # add_library(6834-task-motion-planner
@@ -112,6 +125,8 @@ include_directories(
 
 ## Declare a cpp executable
 # add_executable(6834-task-motion-planner_node src/6834-task-motion-planner_node.cpp)
+add_executable(motion_planner_server src/motion_planner_server.cpp)
+target_link_libraries(motion_planner_server ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
