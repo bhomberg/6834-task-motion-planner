@@ -61,7 +61,7 @@ def stateUpdate(state, failCause, failStep):
 def get_motion_plan(pose1, pose2):
     pass
 
-def MPErrs(pose1, pose2):
+def MPErrs(pose1, pose2, state):
     pass
 
 
@@ -100,7 +100,7 @@ class tryRefineClass:
                     self.index++
                     self.pose1 = self.pose2
                 else if mode == 'partialTraj':
-                    return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2))
+                    return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2, state))
 
 if __name__ == "__main__":
     rospy.wait_for_service('task_server_service')
