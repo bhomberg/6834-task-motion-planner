@@ -57,8 +57,10 @@ find_package(Eigen REQUIRED)
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
+   cylinder.msg
    motion_plan_parameters.msg
    motion_plan.msg
+   pose_gen.msg
    hl_plan.msg
    task_domain.msg
  )
@@ -68,6 +70,7 @@ find_package(Eigen REQUIRED)
    FILES
    task_service.srv
    motion_service.srv
+   task_service.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -82,7 +85,10 @@ find_package(Eigen REQUIRED)
    DEPENDENCIES
    std_msgs
    geometry_msgs
+<<<<<<< HEAD
+=======
    moveit_msgs
+>>>>>>> 6d2ab3fa5f3e9b37766523a0c9445e62cbe00f8e
 )
 
 ###################################
