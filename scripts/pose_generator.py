@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 import roslib
-roslib.load_manifest("6834-task-motion-planner")
+roslib.load_manifest("task_motion_planner")
 import geometry_msgs
-from geometry_msgs.msg import *
+from geometry_msgs.msg import Pose
 from task_motion_planner.msg import *
+from task_motion_planner.srv import *
 
 import rospy
 import math

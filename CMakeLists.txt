@@ -85,10 +85,7 @@ find_package(Eigen REQUIRED)
    DEPENDENCIES
    std_msgs
    geometry_msgs
-<<<<<<< HEAD
-=======
    moveit_msgs
->>>>>>> 6d2ab3fa5f3e9b37766523a0c9445e62cbe00f8e
 )
 
 ###################################
@@ -101,11 +98,11 @@ find_package(Eigen REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES 6834-task-motion-planner
   CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs moveit_msgs message_runtime moveit_core moveit_ros_planning_interface
 #  DEPENDS system_lib
 )
+#  INCLUDE_DIRS include
+#  LIBRARIES 6834-task-motion-planner
 
 ###########
 ## Build ##
