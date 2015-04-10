@@ -1,2 +1,4 @@
+moveit_msgs/RobotState start_state
+moveit_msgs/RobotState end_state
 moveit_msgs/DisplayTrajectory trajectory
 bool success

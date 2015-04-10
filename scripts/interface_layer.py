@@ -4,11 +4,16 @@ import sys
 import rospy
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
+from moveit_msgs.msg import *
+from geometry_msgs.msg import *
 
 MAX_TRAJ_COUNT = 999
 # TODO: if necessary, add in random seed for pose generators later
 
-def run_interface_layer(state, initialPose, task_server):
+task_server = None
+motion_server = None
+
+def run_interface_layer(state, initialPose):
     initial_state = state
     step = None
     hlplan = None
@@ -16,7 +21,7 @@ def run_interface_layer(state, initialPose, task_server):
     pose1 = None
     sub = tryRefineClass()
     if hlplan == None:
-        hlplan = callTaskPlanner(state, task_server)
+        hlplan = callTaskPlanner(state)
         step = 1
         partialTraj = None
         pose1 = initialPose
@@ -29,7 +34,7 @@ def run_interface_layer(state, initialPose, task_server):
         while not success and trajCount < MAX_TRAJ_COUNT:
             (partialTraj, pose2, failStep, failCause) = sub.try_refine(pose1, hlplan, step, partialTraj, mode='partialTraj')
             state = stateUpdate(state, failCause, failStep)
-            (success, newPlan) = callTaskPlanner(state, task_server)
+            (success, newPlan) = callTaskPlanner(state)
             if success:
                 hlplan = hlplan[0:failStep] + newPlan
                 pose1 = pose2
@@ -42,7 +47,7 @@ def run_interface_layer(state, initialPose, task_server):
         pose1 = initialPose
 
 
-def callTaskPlanner(state, task_server):
+def callTaskPlanner(state):
     # plan is an array of tuples, let's say, where the first thing is the action and the rest are objects it acts on
     msg = task_domain()
     # output state to file
@@ -58,8 +63,23 @@ def callTaskPlanner(state, task_server):
 def stateUpdate(state, failCause, failStep):
     return state
 
-def get_motion_plan(pose1, pose2):
-    pass
+def get_motion_plan(world, state, action, goalPose):
+    # TODO: Add timed try except???
+    try:
+        msg = motion_plan_parameters()
+        msg.world = world
+        msg.start = state
+        msg.group_names = len(goalPose)*[actions[1]]
+        
+        # TODO: implement proper list of tuples management
+        msg.goals = [goalPose]
+        
+        resp = motion_server(msg)
+        
+        return (resp.plan.success, res.plan.end_state, resp.plan.trajectory)
+    except rospy.ServiceException, e:
+        print "Service call failed: %s"%e
+        return (False, RobotState(), DisplayTrajectory())
 
 def MPErrs(pose1, pose2, state):
     pass
@@ -105,7 +125,11 @@ class tryRefineClass:
 if __name__ == "__main__":
     rospy.wait_for_service('task_server_service')
     task_server = rospy.ServiceProxy('task_server_service', task_service)
+    
+    rospy.wait_for_service('motion_server_service')
+    motion_server = rospy.ServiceProxy('motion_server_service', motion_service)
+    
     state = None
     initialPose = None
-    run_interface_layer(state, initialPose, task_server)
+    run_interface_layer(state, initialPose)
  

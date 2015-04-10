@@ -45,6 +45,7 @@ def get_motion_plan(req):
                 #start.multi_dof_joint_state.joint_names = plan.multi_dof_joint_trajectory.joint_names
                 #start.multi_dof_joint_state.transforms = plan.multi_dof_joint_trajectory.points[0].transforms
             
+                res.start_state = start
                 res.trajectory.trajectory_start = start 
             
             res.trajectory.trajectory.append(plan)
@@ -56,6 +57,9 @@ def get_motion_plan(req):
             curr_state.joint_state.effort = plan.joint_trajectory.points[-1].effort
             #curr_state.multi_dof_joint_state.joint_names = plan.multi_dof_joint_trajectory.joint_names
             #curr_state.multi_dof_joint_state.transforms = plan.multi_dof_joint_trajectory.points[-1].transforms
+            
+            if i == len(req.parameters.group_names) - 1:
+                res.end_state = curr_state
         else:
             print "============ Motion plan failed" 
             res.trajectory = DisplayTrajectory()

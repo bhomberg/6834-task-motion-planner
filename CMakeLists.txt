@@ -85,10 +85,7 @@ find_package(Eigen REQUIRED)
    DEPENDENCIES
    std_msgs
    geometry_msgs
-<<<<<<< HEAD
-=======
    moveit_msgs
->>>>>>> 6d2ab3fa5f3e9b37766523a0c9445e62cbe00f8e
 )
 
 ###################################
