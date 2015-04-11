@@ -2,6 +2,7 @@
 
 import sys
 import rospy
+import re
 import moveit_commander
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
@@ -11,8 +12,8 @@ from std_msgs.msg import String
 
 
 class MotionPlannerServer(object):
-    def __init__(self):
-        pass
+    def __init__(self, max_planning_time):
+        self.max_planning_time = max_planning_time
         
     def get_motion_plan(self, req):
         print "============ Starting Moveit Commander"
@@ -21,60 +22,84 @@ class MotionPlannerServer(object):
         print "============ Setting current state"
         robot = moveit_commander.RobotCommander()
         scene = moveit_commander.PlanningSceneInterface()
+        
+        world_start_state = req.parameters.state.world
+        robot_start_state = req.parameters.state.robot
+        action = re.split(',', req.parameters.action[1:-1])
+        pose_goals = req.parameters.goals
     
         # TODO: Find alternate method for collision objects
         #scene.add_collision_objects(req.parameters.world.collision_objects)
         
-        curr_state = req.parameters.start
+        curr_state = robot_start_state
         res = motion_plan()
     
-        for i in range(len(req.parameters.group_names)):
-            print "============ Move group ", req.parameters.group_names[0]
-            group = moveit_commander.MoveGroupCommander(req.parameters.group_names[0])
+        print "============ Planning actoin ", action[0]
+        for i in range(len(pose_goals)):
+            print "============ Move group ", action[1]
+            group = moveit_commander.MoveGroupCommander(action[1])
         
-            group.set_planning_time(5.0)
+            group.set_planning_time(self.max_planning_time)
             group.set_start_state(curr_state)
-            group.set_pose_target(req.parameters.goals[0])
+            group.set_pose_target(pose_goals[i].pose)
         
             plan = group.plan()
     
-            if len(plan.joint_trajectory.points) > 0 or len(plan.multi_dof_joint_trajectory.points) > 0:
-                print "============ Motion plan succeeded"
+            if len(plan.joint_trajectory.points) > 0:
+                print "============ Component ", i, " of motion plan succeeded"
             
-                if i == 0:
-                    start = RobotState()
-                    start.joint_state.name = plan.joint_trajectory.joint_names
-                    start.joint_state.position = plan.joint_trajectory.points[0].positions
-                    start.joint_state.velocity = plan.joint_trajectory.points[0].velocities
-                    start.joint_state.effort = plan.joint_trajectory.points[0].effort
-                    #start.multi_dof_joint_state.joint_names = plan.multi_dof_joint_trajectory.joint_names
-                    #start.multi_dof_joint_state.transforms = plan.multi_dof_joint_trajectory.points[0].transforms
+                # Determine start pose for trajectory
+                start = RobotState()
+                start.joint_state.name = plan.joint_trajectory.joint_names
+                start.joint_state.position = plan.joint_trajectory.points[0].positions
+                start.joint_state.velocity = plan.joint_trajectory.points[0].velocities
+                start.joint_state.effort = plan.joint_trajectory.points[0].effort
             
-                    res.start_state = start
-                    res.trajectory.trajectory_start = start 
+                # Add trajectory plan to motion sequence list
+                motion = motion_seq()
+                motion.trajectory.trajectory_start = start 
+                motion.trajectory.trajectory.append(plan)
+                motion.gripperOpen = pose_goals[i].gripperOpen
             
-                res.trajectory.trajectory.append(plan)
+                res.motion.append(motion)
             
-                ## Update current state for next planned action
+                ## Update current state for next planned trajectory
                 curr_state.joint_state.name = plan.joint_trajectory.joint_names
                 curr_state.joint_state.position = plan.joint_trajectory.points[-1].positions
                 curr_state.joint_state.velocity = plan.joint_trajectory.points[-1].velocities
                 curr_state.joint_state.effort = plan.joint_trajectory.points[-1].effort
-                #curr_state.multi_dof_joint_state.joint_names = plan.multi_dof_joint_trajectory.joint_names
-                #curr_state.multi_dof_joint_state.transforms = plan.multi_dof_joint_trajectory.points[-1].transforms
             
-                if i == len(req.parameters.group_names) - 1:
-                    res.end_state = curr_state
             else:
-                print "============ Motion plan failed" 
-                res.trajectory = DisplayTrajectory()
+                print "============ Component ", i, " of motion plan failed"
+                res.state = req.parameters.state
+                res.motion = [motion_seq()]
                 res.success = False
                 print "============ Done"
                 return res   
     
+        # Set state of world after action completion
+        end_state = world_state()
+        end_state.robot = curr_state
+        
+        obj_idx = self._search_for_object(action[2], world_start_state.collision_objects)
+        
+        end_state.world = world_start_state
+        if obj_idx != -1:
+            if action[0] == 'pickUp':
+                end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[-1].pose
+            elif action[0] == 'putDown':
+                end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[1].pose
+    
+        res.state = end_state
         res.success = True        
         print "============ Done"
         return res
+        
+    def _search_for_object(self, obj_name, obj_list):
+        for i in range(len(obj_list)):
+            if obj_name == obj_list[i].id:
+                return i                
+        return -1
     
     def run(self):
         rospy.init_node('motion_planner_server')
@@ -83,6 +108,6 @@ class MotionPlannerServer(object):
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer()
+    motion_planner_server = MotionPlannerServer(1.0)
     motion_planner_server.run()
     
