@@ -11,7 +11,7 @@ class TaskPlannerServer(object):
         self.domain_file = domain_file
         
     def handle_pddl(self, req):
-        print "Serving motion plan"
+        print "Serving task plan"
         domain_file = "domain"
         task_file = req.domain.task_file
         ff_call = self.path + "./ff -o " + self.domain_file + " -f " + task_file + " > output" 
@@ -22,25 +22,23 @@ class TaskPlannerServer(object):
         actions = False
 
         f = open('output')
-        f2 = open('returnfile', 'w')
+        s = ""
         for line in f:
             if line[0:4]=='step':
                 msg.error = False
                 actions = True
-                f2.write(line[11:-1] + '\n')
+                s = s + line[11:-1] + '\n'
             elif actions == True:
                 if line == '\n':
                     actions = False
                 else:
-                    f2.write(line[11:-1] + '\n')
-    
+                    s = s + line[11:-1] + '\n'
         f.close()
-        f2.close()
+        msg.plan = s
 
-        msg.file = "returnfile"
         return msg
 
-    def run():
+    def run(self):
         rospy.init_node('task_planner_server')
         s = rospy.Service('task_server_service', task_service, self.handle_pddl)
         print "Ready to serve task plans"
@@ -49,3 +47,4 @@ class TaskPlannerServer(object):
 if __name__ == "__main__":
     task_planner_server = TaskPlannerServer("~/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "domain")
     task_planner_server.run()
+    
