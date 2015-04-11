@@ -42,6 +42,9 @@ def motion_planner_client():
         msg.goals[0].orientation.w = 1.0
         
         resp = motion_server(msg)
+        
+        print resp.plan.end_state
+        
         return resp.plan.success
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
