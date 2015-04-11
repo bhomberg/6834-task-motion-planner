@@ -25,7 +25,7 @@ class InterfaceLayer(object):
         pose1 = None
         sub = tryRefineClass()
         if hlplan == None:
-            hlplan = callTaskPlanner(state, world)
+            hlplan = callTaskPlanner(state)
             step = 1
             partialTraj = None
             pose1 = initialPose
@@ -52,16 +52,42 @@ class InterfaceLayer(object):
 
 
     def callTaskPlanner(state, world):
-        # plan is an array of tuples, let's say, where the first thing is the action and the rest are objects it acts on
+        # plan is an array of tuples where the first thing is the action and the rest are objects it acts on
+        # state is organized as follows:
+        #    list of objects in the world
+        #    list of predicates true in the initial state
+        #    list of predicates for the goal
         msg = task_domain()
-        #TODO: output state and world to file
+        #output state to file
+	f = open('state', 'w')
+        f.write('(define (problem task)')
+        f.write('(:domain taskmotion)')
+        f.write('(:objects ')
+        for o in state[0]:
+            f.write(o + ' ')
+        f.write(')')
+        f.write('(:init ')
+        for i in state[1]:
+            f.write('(')
+            for a in i:
+                f.write(a + ' ')
+            f.write(')\n')
+        f.write(')\n')
+        f.write('(:goal ')
+        for g in state[2]:
+            f.write('(')
+            for a in g:
+                f.write(a + ' ')
+            f.write(')\n')
+        f.write(')')
+        f.close()
         msg.task_file = 'state'
         resp = task_server(msg)
         # parse plan file into appropriate action tuple
         plan = []
-        f = open(resp.plan.file)
-        for line in f:
-            plan.append(tuple(line.rsplit(' ')))
+	l = resp.plan.plan.split('\n')
+	plan = [tuple(line.split(' ')) for line in l]
+
         return (resp.plan.error, plan)
 
     def stateUpdate(state, world, failCause, failStep):
@@ -81,8 +107,27 @@ class InterfaceLayer(object):
             print "Service call failed: %s"%e
             return (world, [], False)
 
-    def MPErrs(pose1, pose2, state, world):
-        pass
+    def MPErrs(pose1, pose2, state, world, action):
+        obstacles = world.world.collision_objects
+	a_whole_new_world = World()
+	a_whole_new_world.robot = world.robot
+	a_whole_new_world.world = world.world
+	
+	for i in range(len(obstacles)):
+            if i == 0:
+                (~, ~, success) = get_motion_plan(world, action, pose2)
+                if success:
+                    return []
+            else:
+                for l in itertools.combinations(range(len(obstacles)), i):
+                    updated_obstacles = obstacles
+                    for item in l:
+                        updated_obstacles.pop(item)
+                    a_whole_new_world.world.collision_objects = updated_obstacles
+                    (~, ~, success) = get_motion_plan(a_whole_new_world, action, pose2)
+                    if success:
+                        return [obstacles[i].id for i in l]
+        print "ERROR!"
 
 
 class tryRefineClass:
