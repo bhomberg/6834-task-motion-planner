@@ -25,7 +25,7 @@ class PoseGenerator:
 		pose1.position.y = random.uniform(y-r,y+r)
 		pose1.position.x = math.sqrt(r**2 - (pose1.position.y - y)**2) - x
 		pose1.position.z = z
-		yaw = math.tan(pose1.position.y/pose1.position.x)
+		yaw = math.atan2(pose1.position.y/pose1.position.x)
 		pose1.orientation = rpy2Orientation(0,0,yaw)
 		poseGen1.gripperOpen = True
 
