@@ -31,13 +31,12 @@
 
 \section{Introduction}
 
--talk about motion planners and task planners and what they do
-
--talk about the need to integrate the two together
-
--why we don't want to just discretize the environment
-
+In order to achieve high level goals a robot must combine task and motion planning. A robot uses task planning to determine its long term strategy and motion planning to determine the movements movements it  will execute to achieve the task. Effectively combining task and motion planning is an open research problem. We developed an interface between the motion and task planning. Our system uses off-the-shelf task and motion planners and makes no assumptions about their implementation.
+ 
+An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. However, the number of required discretizations to solve the problem is generally very large and results in extremely large or infeasible problems. The interface allows the task planner state space to use an abstract state space which ignores geometry. The interface layer translates geometric constraints and passes them to the task planner.
 \section{Problem Statement}
+
+
 
 \section{High Level Approach}
 
