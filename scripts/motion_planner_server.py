@@ -28,8 +28,13 @@ class MotionPlannerServer(object):
         action = re.split(',', req.parameters.action[1:-1])
         pose_goals = req.parameters.goals
     
-        # TODO: Find alternate method for collision objects
-        #scene.add_collision_objects(req.parameters.world.collision_objects)
+        # Add objects to planning scene
+        for i in len(range(world_state.collision_objects)):
+            # Approximate object (know to be cylinder) as box
+            obj = world_state.collision_objects[i]
+            h = obj.primitives[0].dimensions[0]
+            r = obj.primitives[0].dimensions[1]
+            scene.add_box(obj.id, obj.primitive_poses[0], (r, r, h))
         
         curr_state = robot_start_state
         res = motion_plan()
