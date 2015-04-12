@@ -48,7 +48,7 @@ class PoseGenerator:
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
         CLEARANCE_HEIGHT = .15
-        DIST_FROM_CYLINDER = .05
+        DIST_FROM_CYLINDER = .15
         
         # radius of circle around the cylinder where the gripper origin will lie
         r = radius + DIST_FROM_CYLINDER
