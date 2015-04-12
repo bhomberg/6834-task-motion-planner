@@ -92,7 +92,7 @@ class PoseGenerator:
         pose4.position.x = pose2.position.x
         pose4.position.y = pose2.position.y
         pose4.position.z = self.table_height + CLEARANCE_HEIGHT
-        pose4.orientation = pose3.orientation
+        pose4.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = False
         
         # Standard Pose: A pose s.t. the group is out of the way of the other 
