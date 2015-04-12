@@ -24,7 +24,7 @@ class PoseGenerator:
 		position = obj.primitive_poses[0].position
 
 		if action[0] == 'pickup':
-			self.pickup(position,height,radius)
+			return self.pickup(position,height,radius)
 		elif action[0] == 'putdown':
 			pass
 		else:
