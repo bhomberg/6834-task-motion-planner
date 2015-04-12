@@ -68,7 +68,7 @@ class PoseGenerator:
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = math.atan2(pose1.position.y, pose1.position.x)
-        pose1.orientation = self._rpy_to_orientation(0,0,yaw)
+        pose1.orientation = self._rpy_to_orientation(yaw,0,math.pi/2)
         poseGen1.gripperOpen = True
 
         # Pre-grasp: A pose s.t. the open gripper is touching the cylinder
@@ -179,18 +179,12 @@ class PoseGenerator:
 
     # Calculates the quaternion orientation given the roll, pitch, and yaw
     def _rpy_to_orientation(self, roll, pitch, yaw):
+        # bank, attitude, heading
         c1 = math.cos(yaw/2)
-        if pitch == math.pi/2:
-            c2 = math.cos(math.pi/4)
-            s2 = math.cos(math.pi/4)
-        elif pitch == -math.pi/2:
-            c2 = math.cos(-math.pi/4)
-            s2 = math.sin(-math.pi/4)
-        else:
-            c2 = math.cos(pitch/2)
-            s2 = math.sin(pitch/2)
-        c3 = math.cos(roll/2)
         s1 = math.sin(yaw/2)
+        c2 = math.cos(pitch/2)
+        s2 = math.sin(pitch/2)
+        c3 = math.cos(roll/2)
         s3 = math.sin(roll/2)
 
         result = Quaternion()
@@ -202,9 +196,6 @@ class PoseGenerator:
 
 if __name__ == "__main__":
     poseGen = PoseGenerator()
-    pose = Pose()
     # test case
-    pose.position.x = .1
-    pose.position.y = .1
-    pose.position.z = .27
-    print poseGen.pickup(pose,.05,.02)
+    print poseGen._rpy_to_orientation(-math.pi/4,0,math.pi/2)
+    # print poseGen._rpy_to_orientation(0,0,math.pi/4)
