@@ -56,6 +56,6 @@ def motion_planner_client():
         print "Service call failed: %s"%e
 
 if __name__ == "__main__":
-    print task_planner_client()
-    #print motion_planner_client()
+    #print task_planner_client()
+    print motion_planner_client()
  
