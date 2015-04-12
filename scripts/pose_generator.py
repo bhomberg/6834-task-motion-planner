@@ -27,15 +27,15 @@ class PoseGenerator:
         objects = world.world.collision_objects
         obj = self._search_for_object(action[1], objects)
         height = obj.primitives[0].dimensions[0]
+        radius = obj.primitives[0].dimensions[1]
         
         if action[0] == 'pickup':
             pose = obj.primitive_poses[0]
-            radius = obj.primitives[0].dimensions[1]
             return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
             print action[-1]
             table = self._search_for_object(action[-1], objects)
-            return self.putdown(table,height)
+            return self.putdown(table,height,radius)
         else:
             return
 
@@ -114,7 +114,7 @@ class PoseGenerator:
     # return =  an array of 6 pose_gen messages containing a pose and a
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, set-down, let-go, back away, lift arm, standard pose
-    def putdown(self,table,height):
+    def putdown(self,table,height,radius):
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
         x1 = table_center.x - table.primitives[0].dimensions[0]/2
@@ -123,7 +123,7 @@ class PoseGenerator:
         y2 = table_center.y + table.primitives[0].dimensions[1]/2
 
         CLEARANCE_HEIGHT = table_height + 2*height
-        X_Y_DIST_FROM_CYLINDER = .05
+        r = radius .05
 
         # Sample an (x,y) point inside the given area
         # Generate a pose hovering over the point
@@ -150,8 +150,8 @@ class PoseGenerator:
 
         # Move back pose
         poseGen4 = pose_gen()
-        poseGen4.pose.position.x = poseGen3.pose.position.x - X_Y_DIST_FROM_CYLINDER
-        poseGen4.pose.position.y = poseGen3.pose.position.y - X_Y_DIST_FROM_CYLINDER
+        poseGen4.pose.position.x = r / radius * (poseGen3.pose.position.x - 15*self.GRIPPER_OFFSET - obj_pose.position.x) + obj_pose.position.x
+        poseGen4.pose.position.y = r / radius * (poseGen3.pose.position.y - obj_pose.position.y) + obj_pose.position.y
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True
