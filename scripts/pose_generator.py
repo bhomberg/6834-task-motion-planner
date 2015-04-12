@@ -123,7 +123,7 @@ class PoseGenerator:
         x2 = table_center.x + table.primitives[0].dimensions[0]/2
         x2 = table_center.y + table.primitives[0].dimensions[1]/2
 
-        CLEARANCE_HEIGHT = self.table_height + height
+        CLEARANCE_HEIGHT = table_height + height
         X_Y_DIST_FROM_CYLINDER = .05
 
         # Sample an (x,y) point inside the given area
@@ -140,7 +140,7 @@ class PoseGenerator:
         poseGen2 = pose_gen()
         poseGen2.pose.position.x = poseGen1.pose.position.x
         poseGen2.pose.position.y = poseGen1.pose.position.y
-        poseGen2.pose.position.z = self.table_height + height/2
+        poseGen2.pose.position.z = table_height + height/2
         poseGen2.pose.orientation = poseGen1.pose.orientation
         poseGen2.gripperOpen = False
 
