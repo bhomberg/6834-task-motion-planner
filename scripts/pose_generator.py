@@ -180,18 +180,18 @@ class PoseGenerator:
     # Calculates the quaternion orientation given the roll, pitch, and yaw
     def _rpy_to_orientation(self, roll, pitch, yaw):
         # bank, attitude, heading
-        c1 = math.cos(yaw/2)
-        s1 = math.sin(yaw/2)
+        c1 = math.cos(roll/2)
+        s1 = math.sin(roll/2)
         c2 = math.cos(pitch/2)
         s2 = math.sin(pitch/2)
-        c3 = math.cos(roll/2)
-        s3 = math.sin(roll/2)
+        c3 = math.cos(yaw/2)
+        s3 = math.sin(yaw/2)
 
         result = Quaternion()
-        result.x = s1 * s2 * c3 + c1 * c2 * s3
-        result.y = s1 * c2 * c3 + c1 * s2 * s3
-        result.z = c1 * s2 * c3 - s1 * c2 * s3
-        result.w = c1 * c2 * c3 - s1 * s2 * s3
+        result.x = s3 * s2 * c1 + c3 * c2 * s1
+        result.y = s3 * c2 * c1 + c3 * s2 * s1
+        result.z = c3 * s2 * c1 - s3 * c2 * s1
+        result.w = c3 * c2 * c1 - s3 * s2 * s1
         return result
 
 if __name__ == "__main__":
