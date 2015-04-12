@@ -75,8 +75,8 @@ class PoseGenerator:
         poseGen2 = pose_gen()
         pose2 = poseGen2.pose
         # x,y pose s.t. gripper moves towards the cylinder and touches it
-        pose2.position.x = radius / r * (pose1.position.x - obj_pose.position.x) + obj_pose.position.x
-        pose2.position.y = radius / r * (pose1.position.y - obj_pose.position.y) + obj_pose.position.y
+        pose2.position.x = radius / r * (obj_pose.position.x - pose1.position.x) + obj_pose.position.x
+        pose2.position.y = radius / r * (obj_pose.position.y - pose1.position.y) + obj_pose.position.y
         pose2.position.z = z
         pose2.orientation = pose1.orientation
         poseGen2.gripperOpen = True
@@ -182,7 +182,7 @@ class PoseGenerator:
         s2 = math.sin(pitch/2)
         c3 = math.cos(yaw/2)
         s3 = math.sin(yaw/2)
-        
+
         result = Quaternion()
         result.x = s1 * s2 * c3 + c1 * c2 * s3
         result.y = s1 * c2 * c3 + c1 * s2 * s3
