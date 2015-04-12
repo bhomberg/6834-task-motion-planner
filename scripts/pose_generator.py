@@ -105,7 +105,8 @@ class PoseGenerator:
         poseGen5.gripperOpen = False
 
         # An array of pose_gen messages
-        return [poseGen1,poseGen2,poseGen3,poseGen4,poseGen5] 
+        return [poseGen1]
+        # return [poseGen1,poseGen2,poseGen3,poseGen4,poseGen5] 
 
     # Generates a set of gripper poses for a putting down a cylinder,
     # given an area in which to place the object
