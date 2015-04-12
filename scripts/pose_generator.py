@@ -25,7 +25,7 @@ class PoseGenerator:
     def generate(self, action, world):
         action = re.split(',', action[1:-1])
         objects = world.world.collision_objects
-        obj = self._search_for_object(objects[2], objects)
+        obj = self._search_for_object(action[2], objects)
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
 
