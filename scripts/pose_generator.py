@@ -182,12 +182,12 @@ class PoseGenerator:
         s2 = math.sin(pitch/2)
         c3 = math.cos(yaw/2)
         s3 = math.sin(yaw/2)
-
+        
         result = Quaternion()
-        result.x = s3 * s2 * c1 + c3 * c2 * s1
-        result.y = s3 * c2 * c1 + c3 * s2 * s1
-        result.z = c3 * s2 * c1 - s3 * c2 * s1
-        result.w = c3 * c2 * c1 - s3 * s2 * s1
+        result.x = s1 * s2 * c3 + c1 * c2 * s3
+        result.y = s1 * c2 * c3 + c1 * s2 * s3
+        result.z = c1 * s2 * c3 - s1 * c2 * s3
+        result.w = c1 * c2 * c3 - s1 * s2 * s3
         return result
 
 if __name__ == "__main__":
