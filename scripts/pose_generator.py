@@ -28,10 +28,10 @@ class PoseGenerator:
         obj = objects[obj_idx]
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
-        position = obj.primitive_poses[0].position
+        pose = obj.primitive_poses[0]
 
         if action[0] == 'pickup':
-            return self.pickup(position,height,radius)
+            return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
             pass
         else:
@@ -60,7 +60,7 @@ class PoseGenerator:
         # random y position at a set distance from the cylinder
         pose1.position.y = random.uniform(obj_pose.position.y-r, obj_pose.position.y+r)
         # x position along the circle around the cylinder
-        pose1.position.x = math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2) - obj_pose.position.x
+        pose1.position.x = obj_pose.position.x - math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = math.atan2(pose1.position.y, pose1.position.x)
