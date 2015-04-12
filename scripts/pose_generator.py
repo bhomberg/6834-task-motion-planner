@@ -67,7 +67,7 @@ class PoseGenerator:
         pose1.position.x = obj_pose.position.x + math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
-        yaw = math.atan2(pose1.position.y, pose1.position.x)
+        yaw = math.atan2(pose1.position.y-obj_pose.position.y, pose1.position.x-obj_pose.position.y)
         pose1.orientation = self._rpy_to_orientation(math.pi/2,0,yaw)
         poseGen1.gripperOpen = True
 
