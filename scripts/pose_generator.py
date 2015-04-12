@@ -47,7 +47,7 @@ class PoseGenerator:
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
-        CLEARANCE_HEIGHT = height + .05
+        CLEARANCE_HEIGHT = obj_pose.z + height
         DIST_FROM_CYLINDER = .1
         
         # radius of circle around the cylinder where the gripper origin will lie
@@ -91,7 +91,7 @@ class PoseGenerator:
         pose4 = poseGen4.pose
         pose4.position.x = pose2.position.x
         pose4.position.y = pose2.position.y
-        pose4.position.z = self.table_height + CLEARANCE_HEIGHT
+        pose4.position.z = CLEARANCE_HEIGHT
         pose4.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = False
         
@@ -100,7 +100,7 @@ class PoseGenerator:
         poseGen5 = pose_gen()
         pose5 = poseGen5.pose
         # x,y = 0,0
-        pose5.position.z = self.table_height + CLEARANCE_HEIGHT
+        pose5.position.z = CLEARANCE_HEIGHT
         pose5.orientation = self._rpy_to_orientation(math.pi/2,0,0)
         poseGen5.gripperOpen = False
 
