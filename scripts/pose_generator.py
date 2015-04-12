@@ -9,6 +9,8 @@ import random
 import copy
 import re
 
+#TODO: right/left arm ---> standard pose is different
+
 # Generates a set of gripper poses given an action and a world description
 # The motion planner verifies that the set of candidate poses is valid 
 # (not obstructed by objects & objects are reachable) 
@@ -59,8 +61,10 @@ class PoseGenerator:
         pose1 = poseGen1.pose
         # random y position at a set distance from the cylinder
         pose1.position.y = random.uniform(obj_pose.position.y-r, obj_pose.position.y+r)
+        # TODO: multiply -1 or 1 by the sqrt? -- would need orientation
+        # multiplier = 1 if random.random() < .5 else -1
         # x position along the circle around the cylinder
-        pose1.position.x = obj_pose.position.x - math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
+        pose1.position.x = obj_pose.position.x + multiplier * math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = math.atan2(pose1.position.y, pose1.position.x)
