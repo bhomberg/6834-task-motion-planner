@@ -70,7 +70,7 @@ class InterfaceLayer(object):
         msg = task_domain()
         #output state to file
 	f = open('state', 'w')
-        f.write('(define (problem task)')
+        f.write('(define (problemtask)')
         f.write('(:domain taskmotion)')
         f.write('(:objects ')
         for o in state[0]:

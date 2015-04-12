@@ -1,0 +1,25 @@
+(define (problem problemtask)
+  (:domain taskmotion)
+  (:objects leftarm - gripper
+  	     block1 block2 - physob
+	     gp_block1 gp_block2 pdp_block1_S pdp_block2_S initpose - pose
+	     S -location)
+  (:init (RobotAt initpose)
+	 (Empty leftarm)
+	 (IsGPFG gp_block1 block1)
+	 (IsGPFG gp_block2 block2)
+	 (IsGPFPD pdp_block1_S block1 S)
+	 (IsGPFPD pdp_block2_S block2 S)
+	 (IsLFPD S block1)
+	 (IsLFPD S block2)
+	 
+
+	 (Obstructs block2 block1))
+  (:goal (At block1 S))
+)
+
+
+; PICKUP BLOCK2 LEFTARM INITPOSE GP_BLOCK2
+; PUTDOWN BLOCK2 LEFTARM GP_BLOCK2 PDP_BLOCK2_S S
+; PICKUP BLOCK1 LEFTARM PDP_BLOCK2_S GP_BLOCK1
+; PUTDOWN BLOCK1 LEFTARM GP_BLOCK1 PDP_BLOCK1 S

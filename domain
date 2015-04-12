@@ -1,0 +1,55 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Domain for grasping test for 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (domain taskmotion)
+  (:requirements :strips :typing :adl)
+  (:types location gripper physob pose)
+
+  (:predicates 
+    (Empty ?gripper - gripper)
+    (RobotAt ?pose - pose)
+    (IsGPFG ?pose - pose ?obj - physob)
+    (Obstructs ?obj1 - physob ?obj2 - physob)
+    (In ?obj - physob ?gripper - gripper)
+    (PDObstructs ?obj1 - physob ?obj2 - physob ?tloc - location)
+    (IsGPFPD ?pose - pose ?obj - physob ?tloc - location)
+    (IsLFPD ?tloc - location ?obj - physob)
+    (At ?obj - physob ?tloc - location))
+
+  (:action pickup
+	     :parameters (?obj - physob ?gripper - gripper ?pose1 - pose ?pose2 - pose)
+	     :precondition (and (Empty ?gripper)
+	     		   	(RobotAt ?pose1)
+				(IsGPFG ?pose2 ?obj)
+				(forall (?obj2 - physob)
+					      (and (not (Obstructs ?obj2 ?obj)))))
+	     :effect (and (In ?obj ?gripper)
+	     	     	  (RobotAt ?pose2)
+			  (not (RobotAt ?pose1))
+	     	     	  (not (Empty ?gripper))
+			  (forall (?obj2 - physob ?tloc - location)
+			  	  (and (not (Obstructs ?obj ?obj2))
+			       	       (not (PDObstructs ?obj ?obj2 ?tloc))))))
+		   
+  (:action putdown
+	     :parameters (?obj - physob ?gripper - gripper ?pose1 - pose ?pose2 - pose ?tloc - location)
+	     :precondition (and (In ?obj ?gripper)
+	     		   	(RobotAt ?pose1)
+				(IsGPFPD ?pose2 ?obj ?tloc)
+				(IsLFPD ?tloc ?obj)
+				(forall (?obj2 - physob)
+					(not (PDObstructs ?obj2 ?obj ?tloc))))
+	     :effect (and (not (In ?obj ?gripper))
+	     	     	  (Empty ?gripper)
+	     	     	  (At ?obj ?tloc)
+			  (RobotAt ?pose2)
+			  (not (RobotAt ?pose1))))
+			   
+  (:action move
+	     :parameters (?pose1 - pose ?pose2 - pose)
+	     :precondition (and (RobotAt ?pose1))
+	     :effect
+	     (and (not (RobotAt ?pose1))
+		  (RobotAt ?pose2))))
+
