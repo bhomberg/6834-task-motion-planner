@@ -25,17 +25,17 @@ class PoseGenerator:
     def generate(self, action, world):
         action = re.split(',', action[1:-1])
         objects = world.world.collision_objects
+        obj = self._search_for_object(action[1], objects)
+        height = obj.primitives[0].dimensions[0]
         
         if action[0] == 'pickup':
-            obj = self._search_for_object(action[1], objects)
-            height = obj.primitives[0].dimensions[0]
-            radius = obj.primitives[0].dimensions[1]
             pose = obj.primitive_poses[0]
+            radius = obj.primitives[0].dimensions[1]
             return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
             print action[-1]
             table = self._search_for_object(action[-1], objects)
-            self.pickup(table,height,radius)
+            self.pickup(table,height)
         else:
             return
 
@@ -115,7 +115,7 @@ class PoseGenerator:
     # return =  an array of 6 pose_gen messages containing a pose and a
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, set-down, let-go, back away, lift arm, standard pose
-    def putdown(self,table,height,radius):
+    def putdown(self,table,height):
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
         x1 = table_center.x - table.primitives[0].dimensions[0]/2
