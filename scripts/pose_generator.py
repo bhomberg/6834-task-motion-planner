@@ -48,7 +48,7 @@ class PoseGenerator:
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
         CLEARANCE_HEIGHT = .15
-        DIST_FROM_CYLINDER = .03
+        DIST_FROM_CYLINDER = .05
         
         # radius of circle around the cylinder where the gripper origin will lie
         r = radius + DIST_FROM_CYLINDER
@@ -117,7 +117,7 @@ class PoseGenerator:
     def putdown(self,x1,y1,x2,y2):
         CLEARANCE_HEIGHT = .15
         HEIGHT_ABOVE_TABLE = .03
-        X_Y_DIST_FROM_CYLINDER = .02
+        X_Y_DIST_FROM_CYLINDER = .05
         
         # Sample an (x,y) point inside the given area
         # Generate a pose hovering over the point
