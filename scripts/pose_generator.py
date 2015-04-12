@@ -179,8 +179,8 @@ class PoseGenerator:
     def _search_for_object(self, obj_name, obj_list):
         for i in range(len(obj_list)):
             if obj_name == obj_list[i].id:
-                return objects[i]              
-        return objects[-1]
+                return obj_list[i]              
+        return None
 
     # Calculates the quaternion orientation given the roll, pitch, and yaw
     def _rpy_to_orientation(self, roll, pitch, yaw):
