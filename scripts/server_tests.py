@@ -37,10 +37,14 @@ def motion_planner_client():
         msg.action = '(pickUp,left_arm,obj1)'
         
         msg.goals = [pose()]
-        msg.goals[0].pose.position.x = 0.74
-        msg.goals[0].pose.position.y = 0.28
-        msg.goals[0].pose.position.z = 0.34
-        msg.goals[0].pose.orientation.w = 1.0
+        msg.goals[0].pose.position.x = 0.886793753169#0.74
+        msg.goals[0].pose.position.y = 0.156411356089#0.28
+        msg.goals[0].pose.position.z = 0.33270119457#0.34
+        msg.goals[0].pose.orientation.w = 0.442682322684#1
+        msg.goals[0].pose.orientation.x = 0.593758216119#0
+        msg.goals[0].pose.orientation.y = 0.478471427198#0
+        msg.goals[0].pose.orientation.z = 0.471750607132#0
+        
         msg.goals[0].gripperOpen = True
         
         resp = motion_server(msg)
