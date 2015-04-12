@@ -34,8 +34,7 @@ class PoseGenerator:
             return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
             print action[-1]
-            self.table = self._search_for_object(action[-1], objects)
-            self.table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
+            table = self._search_for_object(action[-1], objects)
             self.pickup(table,height,radius)
         else:
             return
@@ -118,6 +117,7 @@ class PoseGenerator:
     #           poses = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,table,height,radius):
         table_center = table.primitive_poses[0].position
+        table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
         x1 = table_center.x - table.primitives[0].dimensions[0]/2
         y1 = table_center.y - table.primitives[0].dimensions[1]/2
         x2 = table_center.x + table.primitives[0].dimensions[0]/2
