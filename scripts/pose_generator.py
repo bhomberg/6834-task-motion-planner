@@ -64,7 +64,7 @@ class PoseGenerator:
         # TODO: multiply -1 or 1 by the sqrt? -- would need orientation
         # multiplier = 1 if random.random() < .5 else -1
         # x position along the circle around the cylinder
-        pose1.position.x = obj_pose.position.x + multiplier * math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
+        pose1.position.x = obj_pose.position.x + math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = math.atan2(pose1.position.y, pose1.position.x)
@@ -197,5 +197,6 @@ class PoseGenerator:
 if __name__ == "__main__":
     poseGen = PoseGenerator()
     # test case
+    # yaw, roll, pitch
     print poseGen._rpy_to_orientation(-math.pi/4,0,math.pi/2)
-    # print poseGen._rpy_to_orientation(0,0,math.pi/4)
+    print poseGen._rpy_to_orientation(0,0,math.pi/4)
