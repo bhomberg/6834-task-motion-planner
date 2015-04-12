@@ -85,7 +85,7 @@ class MotionPlannerServer(object):
                 
                 rospy.sleep(2.0)
                 
-                group.go(wait=True)
+                #group.go(wait=True)
                 #return
                 
             else:
@@ -127,6 +127,6 @@ class MotionPlannerServer(object):
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer(1.0)
+    motion_planner_server = MotionPlannerServer(5.0)
     motion_planner_server.run()
     
