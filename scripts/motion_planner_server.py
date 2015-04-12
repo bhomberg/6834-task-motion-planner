@@ -73,6 +73,8 @@ class MotionPlannerServer(object):
                 curr_state.joint_state.position = plan.joint_trajectory.points[-1].positions
                 curr_state.joint_state.velocity = plan.joint_trajectory.points[-1].velocities
                 curr_state.joint_state.effort = plan.joint_trajectory.points[-1].effort
+                
+                rospy.sleep(5.0)
             
             else:
                 print "============ Component ", i, " of motion plan failed"
