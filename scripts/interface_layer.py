@@ -12,81 +12,80 @@ task_server = None
 # TODO: if necessary, add in random seed for pose generators later
 motion_server = None
 
-def run_interface_layer(state, world, initialPose):
-    initial_state = state
-    initial_world = world
-    step = None
-    hlplan = None
-    partialTraj = None
-    pose1 = None
-    sub = tryRefineClass()
-    if hlplan == None:
-        hlplan = callTaskPlanner(state, world)
-        step = 1
+class InterfaceLayer(object):
+    def __init__(self, ):
+        pass
+        
+    def run_interface_layer(state, world, initialPose):
+        initial_state = state
+        initial_world = world
+        step = None
+        hlplan = None
         partialTraj = None
-        pose1 = initialPose
-    while(resource limit not reached):
-        (success, refinement) = sub.try_refine(pose1, state, world, hlplan, step, partialTraj, mode='errorFree')
-        if success:
-            return refinement
-        success = False
-        trajCount = 0
-        while not success and trajCount < MAX_TRAJ_COUNT:
-            (partialTraj, pose2, failStep, failCause, state, world) = sub.try_refine(pose1, state, world hlplan, step, partialTraj, mode='partialTraj')
-            (state, world) = stateUpdate(state, world, failCause, failStep)
-            (success, newPlan) = callTaskPlanner(state, world)
+        pose1 = None
+        sub = tryRefineClass()
+        if hlplan == None:
+            hlplan = callTaskPlanner(state, world)
+            step = 1
+            partialTraj = None
+            pose1 = initialPose
+        while(resource limit not reached):
+            (success, refinement) = sub.try_refine(pose1, state, world, hlplan, step, partialTraj, mode='errorFree')
             if success:
-                hlplan = hlplan[0:failStep] + newPlan
-                pose1 = pose2
-                step = failStep
-            trajCount++
-    if trajCount == MAX_TRAJ_COUNT:
-        state = initial_state
-        step = 1
-        partialTraj = None
-        pose1 = initialPose
+                return refinement
+            success = False
+            trajCount = 0
+            while not success and trajCount < MAX_TRAJ_COUNT:
+                (partialTraj, pose2, failStep, failCause, state, world) = sub.try_refine(pose1, state, world hlplan, step, partialTraj, mode='partialTraj')
+                (state, world) = stateUpdate(state, world, failCause, failStep)
+                (success, newPlan) = callTaskPlanner(state, world)
+                if success:
+                    hlplan = hlplan[0:failStep] + newPlan
+                    pose1 = pose2
+                    step = failStep
+                trajCount++
+        if trajCount == MAX_TRAJ_COUNT:
+            state = initial_state
+            step = 1
+            partialTraj = None
+            pose1 = initialPose
 
 
-def callTaskPlanner(state, world):
-    # plan is an array of tuples, let's say, where the first thing is the action and the rest are objects it acts on
-    msg = task_domain()
-    #TODO: output state and world to file
-    msg.task_file = 'state'
-    resp = task_server(msg)
-    # parse plan file into appropriate action tuple
-    plan = []
-    f = open(resp.plan.file)
-    for line in f:
-        plan.append(tuple(line.rsplit(' ')))
-    return (resp.plan.error, plan)
+    def callTaskPlanner(state, world):
+        # plan is an array of tuples, let's say, where the first thing is the action and the rest are objects it acts on
+        msg = task_domain()
+        #TODO: output state and world to file
+        msg.task_file = 'state'
+        resp = task_server(msg)
+        # parse plan file into appropriate action tuple
+        plan = []
+        f = open(resp.plan.file)
+        for line in f:
+            plan.append(tuple(line.rsplit(' ')))
+        return (resp.plan.error, plan)
 
-def stateUpdate(state, world, failCause, failStep):
-    return state
+    def stateUpdate(state, world, failCause, failStep):
+        return state
 
-def get_motion_plan(world, state, action, goalPose):
-    # TODO: Add timed try except???
-    try:
-        msg = motion_plan_parameters()
-        msg.world = world
-        msg.start = state
-        msg.group_names = len(goalPose)*[actions[1]]
+    def get_motion_plan(world, action, goals):
+        try:
+            msg = motion_plan_parameters()
+            msg.state = world
+            msg.action = action
+            msg.goals = goals
         
-        # TODO: implement proper list of tuples management
-        msg.goals = [goalPose]
+            resp = motion_server(msg)
         
-        resp = motion_server(msg)
-        
-        return (resp.plan.success, res.plan.end_state, resp.plan.trajectory)
-    except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
-        return (False, RobotState(), DisplayTrajectory())
+            return (resp.plan.state, res.plan.motion, resp.plan.success)
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
+            return (world, [], False)
 
-def MPErrs(pose1, pose2, state, world):
-    pass
+    def MPErrs(pose1, pose2, state, world):
+        pass
 
 
 class tryRefineClass:
-
     def __init__(self):
         self.world = None
         self.state = None
