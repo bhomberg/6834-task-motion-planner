@@ -35,7 +35,7 @@ class PoseGenerator:
         elif action[0] == 'putdown':
             print action[-1]
             table = self._search_for_object(action[-1], objects)
-            self.pickup(table,height)
+            self.putdown(table,height)
         else:
             return
 
