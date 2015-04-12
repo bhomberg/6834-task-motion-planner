@@ -150,8 +150,8 @@ class PoseGenerator:
 
         # Move back pose
         poseGen4 = pose_gen()
-        poseGen4.pose.position.x = poseGen3.pose.position.x + X_Y_DIST_FROM_CYLINDER
-        poseGen4.pose.position.y = poseGen3.pose.position.y + X_Y_DIST_FROM_CYLINDER
+        poseGen4.pose.position.x = poseGen3.pose.position.x - X_Y_DIST_FROM_CYLINDER
+        poseGen4.pose.position.y = poseGen3.pose.position.y - X_Y_DIST_FROM_CYLINDER
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True
