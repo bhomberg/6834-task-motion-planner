@@ -53,7 +53,7 @@ class PoseGenerator:
         # radius of circle around the cylinder where the gripper origin will lie
         r = radius + DIST_FROM_CYLINDER
         # height of gripper when grasping cylinder
-        z =  obj_pose.position.z + height/2
+        z =  obj_pose.position.z
 
         # A random pose lying on a circle around the cylinder
         # pointing towards the cylinder with the gripper open
@@ -64,7 +64,7 @@ class PoseGenerator:
         # TODO: multiply -1 or 1 by the sqrt? -- would need orientation
         # multiplier = 1 if random.random() < .5 else -1
         # x position along the circle around the cylinder
-        pose1.position.x = obj_pose.position.x + math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
+        pose1.position.x = obj_pose.position.x - math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = math.atan2(pose1.position.y-obj_pose.position.y, pose1.position.x-obj_pose.position.x)
