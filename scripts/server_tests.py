@@ -14,7 +14,7 @@ def task_planner_client():
         msg = task_domain()
         msg.task_file = 'problem0'
         resp = task_server(msg)
-        return resp.plan.error, resp.plan.file
+        return resp.plan.error, resp.plan.plan
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
         
@@ -56,6 +56,6 @@ def motion_planner_client():
         print "Service call failed: %s"%e
 
 if __name__ == "__main__":
-    #print task_planner_client()
-    print motion_planner_client()
+    print task_planner_client()
+    #print motion_planner_client()
  
