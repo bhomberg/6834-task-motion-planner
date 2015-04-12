@@ -68,26 +68,22 @@ class PoseGenerator:
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = math.atan2(pose1.position.y, pose1.position.x)
-        pose1.orientation = self._rpy_to_orientation(yaw,0,math.pi/2)
+        pose1.orientation = self._rpy_to_orientation(math.pi/2,0,yaw)
         poseGen1.gripperOpen = True
 
         # Pre-grasp: A pose s.t. the open gripper is touching the cylinder
         poseGen2 = pose_gen()
         pose2 = poseGen2.pose
         # x,y pose s.t. gripper moves towards the cylinder and touches it
-        pose2.position.x = radius / r * pose1.position.x + obj_pose.position.x
-        pose2.position.y = radius / r * pose1.position.y + obj_pose.position.y
+        pose2.position.x = radius / r * (pose1.position.x - obj_pose.position.x) + obj_pose.position.x
+        pose2.position.y = radius / r * (pose1.position.y - obj_pose.position.y) + obj_pose.position.y
         pose2.position.z = z
         pose2.orientation = pose1.orientation
         poseGen2.gripperOpen = True
         
         # Grasp: A pose that grasps the cylinder
         poseGen3 = pose_gen()
-        pose3 = poseGen3.pose
-        pose3.position.x = pose2.position.x
-        pose3.position.y = pose2.position.y
-        pose3.position.z = z
-        pose3.orientation = pose2.orientation
+        poseGen3.pose = pose2
         poseGen3.gripperOpen = False
 
         # A pose s.t. the cylinder is lifted above all the other cylinders
