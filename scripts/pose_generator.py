@@ -45,9 +45,11 @@ class PoseGenerator:
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
-        HEIGHT_ABOVE_TABLE = .15
+        CLEARANCE_HEIGHT = .15
+        DIST_FROM_CYLINDER = .03
+        
         # radius of circle around the cylinder where the gripper origin will lie
-        r = radius + .03 
+        r = radius + DIST_FROM_CYLINDER
         # height of gripper when grasping cylinder
         z =  obj_pose.position.z + height/2
 
@@ -58,7 +60,7 @@ class PoseGenerator:
         # random y position at a set distance from the cylinder
         pose1.position.y = random.uniform(obj_pose.position.y-r, obj_pose.position.y+r)
         # x position along the circle around the cylinder
-        pose1.position.x = math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2) - obj_pose.position.x
+        pose1.position.x = obj_pose.position.x - math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = math.atan2(pose1.position.y, pose1.position.x)
@@ -69,8 +71,8 @@ class PoseGenerator:
         poseGen2 = pose_gen()
         pose2 = poseGen2.pose
         # x,y pose s.t. gripper moves towards the cylinder and touches it
-        pose2.position.x = radius*(pose1.position.x/math.sqrt(pose1.position.x**2+pose1.position.y**2)) + obj_pose.position.x
-        pose2.position.y = radius*(pose1.position.y/math.sqrt(pose1.position.x**2+pose1.position.y**2)) + obj_pose.position.y
+        pose2.position.x = radius / r * pose1.position.x + obj_pose.position.x
+        pose2.position.y = radius / r * pose1.position.y + obj_pose.position.y
         pose2.position.z = z
         pose2.orientation = pose1.orientation
         poseGen2.gripperOpen = True
@@ -89,7 +91,7 @@ class PoseGenerator:
         pose4 = poseGen4.pose
         pose4.position.x = pose2.position.x
         pose4.position.y = pose2.position.y
-        pose4.position.z = self.table_height + HEIGHT_ABOVE_TABLE
+        pose4.position.z = self.table_height + CLEARANCE_HEIGHT
         pose4.orientation = pose3.orientation
         poseGen4.gripperOpen = False
         
@@ -97,7 +99,8 @@ class PoseGenerator:
         # objects in a standard position
         poseGen5 = pose_gen()
         pose5 = poseGen5.pose
-        pose5.position.z = self.table_height + HEIGHT_ABOVE_TABLE
+        # x,y = 0,0
+        pose5.position.z = self.table_height + CLEARANCE_HEIGHT
         pose5.orientation = self._rpy_to_orientation(0,0,0)
         poseGen5.gripperOpen = False
 
@@ -112,19 +115,23 @@ class PoseGenerator:
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,x1,y1,x2,y2):
+        CLEARANCE_HEIGHT = .15
+        HEIGHT_ABOVE_TABLE = .03
+        X_Y_DIST_FROM_CYLINDER = .02
+        
         # Sample an (x,y) point inside the given area
         # Generate a pose hovering over the point
         poseGen1 = pose_gen()
         poseGen1.pose.position.x = random.uniform(x1,x2)
         poseGen1.pose.position.y = random.uniform(y1,y2)
-        poseGen1.pose.position.z = self.table_height + .15
+        poseGen1.pose.position.z = self.table_height + CLEARANCE_HEIGHT
         poseGen1.gripperOpen = False
 
         # Set down pose
         poseGen2 = pose_gen()
         poseGen2.pose.position.x = poseGen1.pose.position.x
         poseGen2.pose.position.y = poseGen1.pose.position.y
-        poseGen2.pose.position.z = self.table_height + .03
+        poseGen2.pose.position.z = self.table_height + HEIGHT_ABOVE_TABLE
         poseGen2.pose.orientation = poseGen1.pose.orientation
         poseGen2.gripperOpen = False
 
@@ -135,8 +142,8 @@ class PoseGenerator:
 
         # Move back pose
         poseGen4 = pose_gen()
-        poseGen4.pose.position.x = poseGen3.pose.position.x + .02
-        poseGen4.pose.position.y = poseGen3.pose.position.y + .02
+        poseGen4.pose.position.x = poseGen3.pose.position.x + X_Y_DIST_FROM_CYLINDER
+        poseGen4.pose.position.y = poseGen3.pose.position.y + X_Y_DIST_FROM_CYLINDER
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True
@@ -145,13 +152,13 @@ class PoseGenerator:
         poseGen5 = pose_gen()
         poseGen5.pose.position.x = poseGen4.pose.position.x
         poseGen5.pose.position.y = poseGen4.pose.position.y
-        poseGen5.pose.position.z = poseGen5.pose.position.z + .10
+        poseGen5.pose.position.z = poseGen5.pose.position.z + CLEARANCE_HEIGHT
         poseGen5.pose.orientation = poseGen4.pose.orientation
         poseGen5.gripperOpen = True
             
         # Move out of the way to the standard position
         poseGen6 = pose_gen()
-        poseGen6.pose.position.z = self.table_height + .10
+        poseGen6.pose.position.z = self.table_height + CLEARANCE_HEIGHT
         poseGen6.gripperOpen = True
 
         # Return array of custom pose messages
