@@ -35,7 +35,7 @@ class PoseGenerator:
         elif action[0] == 'putdown':
             print action[-1]
             table = self._search_for_object(action[-1], objects)
-            self.putdown(table,height)
+            return self.putdown(table,height)
         else:
             return
 
@@ -105,7 +105,6 @@ class PoseGenerator:
         poseGen5.gripperOpen = False
 
         # An array of pose_gen messages
-        # return [poseGen1]
         return [poseGen1,poseGen2,poseGen3,poseGen4,poseGen5] 
 
     # Generates a set of gripper poses for a putting down a cylinder,
@@ -133,7 +132,7 @@ class PoseGenerator:
         poseGen1.pose.position.y = random.uniform(y1,y2)
         poseGen1.pose.position.z = CLEARANCE_HEIGHT
         yaw = random.uniform(-math.pi/4,math.pi/4)
-        poseGen1.pose.orientation = _rpy_to_orientation(math.pi/2,0,yaw)
+        poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2,0,yaw)
         poseGen1.gripperOpen = False
 
         # Set down pose
