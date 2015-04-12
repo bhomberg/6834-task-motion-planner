@@ -29,9 +29,9 @@ class MotionPlannerServer(object):
         pose_goals = req.parameters.goals
     
         # Add objects to planning scene
-        for i in len(range(world_state.collision_objects)):
+        for i in range(len(world_start_state.collision_objects)):
             # Approximate object (know to be cylinder) as box
-            obj = world_state.collision_objects[i]
+            obj = world_start_state.collision_objects[i]
             h = obj.primitives[0].dimensions[0]
             r = obj.primitives[0].dimensions[1]
             scene.add_box(obj.id, obj.primitive_poses[0], (r, r, h))

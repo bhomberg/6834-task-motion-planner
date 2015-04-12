@@ -62,7 +62,6 @@ find_package(Eigen REQUIRED)
    motion_plan.msg
    motion_plan_parameters.msg
    motion_seq.msg
-   pose.msg
    pose_gen.msg
    task_domain.msg
    world_state.msg
