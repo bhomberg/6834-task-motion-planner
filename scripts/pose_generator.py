@@ -101,7 +101,7 @@ class PoseGenerator:
         pose5 = poseGen5.pose
         # x,y = 0,0
         pose5.position.z = self.table_height + CLEARANCE_HEIGHT
-        pose5.orientation = self._rpy_to_orientation(0,0,0)
+        pose5.orientation = self._rpy_to_orientation(math.pi/2,0,0)
         poseGen5.gripperOpen = False
 
         # An array of pose_gen messages
@@ -125,6 +125,8 @@ class PoseGenerator:
         poseGen1.pose.position.x = random.uniform(x1,x2)
         poseGen1.pose.position.y = random.uniform(y1,y2)
         poseGen1.pose.position.z = self.table_height + CLEARANCE_HEIGHT
+        yaw = random.uniform(-math.pi/4,math.pi/4)
+        poseGen1.pose.orientation = _rpy_to_orientation(math.pi/2,0,yaw)
         poseGen1.gripperOpen = False
 
         # Set down pose
@@ -159,6 +161,7 @@ class PoseGenerator:
         # Move out of the way to the standard position
         poseGen6 = pose_gen()
         poseGen6.pose.position.z = self.table_height + CLEARANCE_HEIGHT
+        poseGen6.pose.orientation = poseGen5.pose.orientation
         poseGen6.gripperOpen = True
 
         # Return array of custom pose messages
@@ -182,7 +185,7 @@ class PoseGenerator:
         s2 = math.sin(pitch/2)
         c3 = math.cos(yaw/2)
         s3 = math.sin(yaw/2)
-        
+
         result = Quaternion()
         result.x = s1 * s2 * c3 + c1 * c2 * s3
         result.y = s1 * c2 * c3 + c1 * s2 * s3
