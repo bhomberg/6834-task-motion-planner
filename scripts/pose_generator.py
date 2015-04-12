@@ -24,20 +24,17 @@ class PoseGenerator:
     # world = a WorldState msg
     def generate(self, action, world):
         action = re.split(',', action[1:-1])
-        obj_name = action[-1]
         objects = world.world.collision_objects
-        obj_idx = self._search_for_object(obj_name, objects)
-        table_idx = _search_for_object('table', objects)
-        obj = objects[obj_idx]
-        self.table = objects[table_idx]
-        self.table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
+        obj = self._search_for_object(objects[2], objects)
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
-        pose = obj.primitive_poses[0]
 
         if action[0] == 'pickup':
+            pose = obj.primitive_poses[0]
             return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
+            self.table = _search_for_object(action[-1], objects)
+            self.table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
             self.pickup(table,height,radius)
         else:
             return
@@ -125,16 +122,15 @@ class PoseGenerator:
         x2 = table_center.x + table.primitives[0].dimensions[0]/2
         x2 = table_center.y + table.primitives[0].dimensions[1]/2
 
-        CLEARANCE_HEIGHT = height + .05
+        CLEARANCE_HEIGHT = self.table_height + height
         X_Y_DIST_FROM_CYLINDER = .05
 
-        
         # Sample an (x,y) point inside the given area
         # Generate a pose hovering over the point
         poseGen1 = pose_gen()
         poseGen1.pose.position.x = random.uniform(x1,x2)
         poseGen1.pose.position.y = random.uniform(y1,y2)
-        poseGen1.pose.position.z = self.table_height + CLEARANCE_HEIGHT
+        poseGen1.pose.position.z = CLEARANCE_HEIGHT
         yaw = random.uniform(-math.pi/4,math.pi/4)
         poseGen1.pose.orientation = _rpy_to_orientation(math.pi/2,0,yaw)
         poseGen1.gripperOpen = False
@@ -164,13 +160,13 @@ class PoseGenerator:
         poseGen5 = pose_gen()
         poseGen5.pose.position.x = poseGen4.pose.position.x
         poseGen5.pose.position.y = poseGen4.pose.position.y
-        poseGen5.pose.position.z = poseGen5.pose.position.z + CLEARANCE_HEIGHT
+        poseGen5.pose.position.z = CLEARANCE_HEIGHT
         poseGen5.pose.orientation = poseGen4.pose.orientation
         poseGen5.gripperOpen = True
             
         # Move out of the way to the standard position
         poseGen6 = pose_gen()
-        poseGen6.pose.position.z = self.table_height + CLEARANCE_HEIGHT
+        poseGen6.pose.position.z = CLEARANCE_HEIGHT
         poseGen6.pose.orientation = poseGen5.pose.orientation
         poseGen6.gripperOpen = True
 
@@ -183,8 +179,8 @@ class PoseGenerator:
     def _search_for_object(self, obj_name, obj_list):
         for i in range(len(obj_list)):
             if obj_name == obj_list[i].id:
-                return i                
-        return -1
+                return objects[i]              
+        return objects[-1]
 
     # Calculates the quaternion orientation given the roll, pitch, and yaw
     def _rpy_to_orientation(self, roll, pitch, yaw):
