@@ -27,7 +27,10 @@ class PoseGenerator:
         obj_name = action[-1]
         objects = world.world.collision_objects
         obj_idx = self._search_for_object(obj_name, objects)
+        table_idx = _search_for_object('table', objects)
         obj = objects[obj_idx]
+        self.table = objects[table_idx]
+        self.table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
         pose = obj.primitive_poses[0]
@@ -35,7 +38,7 @@ class PoseGenerator:
         if action[0] == 'pickup':
             return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
-            pass
+            self.pickup(table,height,radius)
         else:
             return
 
@@ -47,7 +50,7 @@ class PoseGenerator:
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
-        CLEARANCE_HEIGHT = .15
+        CLEARANCE_HEIGHT = height + .05
         DIST_FROM_CYLINDER = .05
         
         # radius of circle around the cylinder where the gripper origin will lie
@@ -111,15 +114,21 @@ class PoseGenerator:
 
     # Generates a set of gripper poses for a putting down a cylinder,
     # given an area in which to place the object
-    # x1, y1 = top left corner of area (from top view)
-    # x2, y2 = botttom right corner of area (from top view)
+    # x1, y1 = bottom left corner of area (from top view)
+    # x2, y2 = top right corner of area (from top view)
     # return =  an array of 6 pose_gen messages containing a pose and a
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, set-down, let-go, back away, lift arm, standard pose
-    def putdown(self,x1,y1,x2,y2):
-        CLEARANCE_HEIGHT = .15
-        HEIGHT_ABOVE_TABLE = .03
+    def putdown(self,table,height,radius):
+        table_center = table.primitive_poses[0].position
+        x1 = table_center.x - table.primitives[0].dimensions[0]/2
+        y1 = table_center.y - table.primitives[0].dimensions[1]/2
+        x2 = table_center.x + table.primitives[0].dimensions[0]/2
+        x2 = table_center.y + table.primitives[0].dimensions[1]/2
+
+        CLEARANCE_HEIGHT = height + .05
         X_Y_DIST_FROM_CYLINDER = .05
+
         
         # Sample an (x,y) point inside the given area
         # Generate a pose hovering over the point
@@ -135,7 +144,7 @@ class PoseGenerator:
         poseGen2 = pose_gen()
         poseGen2.pose.position.x = poseGen1.pose.position.x
         poseGen2.pose.position.y = poseGen1.pose.position.y
-        poseGen2.pose.position.z = self.table_height + HEIGHT_ABOVE_TABLE
+        poseGen2.pose.position.z = self.table_height + height/2
         poseGen2.pose.orientation = poseGen1.pose.orientation
         poseGen2.gripperOpen = False
 
