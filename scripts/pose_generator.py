@@ -121,7 +121,7 @@ class PoseGenerator:
         x1 = table_center.x - table.primitives[0].dimensions[0]/2
         y1 = table_center.y - table.primitives[0].dimensions[1]/2
         x2 = table_center.x + table.primitives[0].dimensions[0]/2
-        x2 = table_center.y + table.primitives[0].dimensions[1]/2
+        y2 = table_center.y + table.primitives[0].dimensions[1]/2
 
         CLEARANCE_HEIGHT = table_height + height
         X_Y_DIST_FROM_CYLINDER = .05
