@@ -58,11 +58,14 @@ find_package(Eigen REQUIRED)
  add_message_files(
    FILES
    cylinder.msg
-   motion_plan_parameters.msg
-   motion_plan.msg
-   pose_gen.msg
    hl_plan.msg
+   motion_plan.msg
+   motion_plan_parameters.msg
+   motion_seq.msg
+   pose.msg
+   pose_gen.msg
    task_domain.msg
+   world_state.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -122,8 +125,8 @@ link_directories(${catkin_LIBRARY_DIRS})
 
 ## Declare a cpp executable
 # add_executable(6834-task-motion-planner_node src/6834-task-motion-planner_node.cpp)
-add_executable(motion_planner_server src/motion_planner_server.cpp)
-target_link_libraries(motion_planner_server ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#add_executable(motion_planner_server src/motion_planner_server.cpp)
+#target_link_libraries(motion_planner_server ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

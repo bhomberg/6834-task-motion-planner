@@ -47,3 +47,4 @@ class TaskPlannerServer(object):
 if __name__ == "__main__":
     task_planner_server = TaskPlannerServer("~/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "domain")
     task_planner_server.run()
+    

@@ -1,4 +1,3 @@
-moveit_msgs/RobotState start_state
-moveit_msgs/RobotState end_state
-moveit_msgs/DisplayTrajectory trajectory
+world_state state
+motion_seq[] motion
 bool success
