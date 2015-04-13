@@ -44,7 +44,7 @@ class InterfaceLayer(object):
                 # find a partial trajectory -- how far along the high level task plan can we find motion plans for?
                 (partialTraj, pose2, failStep, failCause, state, world) = sub.try_refine(pose1, state, world hlplan, step, partialTraj, mode='partialTraj')
                 # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
-                (state, world) = stateUpdate(state, world, failCause, failStep)
+                (state, world) = stateUpdate(state, world, failCause, failStep, hlplan)
                 # now, call the task planner again on the new state
                 (success, newPlan) = callTaskPlanner(state)
                 if success: # it may not be possible to find a new plan; if it is, update our high level plan 
@@ -100,7 +100,18 @@ class InterfaceLayer(object):
 
         return (resp.plan.error, plan)
 
-    def stateUpdate(state, world, failCause, failStep):
+    def stateUpdate(state, world, failCause, failStep, hlplan):
+        # stateUpdate will need to be updated based on the specific problem
+        action = hlplan[failStep]
+        if action[0] == pickup:
+            obj_to_pickup = action[1]
+            for obj in failCause:
+                state[2].append( ('Obstructs', obj, obj_to_pickup))
+        elif action[0] == putdown:
+            obj_to_putdown = action[1]
+            tloc = action[5]
+            for obj in failCause:
+                state[2].append( ('PDObstructs', obj, obj_to_putdown, tloc))
         return state
 
     def get_motion_plan(world, action, goals):
