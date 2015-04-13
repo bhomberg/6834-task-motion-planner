@@ -155,7 +155,7 @@ class PoseGenerator:
         # Move back pose
         poseGen4 = pose_gen()
         poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(yaw)
-        poseGen4.pose.position.y = (poseGen4.pose.position.x-poseGen3.pose.position.x) * math.tan(theta) + poseGen3.pose.position.x
+        poseGen4.pose.position.y = (poseGen4.pose.position.x-poseGen3.pose.position.x) * math.tan(yaw) + poseGen3.pose.position.x
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True
