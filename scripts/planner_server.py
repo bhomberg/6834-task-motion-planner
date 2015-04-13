@@ -27,14 +27,15 @@ class TaskPlannerServer(object):
             if line[0:4]=='step':
                 msg.error = False
                 actions = True
-                s = s + line[11:-1] + '\n'
+                s = s + line[11:-1]
             elif actions == True:
-                if line == '\n':
+                if line  == '\n':
                     actions = False
                 else:
-                    s = s + line[11:-1] + '\n'
+                    s = s + '\n' + line[11:-1]
         f.close()
         msg.plan = s
+        print "string: ", s
 
         return msg
 
@@ -45,6 +46,6 @@ class TaskPlannerServer(object):
         rospy.spin()
 
 if __name__ == "__main__":
-    task_planner_server = TaskPlannerServer("~/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "domain")
+    task_planner_server = TaskPlannerServer("~/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "~/indigo_ws/src/6834-task-motion-planner/domain")
     task_planner_server.run()
     
