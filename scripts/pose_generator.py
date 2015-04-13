@@ -25,15 +25,16 @@ class PoseGenerator:
     def generate(self, action, world):
         action = re.split(',', action[1:-1])
         objects = world.world.collision_objects
-        obj = self._search_for_object(action[1], objects)
-        height = obj.primitives[0].dimensions[0]
-        radius = obj.primitives[0].dimensions[1]
-
+        
         if action[0] == 'pickup':
+            obj = self._search_for_object(action[1], objects)
+            height = obj.primitives[0].dimensions[0]
+            radius = obj.primitives[0].dimensions[1]
             pose = obj.primitive_poses[0]
             return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
-            self.table = _search_for_object(action[-1], objects)
+            print action[-1]
+            self.table = self._search_for_object(action[-1], objects)
             self.table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
             self.pickup(table,height,radius)
         else:

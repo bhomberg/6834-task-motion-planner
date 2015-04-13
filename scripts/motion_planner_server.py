@@ -29,7 +29,12 @@ class MotionPlannerServer(object):
         action = re.split(',', req.parameters.action[1:-1])
         pose_goals = req.parameters.goals
     
+        # Add objects to planning scene
+        planning_scene = PlanningScene()
+        planning_scene.world = world_start_state
+        planning_scene.is_diff = True
         
+        self.planning_scene_pub.publish(planning_scene)
         
         #for i in range(len(world_start_state.collision_objects)):
         #    obj = world_start_state.collision_objects[i]
@@ -45,8 +50,8 @@ class MotionPlannerServer(object):
     
         print "============ Planning actoin ", action[0]
         for i in range(len(pose_goals)):
-            print "============ Move group ", action[1]
-            group = moveit_commander.MoveGroupCommander(action[1])
+            print "============ Move group ", action[2]
+            group = moveit_commander.MoveGroupCommander(action[2])
         
             group.set_planning_time(self.max_planning_time)
             group.set_start_state(curr_state)
@@ -90,19 +95,12 @@ class MotionPlannerServer(object):
                 res.success = False
                 print "============ Done"
                 return res   
-                
-        # Add objects to planning scene
-        planning_scene = PlanningScene()
-        planning_scene.world = world_start_state
-        planning_scene.is_diff = True
-        
-        self.planning_scene_pub.publish(planning_scene)
     
         # Set state of world after action completion
         end_state = world_state()
         end_state.robot = curr_state
         
-        obj_idx = self._search_for_object(action[2], world_start_state.collision_objects)
+        obj_idx = self._search_for_object(action[1], world_start_state.collision_objects)
         
         end_state.world = world_start_state
         if obj_idx != -1:
