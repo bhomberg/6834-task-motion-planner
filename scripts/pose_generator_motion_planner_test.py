@@ -23,9 +23,9 @@ def pickupTest(action, motion_server, poseGen):
     primitive.dimensions = [.1, .02]
     obj1.primitives.append(primitive)
     pose = Pose()
-    pose.position.x = 0.5
-    pose.position.y = 0
-    pose.position.z = 0
+    pose.position.x = 0.9
+    pose.position.y = -.15
+    pose.position.z = 0.25
     pose.orientation.w = 1
     obj1.primitive_poses.append(pose)
     state.world.collision_objects.append(obj1)
@@ -41,6 +41,17 @@ def pickupTest(action, motion_server, poseGen):
     msg.action = action
     msg.goals = poseGen.generate(action, state)
     
+    #goals = [pose_gen()]
+    #goals[0].pose.position.x = 0.6
+    #goals[0].pose.position.y = 0.1
+    #goals[0].pose.position.z = 0.4
+    #goals[0].pose.orientation.x = 0
+    #goals[0].pose.orientation.y = 0
+    #goals[0].pose.orientation.z = 0.7071
+    #goals[0].pose.orientation.w = 0.7071
+    #goals[0].gripperOpen = True
+    #msg.goals = goals
+    
     print msg.goals
     
     resp = motion_server(msg)
@@ -54,5 +65,7 @@ if __name__ == "__main__":
     
     poseGen = PoseGenerator()
     
-    for i in range(10):
+    #(pickup,obj1,left_arm,pose1,pose2)'
+    for i in range(1):
         pickupTest('(pickup,left_arm,obj1)', motion_server, poseGen)
+        
