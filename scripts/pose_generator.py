@@ -67,15 +67,15 @@ class PoseGenerator:
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
         yaw = -math.atan2(obj_pose.position.y-pose1.position.y, (obj_pose.position.x-(pose1.position.x-self.GRIPPER_OFFSET)))
-        pose1.orientation = self._rpy_to_orientation(math.pi/2,0,yaw)
+        pose1.orientation = self._rpy_to_orientation(math.pi/2.0,0,yaw)
         poseGen1.gripperOpen = True
 
         # Pre-grasp: A pose s.t. the open gripper is touching the cylinder
         poseGen2 = pose_gen()
         pose2 = poseGen2.pose
         # x,y pose s.t. gripper moves towards the cylinder and touches it
-        pose2.position.x = radius / r * (pose1.position.x - 15*self.GRIPPER_OFFSET - obj_pose.position.x) + obj_pose.position.x
-        pose2.position.y = radius / r * (pose1.position.y - obj_pose.position.y) + obj_pose.position.y
+        pose2.position.x = (radius / (1.0*r)) * (pose1.position.x - 15*self.GRIPPER_OFFSET - obj_pose.position.x) + obj_pose.position.x
+        pose2.position.y = (radius / (1.0*r)) * (pose1.position.y - obj_pose.position.y) + obj_pose.position.y
         pose2.position.z = z
         pose2.orientation = pose1.orientation
         poseGen2.gripperOpen = True
@@ -100,7 +100,7 @@ class PoseGenerator:
         pose5 = poseGen5.pose
         # x,y = 0,0
         pose5.position.z = CLEARANCE_HEIGHT
-        pose5.orientation = self._rpy_to_orientation(math.pi/2,0,0)
+        pose5.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen5.gripperOpen = False
 
         # An array of pose_gen messages
@@ -115,11 +115,11 @@ class PoseGenerator:
     #           poses = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,table,height,radius):
         table_center = table.primitive_poses[0].position
-        table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2
-        x1 = table_center.x - table.primitives[0].dimensions[0]/2
-        y1 = table_center.y - table.primitives[0].dimensions[1]/2
-        x2 = table_center.x + table.primitives[0].dimensions[0]/2
-        y2 = table_center.y + table.primitives[0].dimensions[1]/2
+        table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
+        x1 = table_center.x - table.primitives[0].dimensions[0]/2.0
+        y1 = table_center.y - table.primitives[0].dimensions[1]/2.0
+        x2 = table_center.x + table.primitives[0].dimensions[0]/2.0
+        y2 = table_center.y + table.primitives[0].dimensions[1]/2.0
 
         CLEARANCE_HEIGHT = table_height + 2*height
         r = radius + self.DIST_FROM_CYLINDER
@@ -135,8 +135,8 @@ class PoseGenerator:
         poseGen1.pose.position.y = random.uniform(y1,y2)
         print "(x,y): ", (poseGen1.pose.position.x, poseGen1.pose.position.y)
         poseGen1.pose.position.z = CLEARANCE_HEIGHT
-        yaw = random.uniform(-math.pi/4,math.pi/4)
-        poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2,0,yaw)
+        yaw = random.uniform(-math.pi/4.0,math.pi/4.0)
+        poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,yaw)
         poseGen1.gripperOpen = False
 
         # Set down pose
@@ -189,12 +189,12 @@ class PoseGenerator:
     # Calculates the quaternion orientation given the roll, pitch, and yaw
     def _rpy_to_orientation(self, roll, pitch, yaw):
         # bank, attitude, heading
-        c1 = math.cos(roll/2)
-        s1 = math.sin(roll/2)
-        c2 = math.cos(pitch/2)
-        s2 = math.sin(pitch/2)
-        c3 = math.cos(yaw/2)
-        s3 = math.sin(yaw/2)
+        c1 = math.cos(roll/2.0)
+        s1 = math.sin(roll/2.0)
+        c2 = math.cos(pitch/2.0)
+        s2 = math.sin(pitch/2.0)
+        c3 = math.cos(yaw/2.0)
+        s3 = math.sin(yaw/2.0)
 
         result = Quaternion()
         result.x = s1 * s2 * c3 + c1 * c2 * s3
@@ -207,5 +207,6 @@ if __name__ == "__main__":
     poseGen = PoseGenerator()
     # test case
     # yaw, roll, pitch
-    print poseGen._rpy_to_orientation(-math.pi/4,0,math.pi/2)
-    print poseGen._rpy_to_orientation(0,0,math.pi/4)
+    print poseGen._rpy_to_orientation(-math.pi/4.0,0,math.pi/2.0)
+    print poseGen._rpy_to_orientation(0,0,math.pi/4.0)
+    
