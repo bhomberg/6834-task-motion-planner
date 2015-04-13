@@ -14,6 +14,7 @@ from std_msgs.msg import String
 class MotionPlannerServer(object):
     def __init__(self, max_planning_time):
         self.max_planning_time = max_planning_time
+        self.planning_scene_pub = rospy.Publisher('planning_scene', PlanningScene)
         
     def get_motion_plan(self, req):
         print "============ Starting Moveit Commander"
@@ -28,13 +29,16 @@ class MotionPlannerServer(object):
         action = re.split(',', req.parameters.action[1:-1])
         pose_goals = req.parameters.goals
     
-        # Add objects to planning scene
+        
+        
         #for i in range(len(world_start_state.collision_objects)):
-            # Approximate object (know to be cylinder) as box
         #    obj = world_start_state.collision_objects[i]
+        #    pose = PoseStamped()
+        #    pose.header = obj.header
+        #    pose.pose = obj.primitive_poses[0]
         #    h = obj.primitives[0].dimensions[0]
         #    r = obj.primitives[0].dimensions[1]
-        #    scene.add_box(obj.id, obj.primitive_poses[0], (r, r, h))
+        #    scene.add_box(obj.id, pose, (r, r, h))
         
         curr_state = robot_start_state
         res = motion_plan()
@@ -74,8 +78,11 @@ class MotionPlannerServer(object):
                 curr_state.joint_state.velocity = plan.joint_trajectory.points[-1].velocities
                 curr_state.joint_state.effort = plan.joint_trajectory.points[-1].effort
                 
-                rospy.sleep(5.0)
-            
+                rospy.sleep(2.0)
+                
+                group.go(wait=True)
+                #return
+                
             else:
                 print "============ Component ", i, " of motion plan failed"
                 res.state = req.parameters.state
@@ -83,6 +90,13 @@ class MotionPlannerServer(object):
                 res.success = False
                 print "============ Done"
                 return res   
+                
+        # Add objects to planning scene
+        planning_scene = PlanningScene()
+        planning_scene.world = world_start_state
+        planning_scene.is_diff = True
+        
+        self.planning_scene_pub.publish(planning_scene)
     
         # Set state of world after action completion
         end_state = world_state()

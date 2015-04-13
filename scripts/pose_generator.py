@@ -15,9 +15,10 @@ import re
 # The motion planner verifies that the set of candidate poses is valid 
 # (not obstructed by objects & objects are reachable) 
 class PoseGenerator:
-    def __init__(self, table_height=0.25):
+    def __init__(self, table_height=0.25, GRIPPER_OFFSET = .015):
         # the height of the table in world coordinates
         self.table_height = table_height
+        self.GRIPPER_OFFSET = GRIPPER_OFFSET
 
     # Generates a set of gripper poses given an action and a world description
     # action = a string containing (action, arm, object_name)
@@ -48,7 +49,7 @@ class PoseGenerator:
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
         CLEARANCE_HEIGHT = .15
-        DIST_FROM_CYLINDER = .05
+        DIST_FROM_CYLINDER = .1
         
         # radius of circle around the cylinder where the gripper origin will lie
         r = radius + DIST_FROM_CYLINDER
@@ -67,8 +68,7 @@ class PoseGenerator:
         pose1.position.x = obj_pose.position.x - math.sqrt(r**2 - (pose1.position.y - obj_pose.position.y)**2)
         pose1.position.z = z
         # yaw position s.t. the gripper points towards the cylinder
-        # yaw = math.atan2(pose1.position.y-obj_pose.position.y, pose1.position.x-obj_pose.position.x)
-        yaw = 0
+        yaw = -math.atan2(obj_pose.position.y-pose1.position.y, (obj_pose.position.x-(pose1.position.x-self.GRIPPER_OFFSET)))
         pose1.orientation = self._rpy_to_orientation(math.pi/2,0,yaw)
         poseGen1.gripperOpen = True
 
@@ -76,7 +76,7 @@ class PoseGenerator:
         poseGen2 = pose_gen()
         pose2 = poseGen2.pose
         # x,y pose s.t. gripper moves towards the cylinder and touches it
-        pose2.position.x = radius / r * (pose1.position.x - obj_pose.position.x) + obj_pose.position.x
+        pose2.position.x = radius / r * (pose1.position.x - 15*self.GRIPPER_OFFSET - obj_pose.position.x) + obj_pose.position.x
         pose2.position.y = radius / r * (pose1.position.y - obj_pose.position.y) + obj_pose.position.y
         pose2.position.z = z
         pose2.orientation = pose1.orientation
