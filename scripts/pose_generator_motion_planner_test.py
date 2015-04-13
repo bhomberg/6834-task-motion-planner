@@ -14,18 +14,35 @@ from sensor_msgs.msg import *
 def pickupTest(action, motion_server, poseGen):
     state = world_state()
     state.world = PlanningSceneWorld()
+    
+    surf1 = CollisionObject()
+    surf1.header = Header()
+    surf1.header.frame_id = '1'
+    surf1.id = 'surf1'
+    primitive = SolidPrimitive()
+    primitive.type = 1
+    primitive.dimensions = [1, 1, 0.05]
+    surf1.primitives.append(primitive)
+    pose = Pose()
+    pose.position.x = 1
+    pose.position.y = 0
+    pose.position.z = 0
+    pose.orientation.w = 1
+    surf1.primitive_poses.append(pose)
+    state.world.collision_objects.append(surf1)
+    
     obj1 = CollisionObject()
     obj1.header = Header()
     obj1.header.frame_id = '1'
     obj1.id = 'obj1'
     primitive = SolidPrimitive()
     primitive.type = 3
-    primitive.dimensions = [.1, .02]
+    primitive.dimensions = [.25, .02]
     obj1.primitives.append(primitive)
     pose = Pose()
     pose.position.x = 0.9
     pose.position.y = -.15
-    pose.position.z = 0.25
+    pose.position.z = 0.16
     pose.orientation.w = 1
     obj1.primitive_poses.append(pose)
     state.world.collision_objects.append(obj1)
@@ -66,12 +83,12 @@ def putdownTest(action, motion_server, poseGen):
     surf1.id = 'surf1'
     primitive = SolidPrimitive()
     primitive.type = 1
-    primitive.dimensions = [1, 1, 0.2]
+    primitive.dimensions = [1, 1, 0.05]
     surf1.primitives.append(primitive)
     pose = Pose()
     pose.position.x = 1
     pose.position.y = 0
-    pose.position.z = 0.1
+    pose.position.z = 0
     pose.orientation.w = 1
     surf1.primitive_poses.append(pose)
     state.world.collision_objects.append(surf1)
@@ -82,12 +99,12 @@ def putdownTest(action, motion_server, poseGen):
     obj1.id = 'obj1'
     primitive = SolidPrimitive()
     primitive.type = 3
-    primitive.dimensions = [.1, .02]
+    primitive.dimensions = [.25, .02]
     obj1.primitives.append(primitive)
     pose = Pose()
     pose.position.x = -2
     pose.position.y = 0
-    pose.position.z = 0.25
+    pose.position.z = 0.16
     pose.orientation.w = 1
     obj1.primitive_poses.append(pose)
     state.world.collision_objects.append(obj1)
@@ -114,10 +131,10 @@ if __name__ == "__main__":
     poseGen = PoseGenerator()
     
     #(pickup,obj1,left_arm,pose1,pose2)
-    #for i in range(1):
-    #    pickupTest('(pickup,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
+    for i in range(1):
+        pickupTest('(pickup,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     #(putdown,obj1,left_arm,pose1,pose2,tloc)
-    for i in range(1):
-        putdownTest('(putdown,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+    #for i in range(10):
+    #    putdownTest('(putdown,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
         

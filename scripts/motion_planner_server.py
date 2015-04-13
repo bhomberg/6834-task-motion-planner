@@ -28,6 +28,9 @@ class MotionPlannerServer(object):
         robot_start_state = req.parameters.state.robot
         action = re.split(',', req.parameters.action[1:-1])
         pose_goals = req.parameters.goals
+        
+        # Set attach/detach point
+        attach_detach_idx = 2
     
         # Add objects to planning scene
         planning_scene = PlanningScene()
@@ -85,7 +88,13 @@ class MotionPlannerServer(object):
                 
                 rospy.sleep(2.0)
                 
-                #group.go(wait=True)
+                group.execute(plan)
+                
+                if action[0] == 'pickup' and i == attach_detach_idx:
+                    group.attach_object(action[1])
+                elif action[0] == 'putdown' and i == attach_detach_idx:
+                    pass
+                
                 #return
                 
             else:
@@ -127,6 +136,6 @@ class MotionPlannerServer(object):
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer(5.0)
+    motion_planner_server = MotionPlannerServer(10.0)
     motion_planner_server.run()
     

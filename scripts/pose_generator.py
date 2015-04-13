@@ -153,19 +153,19 @@ class PoseGenerator:
         poseGen3.gripperOpen = True
 
         # Move back pose
-        poseGen4 = pose_gen()
-        poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(math.pi/2.0 - yaw)
-        poseGen4.pose.position.y = poseGen3.pose.position.y + r * math.sin(math.pi/2.0 - yaw)
-        poseGen4.pose.position.z = poseGen3.pose.position.z
-        poseGen4.pose.orientation = poseGen3.pose.orientation
-        poseGen4.gripperOpen = True
+        #poseGen4 = pose_gen()
+        #poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(math.pi/2.0 - yaw)
+        #poseGen4.pose.position.y = poseGen3.pose.position.y - r * math.sin(math.pi/2.0 - yaw)
+        #poseGen4.pose.position.z = poseGen3.pose.position.z
+        #poseGen4.pose.orientation = poseGen3.pose.orientation
+        #poseGen4.gripperOpen = True
         
         # Move up (over the cylinders) pose
         poseGen5 = pose_gen()
-        poseGen5.pose.position.x = poseGen4.pose.position.x
-        poseGen5.pose.position.y = poseGen4.pose.position.y
+        poseGen5.pose.position.x = poseGen3.pose.position.x
+        poseGen5.pose.position.y = poseGen3.pose.position.y
         poseGen5.pose.position.z = CLEARANCE_HEIGHT
-        poseGen5.pose.orientation = poseGen4.pose.orientation
+        poseGen5.pose.orientation = poseGen3.pose.orientation
         poseGen5.gripperOpen = True
             
         # Move out of the way to the standard position
@@ -175,7 +175,8 @@ class PoseGenerator:
         poseGen6.gripperOpen = True
 
         # Return array of custom pose messages
-        return [poseGen1,poseGen2,poseGen3,poseGen4,poseGen5,poseGen6]
+        #return [poseGen1,poseGen2,poseGen3,poseGen4,poseGen5,poseGen6]
+        return [poseGen1,poseGen2,poseGen3,poseGen5,poseGen6]
 
     # Gets an objects index from a list given the object's name
     # obj_name = object's name
