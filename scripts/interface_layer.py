@@ -174,16 +174,54 @@ class SpecificInterfaceLayer(InterfaceLayer):
 class tryRefineClass:
     def __init__(self):
         self.world = None
-        self.state = None
-        self.index = None
+        #self.state = None
+        self.hlplan = None
+        self.actionNum = None
         self.traj = None
-        self.called = False
-        self.old_hlplan = None
-        self.pose1 = None
+        #self.called = False
+        #self.old_hlplan = None
+        self.targetPose = [] # TODO: figure out exactly how we want to initialize this if this doesn't work
         self.axn = None
         self.nextaxn = None
         self.poseGen = PoseGenerator()
 
+    def try_refine_init(initialPose, hlplan, step, trajprefix, world, mode):
+        self.actionNum = step - 1
+        self.traj = trajprefix
+        # initialize pose generators, if that winds up being a thing we do
+        self.targetPose = [0]*len(hlplan)
+        self.targetPose[actionNum] = initialPose
+        self.hlplan = hlplan
+        self.world = [0]*len(hlplan)
+        self.world[actionNum] = world
+        return try_refine_part_1()
+        
+    def try_refine_part_1():
+        while self.actionNum >= step - 1 and len(hlplan) >= self.actionNum:
+            self.axn = (hlplan[self.actionNum], self.actionNum)
+            self.nextaxn = (hlplan[self.actionNum+1], self.actionNum+1)
+            if self.targetPose[self.nextaxn[1]] != 0:
+                # backtrack
+                self.targetPose[self.nextaxn[1]] = self.poseGen(self.nextaxn[0]).resetAndGetFirst()
+                self.targetPose[self.axn[1]] = self.poseGen(self.axn[0]).getNext()
+                self.actionNum--
+                self.traj = traj[0:self.axn[1]] #cut off the motion plan corresponding to that action
+            else:
+                (new_world, motion_plan, success) = get_motion_plan(self.world[self.actionNum], self.axn, self.targetPose[self.nextaxn[1]])
+                if success:
+                    self.traj.append(motion_plan)
+                    self.actionNum++
+            if mode == 'partialTraj':
+                return (self.targetPose[self.axn[1]], self.traj, self.actionNum+1, MPErrs(self.targetPose[self.axn[0]], self.targetPose[self.nextaxn[1]], self.state, self.world), self.state, self.world)
+            return try_refine_part_2()
+                
+
+    def try_refine_part_2():
+        self.targetPost[self.nextaxn[1]] = self.poseGen(self.nextaxn[0]).getNext()
+        if self.actionNum == len(hlplan)+1:
+            return self.traj
+        return try_refine_part_1()
+        
     def try_refine(initialPose, state, world, hlplan, step, trajprefix, mode='errorFree'):
         # if this is the first time it's been called or if there's a new high level plan, update variables!
         if self.called == False or self.old_hlplan != hlplan:
@@ -197,7 +235,7 @@ class tryRefineClass:
             # start by figuring out our actions and poses, use the pose generators to do that
             self.axn = hlplan[index]
             self.nextaxn = hlplan[index+1]
-            self.pose2 = self.poseGen(self.nextaxn).next() # TODO: make this match what Veronica's pose generators actually do, make sure her pose generators return none if not defined?
+            #self.pose2 = self.poseGen(self.nextaxn).next() # TODO: make this match what Veronica's pose generators actually do, make sure her pose generators return none if not defined?
             if self.pose2 == None: # pose 2 is not defined
                 self.poseGen(self.nextaxn).reset() #TODO: make veronica's pose generators match this
                 self.pose1 = self.poseGen(self.axn).next()
@@ -212,10 +250,9 @@ class tryRefineClass:
                     self.traj = self.traj.append(motionPlan)
                     self.index++
                     self.pose1 = self.pose2
-                else if mode == 'partialTraj':
-                    # if it fails, then we need to find out why it failed -- what's blocking?
-                    # I feel like we need to actually do the backtracking search on all of the poses before deciding that we failed, but maybe I'm missing something?  we should look carefully through this tomorrow
-                    return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
+            if mode == 'partialTraj':
+                # if it fails, then we need to find out why it failed -- what's blocking?
+                return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
 
 if __name__ == "__main__":
     rospy.wait_for_service('task_server_service')
