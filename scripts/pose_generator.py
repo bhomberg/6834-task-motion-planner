@@ -33,7 +33,6 @@ class PoseGenerator:
             radius = obj.primitives[0].dimensions[1]
             return self.pickup(pose,height,radius)
         elif action[0] == 'putdown':
-            print action[-1]
             table = self._search_for_object(action[-1], objects)
             return self.putdown(table,height)
         else:
@@ -128,8 +127,13 @@ class PoseGenerator:
         # Sample an (x,y) point inside the given area
         # Generate a pose hovering over the point
         poseGen1 = pose_gen()
+        print "x1: ", x1
+        print "x2: ", x2
+        print "y1: ", y1
+        print "y2: ", y2
         poseGen1.pose.position.x = random.uniform(x1,x2)
         poseGen1.pose.position.y = random.uniform(y1,y2)
+        print "(x,y): ", (poseGen1.pose.position.x, poseGen1.pose.position.y)
         poseGen1.pose.position.z = CLEARANCE_HEIGHT
         yaw = random.uniform(-math.pi/4,math.pi/4)
         poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2,0,yaw)

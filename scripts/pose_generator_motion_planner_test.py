@@ -59,18 +59,35 @@ def pickupTest(action, motion_server, poseGen):
 def putdownTest(action, motion_server, poseGen):
     state = world_state()
     state.world = PlanningSceneWorld()
+    
+    surf1 = CollisionObject()
+    surf1.header = Header()
+    surf1.header.frame_id = '1'
+    surf1.id = 'surf1'
+    primitive = SolidPrimitive()
+    primitive.type = 1
+    primitive.dimensions = [1, 1, 0.2]
+    surf1.primitives.append(primitive)
+    pose = Pose()
+    pose.position.x = 1
+    pose.position.y = 0
+    pose.position.z = 0.1
+    pose.orientation.w = 1
+    surf1.primitive_poses.append(pose)
+    state.world.collision_objects.append(surf1)
+    
     obj1 = CollisionObject()
     obj1.header = Header()
     obj1.header.frame_id = '1'
-    obj1.id = 'surf1'
+    obj1.id = 'obj1'
     primitive = SolidPrimitive()
-    primitive.type = 1
-    primitive.dimensions = [0.5, 0.5, 0.2]
+    primitive.type = 3
+    primitive.dimensions = [.1, .02]
     obj1.primitives.append(primitive)
     pose = Pose()
-    pose.position.x = 0
+    pose.position.x = -2
     pose.position.y = 0
-    pose.position.z = 0.1
+    pose.position.z = 0.25
     pose.orientation.w = 1
     obj1.primitive_poses.append(pose)
     state.world.collision_objects.append(obj1)
@@ -86,7 +103,7 @@ def putdownTest(action, motion_server, poseGen):
     msg.action = action
     msg.goals = poseGen.generate(action, state)
     
-    print msg.goals
+    #print msg.goals
     
     resp = motion_server(msg)
     
@@ -101,6 +118,6 @@ if __name__ == "__main__":
     #    pickupTest('(pickup,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     #(putdown,obj1,left_arm,pose1,pose2,tloc)
-    for i in range(10):
+    for i in range(1):
         putdownTest('(putdown,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
         
