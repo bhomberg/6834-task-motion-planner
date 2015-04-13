@@ -17,6 +17,7 @@ import re
 class PoseGenerator:
     def __init__(self, GRIPPER_OFFSET = .015):
         # the height of the table in world coordinates
+        self.DIST_FROM_CYLINDER = .1
         self.GRIPPER_OFFSET = GRIPPER_OFFSET
 
     # Generates a set of gripper poses given an action and a world description
@@ -47,10 +48,9 @@ class PoseGenerator:
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
         CLEARANCE_HEIGHT = obj_pose.position.z + height
-        DIST_FROM_CYLINDER = .1
         
         # radius of circle around the cylinder where the gripper origin will lie
-        r = radius + DIST_FROM_CYLINDER
+        r = radius + self.DIST_FROM_CYLINDER
         # height of gripper when grasping cylinder
         z =  obj_pose.position.z
 
@@ -122,7 +122,7 @@ class PoseGenerator:
         y2 = table_center.y + table.primitives[0].dimensions[1]/2
 
         CLEARANCE_HEIGHT = table_height + 2*height
-        r = radius .05
+        r = radius + self.DIST_FROM_CYLINDER
 
         # Sample an (x,y) point inside the given area
         # Generate a pose hovering over the point
@@ -154,8 +154,8 @@ class PoseGenerator:
 
         # Move back pose
         poseGen4 = pose_gen()
-        poseGen4.pose.position.x = r / radius * (poseGen3.pose.position.x - 15*self.GRIPPER_OFFSET - obj_pose.position.x) + obj_pose.position.x
-        poseGen4.pose.position.y = r / radius * (poseGen3.pose.position.y - obj_pose.position.y) + obj_pose.position.y
+        poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(yaw)
+        poseGen4.pose.position.y = (poseGen4.pose.position.x-poseGen3.pose.position.x) * math.tan(theta) + poseGen3.pose.position.x
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True
