@@ -13,6 +13,14 @@ motion_server = None
 # TODO: if necessary, add in random seed for pose generators later
 
 class InterfaceLayer(object):
+    # This class is NOT a complete class.  Several functions must be implemented in order
+    # to work with your specific motion planner and your specific task planner.  In particular,
+    # the callTaskPlanner function must be implemented to take inputs in the appropriate format
+    # and return a high level plan in the correct format.  Similarly, get_motion_plan must be
+    # implemented to do the same with the motion planner.  Finally, stateUpdate must be 
+    # implemented to correctly handle updating the state based on errors identified via the
+    # interface layer.
+    
     def __init__(self, ):
         pass
         
@@ -60,6 +68,41 @@ class InterfaceLayer(object):
             partialTraj = None
             pose1 = initialPose
 
+    def MPErrs(pose1, pose2, state, world, action):
+        obstacles = world.world.collision_objects
+	a_whole_new_world = World()
+	a_whole_new_world.robot = world.robot
+	a_whole_new_world.world = world.world
+	
+	for i in range(len(obstacles)):
+            if i == 0:
+                (~, ~, success) = get_motion_plan(world, action, pose2)
+                if success:
+                    return []
+            else:
+                for l in itertools.combinations(range(len(obstacles)), i):
+                    updated_obstacles = obstacles
+                    for item in l:
+                        updated_obstacles.pop(item)
+                    a_whole_new_world.world.collision_objects = updated_obstacles
+                    (~, ~, success) = get_motion_plan(a_whole_new_world, action, pose2)
+                    if success:
+                        return [obstacles[i].id for i in l]
+        print "ERROR!"
+
+    def callTaskPlanner(state, world):
+        # want to return: (success, state)
+        pass
+
+    def stateUpdate(state, world, failCause, failStep, hlplan):
+        # want to return: state
+        pass
+
+    def get_motion_plan(world, action, goals):
+        # want to return: (world, motion plan, success)
+        pass
+
+class SpecificInterfaceLayer(InterfaceLayer):
 
     def callTaskPlanner(state, world):
         # plan is an array of tuples where the first thing is the action and the rest are objects it acts on
@@ -128,29 +171,6 @@ class InterfaceLayer(object):
             print "Service call failed: %s"%e
             return (world, [], False)
 
-    def MPErrs(pose1, pose2, state, world, action):
-        obstacles = world.world.collision_objects
-	a_whole_new_world = World()
-	a_whole_new_world.robot = world.robot
-	a_whole_new_world.world = world.world
-	
-	for i in range(len(obstacles)):
-            if i == 0:
-                (~, ~, success) = get_motion_plan(world, action, pose2)
-                if success:
-                    return []
-            else:
-                for l in itertools.combinations(range(len(obstacles)), i):
-                    updated_obstacles = obstacles
-                    for item in l:
-                        updated_obstacles.pop(item)
-                    a_whole_new_world.world.collision_objects = updated_obstacles
-                    (~, ~, success) = get_motion_plan(a_whole_new_world, action, pose2)
-                    if success:
-                        return [obstacles[i].id for i in l]
-        print "ERROR!"
-
-
 class tryRefineClass:
     def __init__(self):
         self.world = None
@@ -205,5 +225,6 @@ if __name__ == "__main__":
     state = None # TODO: acquire state message and put in proper format
     initialPose = None # TODO: acquire initial pose and put in proper format 
     world = None #TODO: acquire world state 
-    run_interface_layer(state, initialPose, world)
+    interface = SpecificInterfaceLayer()
+    print interface.run_interface_layer(state, initialPose, world)
  
