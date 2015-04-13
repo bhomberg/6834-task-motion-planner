@@ -8,6 +8,7 @@ from moveit_msgs.msg import *
 from geometry_msgs.msg import *
 
 MAX_TRAJ_COUNT = 999
+MAX_ITERS = 999
 task_server = None
 motion_server = None
 # TODO: if necessary, add in random seed for pose generators later
@@ -19,7 +20,8 @@ class InterfaceLayer(object):
     # and return a high level plan in the correct format.  Similarly, get_motion_plan must be
     # implemented to do the same with the motion planner.  Finally, stateUpdate must be 
     # implemented to correctly handle updating the state based on errors identified via the
-    # interface layer.
+    # interface layer.  The class SpecificInterfaceLayer in this file properly extends
+    # InterfaceLayer and implements the appropriate methods.
     
     def __init__(self, ):
         pass
@@ -32,16 +34,21 @@ class InterfaceLayer(object):
         hlplan = None
         partialTraj = None
         pose1 = None
+        num_iters = 0
         # create our tryRefine object, since that function needs to maintain its local variables
         sub = tryRefineClass()
         
         if hlplan == None: # ie, we haven't started planning yet
-            hlplan = callTaskPlanner(state) # find a high level task plan
+            (error, hlplan) = callTaskPlanner(state) # find a high level task plan
             step = 1
             partialTraj = None
             pose1 = initialPose
-        # now that we have a high level plan, we try to actually turn it into motions in the real world
-        while(resource limit not reached):
+            if error:
+                return "Error! Cannot find any high level plan. :("
+            print "HLPlan: ", hlplan
+            # now that we have a high level plan, we try to actually turn it into motions in the real world
+        while(num_iters < MAX_ITERS):
+            num_iters++
             # try to refine our plan, allowing for no errors
             (success, refinement) = sub.try_refine(pose1, state, world, hlplan, step, partialTraj, mode='errorFree')
             if success: # if it worked, we're done!
@@ -51,12 +58,13 @@ class InterfaceLayer(object):
             while not success and trajCount < MAX_TRAJ_COUNT:
                 # find a partial trajectory -- how far along the high level task plan can we find motion plans for?
                 (partialTraj, pose2, failStep, failCause, state, world) = sub.try_refine(pose1, state, world hlplan, step, partialTraj, mode='partialTraj')
+                print "Partial traj, step: ", failStep, ", failcause: ", failCause, ", traj: ", partialTraj
                 # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
-                (state, world) = stateUpdate(state, world, failCause, failStep, hlplan)
+                (state) = stateUpdate(state, failCause, failStep, hlplan)
                 # now, call the task planner again on the new state
-                (success, newPlan) = callTaskPlanner(state)
-                if success: # it may not be possible to find a new plan; if it is, update our high level plan 
-                    # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization (I think -- we should double check this)
+                (error, newPlan) = callTaskPlanner(state)
+                if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
+                    # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization
                     hlplan = hlplan[0:failStep] + newPlan
                     pose1 = pose2
                     step = failStep
@@ -143,7 +151,7 @@ class SpecificInterfaceLayer(InterfaceLayer):
 
         return (resp.plan.error, plan)
 
-    def stateUpdate(state, world, failCause, failStep, hlplan):
+    def stateUpdate(state, failCause, failStep, hlplan):
         # stateUpdate will need to be updated based on the specific problem
         action = hlplan[failStep]
         if action[0] == pickup:
@@ -174,12 +182,13 @@ class SpecificInterfaceLayer(InterfaceLayer):
 class tryRefineClass:
     def __init__(self):
         self.world = None
-        #self.state = None
+        self.state = None
         self.hlplan = None
+        self.index = None
         self.actionNum = None
         self.traj = None
-        #self.called = False
-        #self.old_hlplan = None
+        self.called = False
+        self.old_hlplan = None
         self.targetPose = [] # TODO: figure out exactly how we want to initialize this if this doesn't work
         self.axn = None
         self.nextaxn = None
@@ -235,31 +244,42 @@ class tryRefineClass:
             # start by figuring out our actions and poses, use the pose generators to do that
             self.axn = hlplan[index]
             self.nextaxn = hlplan[index+1]
-            #self.pose2 = self.poseGen(self.nextaxn).next() # TODO: make this match what Veronica's pose generators actually do, make sure her pose generators return none if not defined?
-            if self.pose2 == None: # pose 2 is not defined
-                self.poseGen(self.nextaxn).reset() #TODO: make veronica's pose generators match this
+            self.pose2 = self.poseGen(self.nextaxn).next()
+            if self.pose2 == None: # pose 2 is already defined, so we should backtrack if in Error free mode, otherwise return that we've failed
+                if mode == 'partialTraj': # we failed -- don't bother backtracking since we're just looking for a partial trajectory, so let's figure out what's blocking it -- BIANCA's MODIFICATION
+                    return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
+                self.poseGen(self.nextaxn).reset()
                 self.pose1 = self.poseGen(self.axn).next()
                 index--
-                self.traj = traj.delSuffixFor(self.axn) # TODO: define this (trajectory object?)
+                self.traj = traj[0:self.axn[1]] #cut off the motion plan corresponding to that action
+                #self.traj = traj.delSuffixFor(self.axn)
             else:
                 # try and find a motion plan!
-                (succeeds, state, motionPlan) = get_motion_plan(self.pose1, self.pose2)
-                if succeeds: # if it succeeds, yay, we're done, keep going
+                (world, motionPlan, succeeds) = get_motion_plan(self.pose1, self.pose2)
+                if succeeds: # if it succeeds, either we're done or we can keep going keep going
                     if self.index == len(hlplan)+1:
-                        return traj
+                        return (self.pose1, self.traj, self.index+1, [], self.state, self.world)
                     self.traj = self.traj.append(motionPlan)
                     self.index++
                     self.pose1 = self.pose2
-            if mode == 'partialTraj':
-                # if it fails, then we need to find out why it failed -- what's blocking?
-                return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
-
+                #if mode == 'partialTraj':
+                #    # if it fails, then we need to find out why it failed -- what's blocking?
+                #    return (self.pose1, self.traj, self.index+1, MPErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
+            
 if __name__ == "__main__":
     rospy.wait_for_service('task_server_service')
     task_server = rospy.ServiceProxy('task_server_service', task_service)
     rospy.wait_for_service('motion_server_service')
     motion_server = rospy.ServiceProxy('motion_server_service', motion_service)
-    state = None # TODO: acquire state message and put in proper format
+    state = []
+    state[0] = ['block1 - physob', 'block2 - physob', 'leftarm - gripper', 'gp_block1 - pose', 
+                'gp_block2 - pose', 'pdp_block1_S - pose', 'pdp_block2_S - pose', 'initpose - pose',
+                'S - location']
+    state[1] = [('RobotAt', 'initpose'), ('Empty', 'leftarm'), ('IsGPFG', 'gp_block1', 'block1'),
+                ('IsGPFG', 'gp_block2', 'block2'), ('IsGPFPD', 'pdp_block1_S', 'block1', 'S'),
+                ('IsGPFPD', 'pdp_block2_S', 'block2', 'S'), ('IsLFPD', 'S', 'block1'),
+                ('IsLFPD', 'S', 'block2')]
+    state[2] = [('At', 'block1', 'S')]
     initialPose = None # TODO: acquire initial pose and put in proper format 
     world = None #TODO: acquire world state 
     interface = SpecificInterfaceLayer()
