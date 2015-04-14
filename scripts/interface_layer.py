@@ -8,6 +8,7 @@ from moveit_msgs.msg import *
 from geometry_msgs.msg import *
 import copy
 import itertools
+from random import shuffle
 
 MAX_TRAJ_COUNT = 3
 MAX_ITERS = 1
@@ -379,19 +380,20 @@ class MockPoseGenerator:
 
     def next(self, action):
         if action in self.state:
-            self.state[action]+=1
-            if self.state[action] < 10:
-                return 'mock'
+            # if there are letters left, return it
+            if len(self.state[action]) > 0:
+                return self.state[action].pop()
             else:
                 return None
         else:
-            self.state[action] = 0
-            return 'mock'
+            # generate a random order & return a letter
+            self.state[action] = ['A','B','C','D','E','F','G','H','I','J']
+            shuffle(self.state[action])
+            return self.state[action].pop()
 
     def reset(self, action):
         if action in self.state:
-            self.state[action] = 0
-
+            self.state[action] = []
     def resetAll(self):
         self.state = dict()
             
