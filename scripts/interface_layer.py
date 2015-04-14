@@ -8,6 +8,7 @@ from moveit_msgs.msg import *
 from geometry_msgs.msg import *
 import copy
 import itertools
+from random import shuffle
 
 MAX_TRAJ_COUNT = 9
 MAX_ITERS = 9
