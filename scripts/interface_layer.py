@@ -196,12 +196,19 @@ class SpecificInterfaceLayer(InterfaceLayer):
                     t = ('PDOBSTRUCTS', action[1], obj, 'S') # MOCK
                     if t in state[1]:
                         state[1].remove(t)
+                for loc in world.locations(): # TODO: fix this based on Alex's structure
+                    t = ('AT', action[1], loc)
+                    if t in state[1]:
+                        state[1].remove(t)
             if action[0] == 'PUTDOWN':
                 state[1].remove( ('IN', action[1], action[2]) )
                 state[1].append( ('NOT', 'IN', action[1], action[2]) )
                 state[1].append( ('EMPTY', action[2]) )
                 state[1].remove( ('NOT', 'EMPTY', action[2]) )
                 state[1].append( ('AT', action[1], action[5]) )
+                t = ('NOT', 'AT', action[1], action[5])
+                if t in state[1]:
+                    state[1].remove(t)
                 state[1].remove( ('ROBOTAT', action[3]) )
                 state[1].append( ('ROBOTAT', action[4]) )
 
@@ -395,16 +402,24 @@ if __name__ == "__main__":
     task_server = rospy.ServiceProxy('task_server_service', task_service)
     #rospy.wait_for_service('motion_server_service')
     #motion_server = rospy.ServiceProxy('motion_server_service', motion_service)
-    state = []
-    state.append(['BLOCK1 - physob', 'BLOCK2 - physob', 'LEFTARM - gripper', 'GP_BLOCK1 - pose', 
-                'GP_BLOCK2 - pose', 'PDP_BLOCK1_S - pose', 'PDP_BLOCK2_S - pose', 'INITPOSE - pose',
-                'S - location'])
-    state.append([('ROBOTAT', 'INITPOSE'), ('EMPTY', 'LEFTARM'), ('ISGPFG', 'GP_BLOCK1', 'BLOCK1'),
-                ('ISGPFG', 'GP_BLOCK2', 'BLOCK2'), ('ISGPFPD', 'PDP_BLOCK1_S', 'BLOCK1', 'S'),
-                ('ISGPFPD', 'PDP_BLOCK2_S', 'BLOCK2', 'S'), ('ISLFPD', 'S', 'BLOCK1'),
-                ('ISLFPD', 'S', 'BLOCK2')])
-    state.append([('AT', 'BLOCK1', 'S')])
-    initialPose = 'INITPOSE'
+    # ASSUME WE ARE GIVEN THE INPUT TO PARSE AS A STRING CALLED init_state_string
+    state = [[]]*3
+    l = init_state_string.split('\n')
+    state[0] = l[0].split(',')
+    k = l[1].split(',')
+    state[1] = [i.split(' ') for i in k]
+    k = l[2].split(',')
+    state[2] = [i.split(' ') for i in k]
+    initialPose = l[3]
+    #state.append(['BLOCK1 - physob', 'BLOCK2 - physob', 'LEFTARM - gripper', 'GP_BLOCK1 - pose', 
+    #            'GP_BLOCK2 - pose', 'PDP_BLOCK1_S - pose', 'PDP_BLOCK2_S - pose', 'INITPOSE - pose',
+    #            'S - location'])
+    #state.append([('ROBOTAT', 'INITPOSE'), ('EMPTY', 'LEFTARM'), ('ISGPFG', 'GP_BLOCK1', 'BLOCK1'),
+    #            ('ISGPFG', 'GP_BLOCK2', 'BLOCK2'), ('ISGPFPD', 'PDP_BLOCK1_S', 'BLOCK1', 'S'),
+    #            ('ISGPFPD', 'PDP_BLOCK2_S', 'BLOCK2', 'S'), ('ISLFPD', 'S', 'BLOCK1'),
+    #            ('ISLFPD', 'S', 'BLOCK2')])
+    #state.append([('AT', 'BLOCK1', 'S')])
+    #initialPose = 'INITPOSE'
     world = {'BLOCK1': 'I', 'BLOCK2': 'I'}
     interface = SpecificInterfaceLayer()
     print "about to send to go"

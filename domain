@@ -30,7 +30,9 @@
 	     	     	  (not (Empty ?gripper))
 			  (forall (?obj2 - physob ?tloc - location)
 			  	  (and (not (Obstructs ?obj ?obj2))
-			       	       (not (PDObstructs ?obj ?obj2 ?tloc))))))
+			       	       (not (PDObstructs ?obj ?obj2 ?tloc))))
+		          (forall (?tloc - location)
+			  	  (and (not (At ?obj ?tloc))))))
 		   
   (:action putdown
 	     :parameters (?obj - physob ?gripper - gripper ?pose1 - pose ?pose2 - pose ?tloc - location)
