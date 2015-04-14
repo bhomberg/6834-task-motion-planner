@@ -35,7 +35,7 @@ class TaskPlannerServer(object):
                     s = s + '\n' + line[11:-1]
         f.close()
         msg.plan = s
-        print "string: ", s
+        #print "string: ", s
 
         return msg
 

@@ -9,15 +9,15 @@ from geometry_msgs.msg import *
 import copy
 import itertools
 
-MAX_TRAJ_COUNT = 9
-MAX_ITERS = 9
+MAX_TRAJ_COUNT = 3
+MAX_ITERS = 1
 task_server = None
 motion_server = None
 # TODO: if necessary, add in random seed for pose generators later
 
 class InterfaceLayer(object):
     # This class is NOT a complete class.  Several functions must be implemented in order
-    # to work with your specific motion planner and your specific task planner.  In particular,
+    # to work with your specific motion planner and your specific task planner.  In particular, 
     # the callTaskPlanner function must be implemented to take inputs in the appropriate format
     # and return a high level plan in the correct format.  Similarly, get_motion_plan must be
     # implemented to do the same with the motion planner.  Finally, stateUpdate must be 
@@ -44,7 +44,7 @@ class InterfaceLayer(object):
         
         if hlplan == None: # ie, we haven't started planning yet
             (error, hlplan) = self.callTaskPlanner(state) # find a high level task plan
-            step = 1
+            step = 0
             partialTraj = []
             pose1 = initialPose
             if error:
@@ -52,22 +52,27 @@ class InterfaceLayer(object):
             print "HLPlan: ", hlplan
             # now that we have a high level plan, we try to actually turn it into motions in the real world
         while(num_iters < MAX_ITERS):
+            print "HIGHEST LEVEL ALG 1 ITERATION: ", num_iters
             num_iters+=1
             # try to refine our plan, allowing for no errors
-            (success, traj, t1, t2, t3, t4, t5) = sub.try_refine(pose1, state, world, hlplan, step, partialTraj, 'errorFree')
-            print "blah"
+            (success, t6, traj, t1, t2, t3, t4) = sub.try_refine(pose1, state, world, hlplan, step, partialTraj, 'errorFree')
+            #print "blaH
+            print traj
             if success: # if it worked, we're done!
                 return traj
             trajCount = 0
             # if it didn't work, we need to start piece by piece
             while not success and trajCount < MAX_TRAJ_COUNT:
-                print "enter while"
+                print "INNER LEVEL ALG 1 ITERATION: ", trajCount
+                #print "enter while"
                 # find a partial trajectory -- how far along the high level task plan can we find motion plans for?
-                (success, partialTraj, pose2, failStep, failCause, state, world) = sub.try_refine(pose1, state, world, hlplan, step, partialTraj, mode='partialTraj')
-                print "bloop"
+                (success, pose2, partialTraj, failStep, failCause, state, world) = sub.try_refine(pose1, state, world, hlplan, step, partialTraj, mode='partialTraj')
+                #print "bloop"
                 print "Partial traj, step: ", failStep, ", failcause: ", failCause, ", traj: ", partialTraj
+                if success: # if we succeeded, return!
+                    return partialTraj
                 # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
-                (state) = self.stateUpdate(state, failCause, failStep, hlplan)
+                (state) = self.stateUpdate(state, failCause, failStep, hlplan, world)
                 # now, call the task planner again on the new state
                 (error, newPlan) = self.callTaskPlanner(state)
                 if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
@@ -75,6 +80,7 @@ class InterfaceLayer(object):
                     hlplan = hlplan[0:failStep] + newPlan
                     pose1 = pose2
                     step = failStep
+                    print "HLPlan: ", hlplan
                 trajCount+=1
             # if we spend a lot of time with no success, give up and start over
             if trajCount == MAX_TRAJ_COUNT:
@@ -105,13 +111,13 @@ class InterfaceLayer(object):
                     (a, b, success) = get_motion_plan(a_whole_new_world, action, pose2)
                     if success:
                         return [obstacles[i].id for i in l]
-        print "ERROR!"
+        print "ERROR IN MP ERRORS!"
 
     def callTaskPlanner(self, state):
         # want to return: (success, state)
         pass
 
-    def stateUpdate(self, state, world, failCause, failStep, hlplan):
+    def stateUpdate(self, state, failCause, failStep, hlplan, world):
         # want to return: state
         pass
 
@@ -158,21 +164,54 @@ class SpecificInterfaceLayer(InterfaceLayer):
 	l = resp.plan.plan.split('\n')
 	plan = [tuple(line.split(' ')) for line in l]
         plan[-1] = ('BUFFER DEFAULT ACTION', 'BLAH', 'BLAH', 'BLAH', 'BLAH')
-        print "PLAN: ", plan
+        #print "PLAN: ", plan
         return (resp.plan.error, plan)
 
-    def stateUpdate(self, state, failCause, failStep, hlplan):
+    def stateUpdate(self, state, failCause, failStep, hlplan, world):
         # stateUpdate will need to be updated based on the specific problem
+        # currently set up for mocks
+        for i in range(failStep):
+            action = hlplan[i]
+            if action[0] == 'PICKUP':
+                state[1].remove( ('EMPTY', action[2]) )
+                state[1].append( ('NOT', 'EMPTY', action[2]) )
+                state[1].remove( ('ROBOTAT', action[3]) )
+                state[1].append( ('ROBOTAT', action[4]) )
+                state[1].append( ('NOT', 'ROBOTAT', action[3]) )
+                state[1].append( ('IN', action[1], action[2]) )
+                for obj in world.keys():
+                    state[1].append( ('NOT', 'OBSTRUCTS', action[1], obj) )
+                    state[1].append( ('NOT', 'PDOBSTRUCTS', action[1], obj, 'S') ) # MOCK
+                    t = ('OBSTRUCTS', action[1], obj)
+                    if t in state[1]:
+                        state[1].remove(t)
+                    t = ('PDOBSTRUCTS', action[1], obj, 'S') # MOCK
+                    if t in state[1]:
+                        state[1].remove(t)
+            if action[0] == 'PUTDOWN':
+                state[1].remove( ('IN', action[1], action[2]) )
+                state[1].append( ('NOT', 'IN', action[1], action[2]) )
+                state[1].append( ('EMPTY', action[2]) )
+                state[1].remove( ('NOT', 'EMPTY', action[2]) )
+                state[1].append( ('AT', action[1], action[5]) )
+                state[1].remove( ('ROBOTAT', action[3]) )
+                state[1].append( ('ROBOTAT', action[4]) )
+
+
         action = hlplan[failStep]
         if action[0] == 'PICKUP':
             obj_to_pickup = action[1]
             for obj in failCause:
-                state[2].append( ('Obstructs', obj, obj_to_pickup))
+                state[1].append( ('OBSTRUCTS', obj, obj_to_pickup))
+                print "ADDED STATE (pickup): ", state[1][-1]
+                print state[1]
         elif action[0] == 'PUTDOWN':
             obj_to_putdown = action[1]
             tloc = action[5]
             for obj in failCause:
-                state[2].append( ('PDObstructs', obj, obj_to_putdown, tloc))
+                state[1].append( ('PDOBSTRUCTS', obj, obj_to_putdown, tloc))
+                print "ADDED STATE (putdown): ", state[1][-1]
+                print state[1]
         return state
 
     def get_motion_plan(self, world, action, goals):
@@ -222,64 +261,30 @@ class tryRefineClass:
         self.axn = None
         self.nextaxn = None
         self.poseGen = MockPoseGenerator() # TODO: REMOVE THIS
-
-    def try_refine_init(initialPose, hlplan, step, trajprefix, world, mode):
-        self.actionNum = step - 1
-        self.traj = trajprefix
-        # initialize pose generators, if that winds up being a thing we do
-        self.targetPose = [0]*len(hlplan)
-        self.targetPose[actionNum] = initialPose
-        self.hlplan = hlplan
-        self.world = [0]*len(hlplan)
-        self.world[actionNum] = world
-        return try_refine_part_1()
-        
-    def try_refine_part_1():
-        while self.actionNum >= step - 1 and len(hlplan) >= self.actionNum:
-            self.axn = (hlplan[self.actionNum], self.actionNum)
-            self.nextaxn = (hlplan[self.actionNum+1], self.actionNum+1)
-            if self.targetPose[self.nextaxn[1]] != 0:
-                # backtrack
-                self.targetPose[self.nextaxn[1]] = self.poseGen(self.nextaxn[0]).resetAndGetFirst()
-                self.targetPose[self.axn[1]] = self.poseGen(self.axn[0]).getNext()
-                self.actionNum-=1
-                self.traj = traj[0:self.axn[1]] #cut off the motion plan corresponding to that action
-            else:
-                (new_world, motion_plan, success) = get_motion_plan(self.world[self.actionNum], self.axn, self.targetPose[self.nextaxn[1]])
-                if success:
-                    self.traj.append(motion_plan)
-                    self.actionNum+=1
-            if mode == 'partialTraj':
-                return (self.targetPose[self.axn[1]], self.traj, self.actionNum+1, MPErrs(self.targetPose[self.axn[0]], self.targetPose[self.nextaxn[1]], self.state, self.world), self.state, self.world)
-            return try_refine_part_2()
-                
-
-    def try_refine_part_2():
-        self.targetPost[self.nextaxn[1]] = self.poseGen(self.nextaxn[0]).getNext()
-        if self.actionNum == len(hlplan)+1:
-            return self.traj
-        return try_refine_part_1()
         
     def try_refine(self, initialPose, state, world, hlplan, step, trajprefix, mode):
         # if this is the first time it's been called or if there's a new high level plan, update variables!
         if self.called == False or self.old_hlplan != hlplan:
-            print trajprefix
-            self.index = step - 1
+            print "TRY REFINE: FIRST TIME BEING CALLED OR NEW HLPLAN"
+            self.index = step
             self.state = state
             self.traj = trajprefix
             self.pose1 = initialPose
             self.called = True
+            self.old_hlplan = hlplan
+            self.hlplan = hlplan
+            self.poseGen.resetAll()
             self.world = world
         # progressively try and find a motion plan for each action as we go through the plan
-        while step-1 <= self.index and self.index < len(hlplan) - 1: #NOTE: changed this from <= to < because of out of bounds error
-            print "ITERATING LOOP: ", self.index
+        while step <= self.index and self.index < len(hlplan) - 1: #NOTE: changed this from <= to < because of out of bounds error
+            print "TRY REFINE ITERATING LOOP: ", self.index
             # start by figuring out our actions and poses, use the pose generators to do that
             self.axn = hlplan[self.index]
             self.nextaxn = hlplan[self.index+1]
             self.pose2 = self.poseGen.next(self.nextaxn)
             if self.pose2 == None: # pose 2 is already defined, so we should backtrack if in Error free mode, otherwise return that we've failed
                 if mode == 'partialTraj': # we failed -- don't bother backtracking since we're just looking for a partial trajectory, so let's figure out what's blocking it -- BIANCA's MODIFICATION
-                    return (False, self.pose1, self.traj, self.index+1, self.mocked_MPErrs(self.pose1, self.pose2, self.state, self.world, self.axn), self.state, self.world)
+                    return (False, self.pose1, self.traj, self.index, self.mocked_MPErrs(self.pose1, self.pose2, self.state, self.world, self.axn), self.state, self.world)
                 self.poseGen.reset(self.nextaxn)
                 self.pose1 = self.poseGen.next(self.axn)
                 self.index-=1
@@ -287,12 +292,13 @@ class tryRefineClass:
                 #self.traj = traj.delSuffixFor(self.axn)
             else:
                 # try and find a motion plan!
-                print 'world: ', self.world
-                print 'axn: ', self.axn
-                print 'pose2: ', self.pose2
+                #print 'world: ', self.world
+                #print 'axn: ', self.axn
+                #print 'pose2: ', self.pose2
                 (world, motionPlan, succeeds) = self.mocked_motion_plan(self.world, self.axn, self.pose2) # TODO: fix how we access the motion plan
                 if succeeds: # if it succeeds, either we're done or we can keep going keep going
-                    if self.index == len(hlplan) - 1:
+                    print "CHECK: ", self.index, len(hlplan) - 1
+                    if self.index == len(hlplan) - 2:
                         return (True, self.pose1, self.traj, self.index+1, [], self.state, self.world)
                     self.traj.append(motionPlan)
                     self.index+=1
@@ -303,8 +309,9 @@ class tryRefineClass:
         # we finished!
         print "FINISHED ITERATING, ABOUT TO RETURN"
         print self.index
-        print (False, self.pose1, self.traj, self.index+1, [], self.state, self.world)
-        return (False, self.pose1, self.traj, self.index+1, [], self.state, self.world)
+        self.index += 1
+        #print (False, self.pose1, self.traj, self.index+1, [], self.state, self.world)
+        return (False, self.pose1, self.traj, self.index, [], self.state, self.world)
 
 
     def mocked_motion_plan(self, world, action, goals):
@@ -318,7 +325,7 @@ class tryRefineClass:
         if axn == 'PICKUP':
             grip = action[2]
             obj = action[1]
-            print "object: ", obj
+            #print "object: ", obj
             if 'BLOCK1' in world and 'BLOCK2' in world:
                 if obj == 'BLOCK1' and world['BLOCK1'] == 'I' and world['BLOCK2'] == 'I':
                     return (world, [], False)
@@ -327,7 +334,7 @@ class tryRefineClass:
 
     def mocked_MPErrs(self, pose1, pose2, state, world, action):
         obstacles = world.keys()
-        print obstacles
+        #print obstacles
 	a_whole_new_world = copy.deepcopy(world)
 	#a_whole_new_world.robot = world.robot
 	#a_whole_new_world.world = world.world
@@ -339,11 +346,11 @@ class tryRefineClass:
                     return []
             else:
                 for l in itertools.combinations(range(len(obstacles)), i):
-                    print l
+                    #print l
                     a_whole_new_world = copy.deepcopy(world)
                     #updated_obstacles = obstacles
                     for item in l:
-                        print "ITEM: ", obstacles[item]
+                        #print "ITEM: ", obstacles[item]
                         a_whole_new_world.pop(obstacles[item])
                     #a_whole_new_world.world.collision_objects = updated_obstacles
                     (a, b, success) = self.mocked_motion_plan(a_whole_new_world, action, pose2)
@@ -369,6 +376,9 @@ class MockPoseGenerator:
     def reset(self, action):
         if action in self.state:
             self.state[action] = 0
+
+    def resetAll(self):
+        self.state = dict()
             
 if __name__ == "__main__":
     rospy.init_node('interface_node')
@@ -378,19 +388,20 @@ if __name__ == "__main__":
     #rospy.wait_for_service('motion_server_service')
     #motion_server = rospy.ServiceProxy('motion_server_service', motion_service)
     state = []
-    state.append(['block1 - physob', 'block2 - physob', 'leftarm - gripper', 'gp_block1 - pose', 
-                'gp_block2 - pose', 'pdp_block1_S - pose', 'pdp_block2_S - pose', 'initpose - pose',
+    state.append(['BLOCK1 - physob', 'BLOCK2 - physob', 'LEFTARM - gripper', 'GP_BLOCK1 - pose', 
+                'GP_BLOCK2 - pose', 'PDP_BLOCK1_S - pose', 'PDP_BLOCK2_S - pose', 'INITPOSE - pose',
                 'S - location'])
-    state.append([('RobotAt', 'initpose'), ('Empty', 'leftarm'), ('IsGPFG', 'gp_block1', 'block1'),
-                ('IsGPFG', 'gp_block2', 'block2'), ('IsGPFPD', 'pdp_block1_S', 'block1', 'S'),
-                ('IsGPFPD', 'pdp_block2_S', 'block2', 'S'), ('IsLFPD', 'S', 'block1'),
-                ('IsLFPD', 'S', 'block2')])
-    state.append([('At', 'block1', 'S')])
-    initialPose = 'initpose'
+    state.append([('ROBOTAT', 'INITPOSE'), ('EMPTY', 'LEFTARM'), ('ISGPFG', 'GP_BLOCK1', 'BLOCK1'),
+                ('ISGPFG', 'GP_BLOCK2', 'BLOCK2'), ('ISGPFPD', 'PDP_BLOCK1_S', 'BLOCK1', 'S'),
+                ('ISGPFPD', 'PDP_BLOCK2_S', 'BLOCK2', 'S'), ('ISLFPD', 'S', 'BLOCK1'),
+                ('ISLFPD', 'S', 'BLOCK2')])
+    state.append([('AT', 'BLOCK1', 'S')])
+    initialPose = 'INITPOSE'
     world = {'BLOCK1': 'I', 'BLOCK2': 'I'}
     interface = SpecificInterfaceLayer()
     print "about to send to go"
-    print interface.run_interface_layer(state, initialPose, world)
+    blah =  interface.run_interface_layer(state, initialPose, world)
+    print "FINAL ANSWER: ", blah
     print "END"
     rospy.spin()
  
