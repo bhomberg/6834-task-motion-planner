@@ -357,18 +357,20 @@ class MockPoseGenerator:
 
     def next(self, action):
         if action in self.state:
-            self.state[action]+=1
-            if self.state[action] < 10:
-                return 'mock'
+            # if there are letters left, return it
+            if len(self.state[action]) > 0:
+                return self.state[action].pop()
             else:
                 return None
         else:
-            self.state[action] = 0
-            return 'mock'
+            # generate a random order & return a letter
+            self.state[action] = ['A','B','C','D','E','F','G','H','I','J']
+            shuffle(self.state[action])
+            return self.state[action].pop()
 
     def reset(self, action):
         if action in self.state:
-            self.state[action] = 0
+            self.state[action] = []
             
 if __name__ == "__main__":
     rospy.init_node('interface_node')
