@@ -147,6 +147,10 @@ class SpecificInterfaceLayer(InterfaceLayer):
             f.write('(')
             for a in i:
                 f.write(a + ' ')
+                if a == 'NOT':
+                    f.write('(')
+            if i[0] == 'NOT':
+                f.write(')')
             f.write(')\n')
         f.write(')\n')
         f.write('(:goal ')
@@ -154,6 +158,10 @@ class SpecificInterfaceLayer(InterfaceLayer):
             f.write('(')
             for a in g:
                 f.write(a + ' ')
+                if a == 'NOT':
+                    f.write('(')
+            if g[0] == 'NOT':
+                f.write(')')
             f.write(')\n')
         f.write(')\n)')
         f.close()
