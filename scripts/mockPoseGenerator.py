@@ -1,5 +1,7 @@
 from random import shuffle
 
+# TODO: Change to message type instead of dict, also add second action
+
 class MockPoseGenerator:
     def __init__(self):
         self.state = dict()
