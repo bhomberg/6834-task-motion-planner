@@ -8,6 +8,7 @@ from planner_server import *
 from generateWorldMsg import *
 
 if __name__ == '__main__':
+
     genWorld = generateWorldMsg()
     
     f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/one_cover','r')
@@ -23,6 +24,7 @@ if __name__ == '__main__':
     pose = l[3]
 
     world = genWorld.generateWorld('SQUARE',3)
+    print world
 
     #task_planner_server = TaskPlannerServer("/home/bhomberg/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "/home/bhomberg/indigo_ws/src/6834-task-motion-planner/domain")
     #task_planner_server.run()
@@ -35,3 +37,4 @@ if __name__ == '__main__':
     print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"
     print hlplan
     print traj
+w

@@ -3,6 +3,7 @@
 import sys
 import rospy
 import re
+from copy import deepcopy
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
 
@@ -22,23 +23,28 @@ class MockMotionPlannerServer(object):
         
         surfaces = dict()
         for surface in world.surfaces:
-            surfaces[surface.id] = self.surface_dim*[self.surface_dim*[0]]
+            surfaces[surface.id] = self.surface_dim*deepcopy([self.surface_dim*[0]])
             
         for wall in world.walls:
             surface_id = wall.loc.surface_id
             x = wall.loc.x
             y = wall.loc.y
             surfaces[surface_id][y][x] = 1
-            
+    
+        print surfaces['I']
+        
         for movable_object in world.movable_objects:
             surface_id = movable_object.loc.surface_id
             x = movable_object.loc.x
             y = movable_object.loc.y
             grasped = movable_object.loc.grasped
-            
+    
             if not grasped:
+                print "Surface: ", surface_id
+                print "X: ", x
+                print "Y: ", y
                 surfaces[surface_id][y][x] = 1
-            
+        print surfaces     
         res = motion_plan()
         if action[0] == 'PICKUP':
             object_id = goals.object_id
@@ -111,6 +117,11 @@ class MockMotionPlannerServer(object):
         surface_id = obj.loc.surface_id
         x = obj.loc.x
         y = obj.loc.y
+
+        #for s_id in surfaces.keys():
+        #    print "Surface: ", s_id
+        #    for row in surfaces[s_id]:
+        #        print str(row) + "\n"
         
         if direction == 'N':
             if y == 0 or surfaces[surface_id][y-1][x] == 0:
@@ -127,7 +138,7 @@ class MockMotionPlannerServer(object):
                 return True
             
         elif direction == 'E':
-            if x == self.serface_dim-1 or surfaces[surface_id][y][x+1] == 0:
+            if x == self.surface_dim-1 or surfaces[surface_id][y][x+1] == 0:
                 return True
             
         elif direction == 'SE':
@@ -141,7 +152,7 @@ class MockMotionPlannerServer(object):
                 return True
             
         elif direction == 'S':
-            if y == self.surface_dim-1 or surfaces_id[y+1][x] == 0:
+            if y == self.surface_dim-1 or surface_id[y+1][x] == 0:
                 return True
             
         elif direction == 'SW':

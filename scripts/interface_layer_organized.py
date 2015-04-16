@@ -77,7 +77,8 @@ class InterfaceLayer(object):
         plan = []
         l = resp.plan.plan.split('\n')
         plan = [tuple(line.split(' ')) for line in l]
-        plan[-1] = ('BUFFER DEFAULT ACTION', 'BLAH', 'BLAH', 'BLAH', 'BLAH')
+        plan.insert(0, ('BUFFER DEFAULT ACTION', 'BLAH', 'BLAH', 'BLAH', 'BLAH'))
+        plan = plan[0:-1]
         #print "PLAN: ", plan
         return (resp.plan.error, plan)
         
@@ -110,6 +111,7 @@ class InterfaceLayer(object):
 	
         for i in range(len(obstacles)):
             if i == 0:
+                print "Pose: ", pose2
                 (a, b, success) = self._callMotionPlanner(world, action, pose2)
                 if success:
                     return []
@@ -246,8 +248,8 @@ class TryRefine(object):
             self.pose2 = self.interface.poseGenerator.next(self.nextaxn)
             
             if self.pose2 == None: # pose 2 is already defined, so we should backtrack if in Error free mode, otherwise return that we've failed
-                if mode == 'partialTraj': # we failed -- don't bother backtracking since we're just looking for a partial trajectory, so let's figure out what's blocking it -- BIANCA's MODIFICATION
-                    return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.axn), self.state, self.world)
+                #if mode == 'partialTraj': # we failed -- don't bother backtracking since we're just looking for a partial trajectory, so let's figure out what's blocking it -- BIANCA's MODIFICATION
+                #    return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.axn), self.state, self.world)
                 self.interface.poseGenerator.reset(self.nextaxn)
                 self.pose1 = self.interface.poseGenerator.next(self.axn)
                 self.index-=1
@@ -258,17 +260,17 @@ class TryRefine(object):
                 #print 'world: ', self.world
                 #print 'axn: ', self.axn
                 #print 'pose2: ', self.pose2
-                (world, motionPlan, succeeds) = self.interface._callMotionPlanner(self.world, self.axn, self.pose2) # TODO: fix how we access the motion plan
+                (world, motionPlan, succeeds) = self.interface._callMotionPlanner(self.world, self.nextaxn, self.pose2) # TODO: fix how we access the motion plan
                 if succeeds: # if it succeeds, either we're done or we can keep going keep going
                     print "CHECK: ", self.index, len(hlplan) - 1
-                    if self.index == len(hlplan) - 2:
+                    if self.index == len(hlplan) - 1:
                         return (True, self.pose1, self.traj, self.index+1, [], self.state, self.world)
                     self.traj.append(motionPlan)
                     self.index+=1
                     self.pose1 = self.pose2
-                #if mode == 'partialTraj':
-                #    # if it fails, then we need to find out why it failed -- what's blocking?
-                #    return (self.pose1, self.traj, self.index+1, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
+                if mode == 'partialTraj':
+                    # if it fails, then we need to find out why it failed -- what's blocking?
+                    return (self.pose1, self.traj, self.index+1, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
                 
         # we finished!
         print "FINISHED ITERATING, ABOUT TO RETURN"
