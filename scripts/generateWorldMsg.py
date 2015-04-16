@@ -26,7 +26,7 @@ class generateWorldMsg:
 			self.generateBlockHLine(my_world,shape_size)		
 		elif block_shape=='VLINE':
 			self.generateBlockVLine(my_world,shape_size)
-		print my_world.moveable_objects
+		return my_world
 
 	def generateBlockGrid(self,my_world,block_grid_size):
 		idx = 1
