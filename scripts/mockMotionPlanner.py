@@ -187,6 +187,6 @@ class MockMotionPlannerServer(object):
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer(17)
+    motion_planner_server = MockMotionPlannerServer(17)
     motion_planner_server.run()
     
