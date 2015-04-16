@@ -25,9 +25,52 @@ class InterfaceLayer(object):
         self.stateUpdate = stateUpdate
         
     def _callTaskPlanner(self, state):
-        # TODO: Implement general task planner client call
-        # return: (success, state)
-        pass
+        # plan is an array of tuples where the first thing is the action and the rest are objects it acts on
+        # state is organized as follows:
+        #    list of objects in the world
+        #    list of predicates true in the initial state
+        #    list of predicates for the goal
+        msg = task_domain()
+        #output state to file
+	f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state', 'w')
+        f.write('(define (problem problemtask)\n')
+        f.write('(:domain taskmotion)\n')
+        f.write('(:objects ')
+        for o in state[0]:
+            f.write(o + ' ')
+        f.write(')\n')
+        f.write('(:init ')
+        for i in state[1]:
+            f.write('(')
+            for a in i:
+                f.write(a + ' ')
+                if a == 'NOT':
+                    f.write('(')
+            if i[0] == 'NOT':
+                f.write(')')
+            f.write(')\n')
+        f.write(')\n')
+        f.write('(:goal ')
+        for g in state[2]:
+            f.write('(')
+            for a in g:
+                f.write(a + ' ')
+                if a == 'NOT':
+                    f.write('(')
+            if g[0] == 'NOT':
+                f.write(')')
+            f.write(')\n')
+        f.write(')\n)')
+        f.close()
+        msg.task_file = '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state'
+        resp = task_server(msg)
+        # parse plan file into appropriate action tuple
+        plan = []
+	l = resp.plan.plan.split('\n')
+	plan = [tuple(line.split(' ')) for line in l]
+        plan[-1] = ('BUFFER DEFAULT ACTION', 'BLAH', 'BLAH', 'BLAH', 'BLAH')
+        #print "PLAN: ", plan
+        return (resp.plan.error, plan)
         
     def _callMotionPlanner(self, world, action, goals):
         # return: (world, motion plan, success)
