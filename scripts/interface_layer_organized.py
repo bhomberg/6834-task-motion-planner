@@ -32,7 +32,7 @@ class InterfaceLayer(object):
         #    list of predicates for the goal
         msg = task_domain()
         #output state to file
-	f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state', 'w')
+	    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state', 'w')
         f.write('(define (problem problemtask)\n')
         f.write('(:domain taskmotion)\n')
         f.write('(:objects ')
@@ -66,8 +66,8 @@ class InterfaceLayer(object):
         resp = task_server(msg)
         # parse plan file into appropriate action tuple
         plan = []
-	l = resp.plan.plan.split('\n')
-	plan = [tuple(line.split(' ')) for line in l]
+	    l = resp.plan.plan.split('\n')
+	    plan = [tuple(line.split(' ')) for line in l]
         plan[-1] = ('BUFFER DEFAULT ACTION', 'BLAH', 'BLAH', 'BLAH', 'BLAH')
         #print "PLAN: ", plan
         return (resp.plan.error, plan)
