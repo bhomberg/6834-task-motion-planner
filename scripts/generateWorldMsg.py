@@ -62,11 +62,12 @@ class generateWorldMsg:
 		if i==0 and j==0:
 			o.id = 'BLOCK' + str(0)
 		else:
-			idx += 1
+			idx += 1 
 		o.loc.surface_id = 'I'
 		o.loc.x = self.CENTER + i
 		o.loc.y = self.CENTER + j
-		my_world.moveable_objects.append(o)
+		o.loc.grasped = False
+		my_world.movable_objects.append(o)
 		return idx
 if __name__ == "__main__":
 	g = generateWorldMsg()
