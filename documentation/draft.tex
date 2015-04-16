@@ -94,7 +94,7 @@ At that state, we add in predicates corresponding to the object obstructions.
 Then, the task planner replans from there.  
 
 
-Simple example walkthrough:
+\subsection{Simple Example Walkthrough}
 
 Consider the environment in FIGURE.  
 In this environment, we have two objects, blocks 1 and 2, and our goal is to put block 1 into area S.  
@@ -148,15 +148,21 @@ things to talk about:
 
 \subsection{Representing Continuous Variables Symbolically}
 
-
-
--continuous variables represented symbolically
+One of the key insights of this paper is that continuous variables can be referenced symbolically in the task planner.  
+For instance, consider the pose of the robot: this is a continuous, geometric state.  However, the task planner only keeps track of poses symbolically.  
+The task planner knows that there is some GPFG\_obj\_1 -- a Gripper Pose For Grasping -- for object 1, and it doesn't really care what that pose is, so long as it exists.  
+The task planner reasons over a variety of these symbolic variables, corresponding to poses and trajectories.  
+The motion planner and pose generators take these symbolic variables and associate them with corresponding real locations and motions in the world.  
+This is the key insight which allows the task planner to reason about continuous variables without discretizing.  
 
 
 \subsection{Pose Generators}
 
+veronica can probably write this section
 
 \subsection{Main Interface Layer}
+
+Bianca will finish writing this section and the corresponding subsections tomorrow
 
 \subsubsection{walk through the main image}
 
@@ -167,6 +173,11 @@ This figure, included with text from [1], explains the flow of control of
 \subsubsection{Algorithm 1}
 
 \subsubsection{Algorithm 2}
+
+
+\subsection{API and Interfaces}
+
+Alex should write this section, probably mostly the same as the stuff he's writing for the readme/etc.
 
 
 \section{Limitations}
