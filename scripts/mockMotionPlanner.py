@@ -66,7 +66,7 @@ class MockMotionPlannerServer(object):
                 res.motion = ''
                 res.success = False
             
-        elif action[1] == 'PUTDOWN':
+        elif action[0] == 'PUTDOWN':
             object_id = goals.object_id
             goal_surface_id = goals.surface_id
             goal_x = goals.x

@@ -6,11 +6,16 @@ from task_motion_planner.msg import *
 
 # TODO: change world to message type not dictionary
 
-def mockStateUpdate(state, failCause, failStep, hlplan, world):
+def mockStateUpdate(state, failCause, failStep, prev_fail_step, hlplan, world):
         # stateUpdate will need to be updated based on the specific problem
         # currently set up for mocks
-        for i in range(failStep):
-            action = hlplan[i]
+        print "prev fail step: ", prev_fail_step
+        print "curr: ", failStep
+        for i in range(failStep+1-prev_fail_step):
+            print i+prev_fail_step
+            action = hlplan[i+prev_fail_step]
+            #print action
+            #print state[1]
             if action[0] == 'PICKUP':
                 state[1].remove( ('EMPTY', action[2]) )
                 state[1].append( ('NOT', 'EMPTY', action[2]) )
@@ -18,17 +23,19 @@ def mockStateUpdate(state, failCause, failStep, hlplan, world):
                 state[1].append( ('ROBOTAT', action[4]) )
                 state[1].append( ('NOT', 'ROBOTAT', action[3]) )
                 state[1].append( ('IN', action[1], action[2]) )
-                for obj in world.keys():
-                    state[1].append( ('NOT', 'OBSTRUCTS', action[1], obj) )
-                    state[1].append( ('NOT', 'PDOBSTRUCTS', action[1], obj, 'S') ) # MOCK
-                    t = ('OBSTRUCTS', action[1], obj)
+                for obj in world.world.movable_objects:
+                    state[1].append( ('NOT', 'OBSTRUCTS', action[1], obj.id) )                    
+                    t = ('OBSTRUCTS', action[1], obj.id)
                     if t in state[1]:
                         state[1].remove(t)
-                    t = ('PDOBSTRUCTS', action[1], obj, 'S') # MOCK
-                    if t in state[1]:
-                        state[1].remove(t)
-                for loc in world.locations(): # TODO: fix this based on Alex's structure
-                    t = ('AT', action[1], loc)
+
+                    for loc in world.world.surfaces:
+                            state[1].append( ('NOT', 'PDOBSTRUCTS', action[1], obj.id, loc.id) )
+                            t = ('PDOBSTRUCTS', action[1], obj.id, loc.id)
+                            if t in state[1]:
+                                    state[1].remove(t)
+                for loc in world.world.surfaces: 
+                    t = ('AT', action[1], loc.id)
                     if t in state[1]:
                         state[1].remove(t)
             if action[0] == 'PUTDOWN':
@@ -44,18 +51,18 @@ def mockStateUpdate(state, failCause, failStep, hlplan, world):
                 state[1].append( ('ROBOTAT', action[4]) )
 
 
-        action = hlplan[failStep]
+        action = hlplan[failStep+1]
         if action[0] == 'PICKUP':
             obj_to_pickup = action[1]
             for obj in failCause:
                 state[1].append( ('OBSTRUCTS', obj, obj_to_pickup))
-                print "ADDED STATE (pickup): ", state[1][-1]
-                print state[1]
+                #print "ADDED STATE (pickup): ", state[1][-1]
+                #print state[1]
         elif action[0] == 'PUTDOWN':
             obj_to_putdown = action[1]
             tloc = action[5]
             for obj in failCause:
                 state[1].append( ('PDOBSTRUCTS', obj, obj_to_putdown, tloc))
-                print "ADDED STATE (putdown): ", state[1][-1]
-                print state[1]
+                #print "ADDED STATE (putdown): ", state[1][-1]
+                #print state[1]
         return state
