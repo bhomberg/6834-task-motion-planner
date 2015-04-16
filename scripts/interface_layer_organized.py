@@ -14,7 +14,7 @@ MAX_TRAJ_COUNT = 3
 MAX_ITERS = 1
 
 class InterfaceLayer(object):    
-    def __init__(self, taskServerName, motionServerName, poseGenerator, stateUpdate):        
+    def __init__(self, taskServerName, motionServerName, poseGenerator, stateUpdate, directory):        
         self.taskServerName = taskServerName
         self.taskServer = None
         
@@ -24,6 +24,8 @@ class InterfaceLayer(object):
         self.poseGenerator = poseGenerator
         self.stateUpdate = stateUpdate
         
+        self.directory = directory
+        
     def _callTaskPlanner(self, state):
         # plan is an array of tuples where the first thing is the action and the rest are objects it acts on
         # state is organized as follows:
@@ -32,7 +34,7 @@ class InterfaceLayer(object):
         #    list of predicates for the goal
         msg = task_domain()
         #output state to file
-	    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state', 'w')
+	    f = open(self.directory + 'state', 'w')
         f.write('(define (problem problemtask)\n')
         f.write('(:domain taskmotion)\n')
         f.write('(:objects ')
@@ -62,7 +64,7 @@ class InterfaceLayer(object):
             f.write(')\n')
         f.write(')\n)')
         f.close()
-        msg.task_file = '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state'
+        msg.task_file = self.directory + 'state'
         resp = task_server(msg)
         # parse plan file into appropriate action tuple
         plan = []
