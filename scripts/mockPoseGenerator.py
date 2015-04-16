@@ -1,4 +1,5 @@
 from random import shuffle
+import numpy
 
 # TODO: Change to message type instead of dict, also add second action
 
@@ -14,9 +15,18 @@ class MockPoseGenerator:
             else:
                 return None
         else:
-            # generate a random order & return a letter
-            self.state[action] = ['A','B','C','D','E','F','G','H','I','J']
-            shuffle(self.state[action])
+            # generate list of poses
+            if action == 'PICKUP':
+                self.state[action] = ['N','NE','E','SE','S','SW','W','NW']
+                shuffle(self.state[action])
+            else:
+                x_poses =  list(xrange(17))
+                y_poses = list(xrange(17))
+                shuffle(x_poses)
+                shuffle(y_poses)
+                self.state[action]=numpy.transpose([x_poses,y_poses]).tolist()
+            # randomize the order
+            # return a pose
             return self.state[action].pop()
 
     def reset(self, action):
@@ -25,7 +35,11 @@ class MockPoseGenerator:
 
 if __name__ == "__main__":
     m = MockPoseGenerator()
-    for i in range(11):
-        print m.next('pick')
-    m.reset('pick')
-    print m.next('pick')
+    for i in range(9):
+        print m.next('PICKUP')
+    for i in range(18):
+        print m.next('PUTDOWN')
+    m.reset('PICKUP')
+    m.reset('PUTDOWN')
+    print m.next('PICKUP')
+    print m.next('PUTDOWN')
