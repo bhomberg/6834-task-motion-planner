@@ -1,0 +1,2 @@
+moveit_msgs/PlanningSceneWorld world
+moveit_msgs/RobotState robot
