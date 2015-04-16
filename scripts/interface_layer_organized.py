@@ -89,22 +89,22 @@ class InterfaceLayer(object):
        
     # TODO: Ensure that this works for message types     
     def _mpErrs(self, pose1, pose2, state, world, action):
-        obstacles = world.world.collision_objects
-	    a_whole_new_world = World()
-	    a_whole_new_world.robot = world.robot
-	    a_whole_new_world.world = world.world
+        obstacles = world.world.movable_objects
+        a_whole_new_world = world_state()
+        a_whole_new_world.robot = world.robot
+        a_whole_new_world.world = world.world
 	
-	    for i in range(len(obstacles)):
+        for i in range(len(obstacles)):
             if i == 0:
                 (a, b, success) = self._callMotionPlanner(world, action, pose2)
                 if success:
                     return []
             else:
                 for l in itertools.combinations(range(len(obstacles)), i):
-                    updated_obstacles = obstacles
+                    updated_obstacles = obstacles #double check that this is a deep copy
                     for item in l:
                         updated_obstacles.pop(item)
-                    a_whole_new_world.world.collision_objects = updated_obstacles
+                    a_whole_new_world.world.movable_objects = updated_obstacles
                     (a, b, success) = self._callMotionPlanner(a_whole_new_world, action, pose2)
                     if success:
                         return [obstacles[i].id for i in l]

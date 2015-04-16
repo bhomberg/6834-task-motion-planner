@@ -1,2 +1,2 @@
-moveit_msgs/PlanningSceneWorld world
-moveit_msgs/RobotState robot
+world world
+string robot
