@@ -31,24 +31,178 @@
 
 \section{Introduction}
 
-In order to achieve high level goals a robot must combine task and motion planning. A robot uses task planning to determine its long term strategy and motion planning to determine the movements movements it  will execute to achieve the task. Effectively combining task and motion planning is an open research problem. We developed an interface between the motion and task planning. Our system uses off-the-shelf task and motion planners and makes no assumptions about their implementation.
+In order to achieve high level goals a robot must combine task and motion planning. 
+A robot uses task planning to determine its long term strategy and motion planning to determine the movements movements it  will execute to achieve the task. 
+Effectively combining task and motion planning is an open research problem. 
+We developed an interface between the motion and task planning. 
+Our system uses off-the-shelf task and motion planners and makes no assumptions about their implementation.
  
-An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. However, the number of required discretizations to solve the problem is generally very large and results in extremely large or infeasible problems. The interface allows the task planner state space to use an abstract state space which ignores geometry. The interface layer translates geometric constraints and passes them to the task planner.
+An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. 
+However, the number of required discretizations to solve the problem is generally very large and results in extremely large or infeasible problems. 
+The interface allows the task planner state space to use an abstract state space which ignores geometry. 
+The interface layer translates geometric constraints and passes them to the task planner.
 
 \section{Problem Statement}
 
-We implemented an interface between a task and motion planner for the Baxter robot designed by Rethink Robotics. For the motion planner we used OMPL from the ROS move-it interface and FF for our task planner. We instructed Baxter to pickup and place cylinders standing on a table. The cylinders were placed such that Baxter could not reach all of the cylinders in the initial state. 
+In robotics, it is often necessary to create a plan for a series of motions of the robot in order to complete some high level plan.
+In order to find a task plan which is actually feasible, the task planner must have some knowledge of the geometry of the world.
+Without knowledge of the actual spatial configurations of objects in the world, the task planner would create plans where some actions cannot be completed, due to infeasible motion plans from blocking objects or interference between the robot and the environment.
+
+The high level problem this implementation addresses is to create a combined task and motion planner, following that presented in [1].  
+This approach allows the motion planner to give information to the task planner and allows us to keep the continuous variables continuous, rather than discretizing.  
+This prevents a combinatorial explosion of the state space that the task planner needs to search over.
+
+The main contribution of this implementation is an interface layer.  
+This interface layer is designed to be planner-independent: that is, it can work with any motion planner and task planner, so long as the outputs from each are conformed to the interface specified by the API.  
+The interface layer interleaves calls between the task planner and the motion planner, using geometric feasibility determined through the motion planner to affect the state given to the task planner to plan from.
+
+Specifically, we start by generating a high level plan and attempting to generate motion plans corresponding to each action.  
+When it's not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner in an appropriate format.  
+Then, the task planner replans from that set state and the process continues.  
+When necessary, backtracking occurs.
+
+
 
 \section{High Level Approach}
-We implemented wrappers to incorporate the motion and task planners with the interface API. The interface layer 
+
+Specifically, the interface layer starts by generating a high level plan and attempting to generate motion plans corresponding to each action.  
+When it's not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner in an appropriate format.  
+Then, the task planner replans from that set state and the process continues.  
+When necessary, backtracking occurs.
+
+In order to communicate with the task planner and motion planner, the interface layer utilizes ROS services.  
+For the task planner, the interface layer instantiates a server with a given PDDL domain file.  
+This domain file specifies the different actions that are feasible along with their preconditions and postconditions.  
+For individual service calls, the interface layer takes an internal `state' variable, converts it to PDDL format, and sends it to the server to be solved.  
+The task planner service responds with a high level plan or a notification that finding a plan failed.  
+If finding a plan failed, the interface layer begins backtracking.  
+If a high level plan is found, the interface layer begins searching for refinements of each action as a motion plan.
+
+For the motion planner, the interface layer again communicates via a ROS service.  
+The motion planner is given an action, a world state, and a pose or set of poses corresponding to sub-parts of the action.  
+If it is possible to perform the action using the intermediary poses specified, the motion plan returns the trajectory.  
+If not, it returns an error message.
+
+If the motion plan does not succeed, a variety of poses are tried.  
+Poses are generated randomly from a pose generator.  
+If no poses are successful, the interface layer determines what is blocking the motion plan from succeeding.  
+Specifically, it removes objects from the environment until a feasible motion plan is found.  
+If still no feasible motion plan is found, backtracking is required.  
+If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner.  
+The task planner replans from the step where we failed to find a motion plan.  
+At that state, we add in predicates corresponding to the object obstructions.  
+Then, the task planner replans from there.  
+
+
+\subsection{Simple Example Walkthrough}
+
+Consider the environment in FIGURE.  
+In this environment, we have two objects, blocks 1 and 2, and our goal is to put block 1 into area S.  
+However, we cannot pick up block 1 directly since the walls and block 2 surround it.  
+Here we walk through the steps the interface layer takes when solving this problem in order to explain the details of the interface layer's construction.
+
+\begin{enumerate}[i.]
+
+\item Call the task planner to create a high level plan.  
+In this case, the task planner doesn't yet know that block 2 is blocking block 1, so the plan is simply:
+
+\begin{enumerate}[1.]
+\item PICKUP BLOCK1 with GRIPPER
+
+\item PUTDOWN BLOCK1 on SURFACE S
+\end{enumerate}
+
+\item Next step is to call the motion planner to try and find a trajectory corresponding to each of these actions.  
+In this case, the motion planner fails to find a motion plan for step 1.  
+
+\item The interface layer goes through removing objects to try to find what was causing the error for that action.  
+The interface layer discovers that if it removes block 2, then the motion plan can be created just fine, so block 2 must be obstructing the path.
+
+\item We add a predicate corresponding to BLOCK2 OBSTRUCTS BLOCK1 to the planner's state.
+
+\item Now, we try to find a new high level plan.  
+Since block 2 is obstructing block 1, we can't pick up block 1 directly, so the task planner realizes it needs to move block 2 first before moving block 1. 
+The new plan it creates is:
+
+\begin{enumerate}[1.]
+\item PICKUP BLOCK2 	with GRIPPER
+\item PUTDOWN BLOCK2 on SURFACE S
+\item PICKUP BLOCK1 with GRIPPER
+\item PUTDOWN BLOCK1 on SURFACE S
+\end{enumerate}
+
+\item Now, we again go to the motion planner and try to find a motion plan corresponding to every action.
+In this case, there are no more obstructions, so the process works!
+
+\item Ultimately, the algorithm returns the high level plan in conjunction with a motion plan trajectory for every step of the high level plan.
+
+\end{enumerate}
 
 \section{Technical Details}
 
+-zoom into features, explain how they work on a technical level
+
+-enough understanding to derive + implement algorithm on their own
+
+things to talk about:
+
+\subsection{Representing Continuous Variables Symbolically}
+
+One of the key insights of this paper is that continuous variables can be referenced symbolically in the task planner.  
+For instance, consider the pose of the robot: this is a continuous, geometric state.  However, the task planner only keeps track of poses symbolically.  
+The task planner knows that there is some GPFG\_obj\_1 -- a Gripper Pose For Grasping -- for object 1, and it doesn't really care what that pose is, so long as it exists.  
+The task planner reasons over a variety of these symbolic variables, corresponding to poses and trajectories.  
+The motion planner and pose generators take these symbolic variables and associate them with corresponding real locations and motions in the world.  
+This is the key insight which allows the task planner to reason about continuous variables without discretizing.  
+
+
+\subsection{Pose Generators}
+
+veronica can probably write this section
+
+\subsection{Main Interface Layer}
+
+Bianca will finish writing this section and the corresponding subsections tomorrow
+
+\subsubsection{walk through the main image}
+
+Insert the figure 4 from the paper!
+
+This figure, included with text from [1], explains the flow of control of 
+
+\subsubsection{Algorithm 1}
+
+\subsubsection{Algorithm 2}
+
+
+\subsection{API and Interfaces}
+
+Alex should write this section, probably mostly the same as the stuff he's writing for the readme/etc.
+
+
 \section{Limitations}
+
+-realistic expectations for someone interested in applying the reasoning technique
+
+-still need to get a motion planner and a task planner working and need to make them have the right API interface -- not a pure out of the box working thing
+
+-is not guaranteed to find an optimal solution
+
+-cannot do online re-planning
+
+-time to run is based on speed of the motion planner and task planner
 
 \section{Open Questions}
 
+-include more grasp primitives (e.g. push grasps)
+
+-partially observable or non-deterministic environments
+
+-replanning online
+
 \section{References}
+
+[1] S. Srivastava, E. Fang, L. Riano, R. Chitnis, S. Russell, P. Abbeel. "Combined Task and Motion Planning Through an Extensible Planner-Independent Interface Layer". IEEE International Conference on Robotics and Automation (ICRA), 2014.
 
 
 

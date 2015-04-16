@@ -57,14 +57,17 @@ find_package(Eigen REQUIRED)
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   cylinder.msg
    hl_plan.msg
+   location.msg
+   world.msg
+   world_state.msg
    motion_plan.msg
    motion_plan_parameters.msg
    motion_seq.msg
+   obj.msg
    pose_gen.msg
+   pose.msg
    task_domain.msg
-   world_state.msg
  )
 
 ## Generate services in the 'srv' folder
