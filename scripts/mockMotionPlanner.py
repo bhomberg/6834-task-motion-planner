@@ -16,22 +16,19 @@ class MockMotionPlannerServer(object):
         world = req.parameters.state.world
         action = re.split(',', req.parameters.action[1:-1])
         goals = req.parameters.goals
-        print "Goals: ", goals
         
         #(pickup,obj1,left_arm,pose1,pose2)
         #(putdown,obj1,left_arm,pose1,pose2,tloc)
         
         surfaces = dict()
         for surface in world.surfaces:
-            surfaces[surface.id] = self.surface_dim*deepcopy([self.surface_dim*[0]])
+            surfaces[surface.id] = [[0 for i in range(self.surface_dim)] for j in range(self.surface_dim)]
             
         for wall in world.walls:
             surface_id = wall.loc.surface_id
             x = wall.loc.x
             y = wall.loc.y
             surfaces[surface_id][y][x] = 1
-    
-        print surfaces['I']
         
         for movable_object in world.movable_objects:
             surface_id = movable_object.loc.surface_id
@@ -40,11 +37,8 @@ class MockMotionPlannerServer(object):
             grasped = movable_object.loc.grasped
     
             if not grasped:
-                print "Surface: ", surface_id
-                print "X: ", x
-                print "Y: ", y
                 surfaces[surface_id][y][x] = 1
-        print surfaces     
+    
         res = motion_plan()
         if action[0] == 'PICKUP':
             object_id = goals.object_id
@@ -56,7 +50,6 @@ class MockMotionPlannerServer(object):
                 return
             
             obj = world.movable_objects[obj_idx]
-            print "Direction: ", direction
             can_pickup = self._can_pickup(obj, direction, surfaces)
             
             if can_pickup:
@@ -118,11 +111,6 @@ class MockMotionPlannerServer(object):
         x = obj.loc.x
         y = obj.loc.y
 
-        #for s_id in surfaces.keys():
-        #    print "Surface: ", s_id
-        #    for row in surfaces[s_id]:
-        #        print str(row) + "\n"
-        
         if direction == 'N':
             if y == 0 or surfaces[surface_id][y-1][x] == 0:
                 return True
@@ -152,7 +140,7 @@ class MockMotionPlannerServer(object):
                 return True
             
         elif direction == 'S':
-            if y == self.surface_dim-1 or surface_id[y+1][x] == 0:
+            if y == self.surface_dim-1 or surfaces[surface_id][y+1][x] == 0:
                 return True
             
         elif direction == 'SW':

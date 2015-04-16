@@ -11,13 +11,13 @@ import itertools
 from random import shuffle
 from mockPoseGenerator import *
 from mockMotionPlanner import *
-import mockStateUpdate
+from mockStateUpdate import *
 from interface_layer_organized import *
 from planner_server import *
 from generateWorldMsg import *
 
-MAX_TRAJ_COUNT = 3
-MAX_ITERS = 1
+MAX_TRAJ_COUNT = 5
+MAX_ITERS = 100
 
 class InterfaceLayer(object):    
     def __init__(self, taskServerName, motionServerName, poseGenerator, stateUpdate, directory):        
@@ -118,6 +118,7 @@ class InterfaceLayer(object):
             else:
                 for l in itertools.combinations(range(len(obstacles)), i):
                     updated_obstacles = obstacles #double check that this is a deep copy
+                    print l
                     for item in l:
                         updated_obstacles.pop(item)
                     a_whole_new_world.world.movable_objects = updated_obstacles
@@ -147,9 +148,6 @@ class InterfaceLayer(object):
         num_iters = 0
         # create our tryRefine object, since that function needs to maintain its local variables
         trajRefiner = TryRefine(self)
-        
-        print state
-        print world
         
         if hlplan == None: # ie, we haven't started planning yet
             (error, hlplan) = self._callTaskPlanner(state) # find a high level task plan
@@ -270,7 +268,7 @@ class TryRefine(object):
                     self.pose1 = self.pose2
                 if mode == 'partialTraj':
                     # if it fails, then we need to find out why it failed -- what's blocking?
-                    return (self.pose1, self.traj, self.index+1, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world), self.state, self.world)
+                    return (self.pose1, self.traj, self.index+1, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.axn), self.state, self.world)
                 
         # we finished!
         print "FINISHED ITERATING, ABOUT TO RETURN"
@@ -285,7 +283,7 @@ if __name__ == '__main__':
 
     genWorld = generateWorldMsg()
     
-    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/one_cover','r')
+    f = open('/home/ragtz/indigo_workspace/src/6834-task-motion-planner/states/one_cover','r')
     init_state_string = f.read()
     
     state = [[]]*3
@@ -301,7 +299,7 @@ if __name__ == '__main__':
 
     poseGen = MockPoseGenerator()
 
-    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/')
+    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/ragtz/indigo_workspace/src/6834-task-motion-planner/')
     (hlplan, traj) = interfaceLayer.run(state, world, pose)
     
     print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"
