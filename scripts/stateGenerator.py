@@ -1,4 +1,9 @@
+#!/usr/bin/python
+
+import sys
+
 # The number of blocks (including block 0)
+# set by command line args
 NUMBLOCKS = 10
 
 # Concatenate substrings & add numbers between them, do this for the number of blocks
@@ -17,8 +22,7 @@ def concatMult(strs,last,end=False,start=0):
 		if not i==10:
 			s += ","
 	return s
-
-if __name__ == "__main__":
+def generateString():
 	s = ''
 	# environment
 	s += concatMult(["BLOCK"," - physob"],",")
@@ -41,4 +45,25 @@ if __name__ == "__main__":
 	# initial pose
 	s += "INITPOSE"
 
-	print s
+	return s
+
+def generateFile(filename):
+	s = generateString()
+	f = open(filename, 'w')
+	f.write(s)
+	f.close()
+
+if __name__ == "__main__":
+	# single argument: Number of blocks
+	# 2 arguments: filename, number of blocks
+	if len(sys.argv) == 1:
+		filename = 'state'
+		NUMBLOCKS = 10
+	if len(sys.argv) == 2:
+		filename = 'state'
+		NUMBLOCKS = int(sys.argv[1])
+	else:
+		filename = sys.argv[1]
+		NUMBLOCKS = int(sys.argv[2])
+
+	generateFile(filename)
