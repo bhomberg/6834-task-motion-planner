@@ -38,13 +38,13 @@ class MockPoseGenerator:
             # generate list of poses
             if action == 'PICKUP':
                 self.state[action_tuple] = ['N','NE','E','SE','S','SW','W','NW']
-                #shuffle(self.state[action_tuple])
+                shuffle(self.state[action_tuple])
                 msg.direction = self.state[action_tuple].pop()
             else:
                 x_poses =  list(xrange(17))
                 y_poses = list(xrange(17))
-                #shuffle(x_poses)
-                #shuffle(y_poses)
+                shuffle(x_poses)
+                shuffle(y_poses)
                 self.state[action_tuple]=numpy.transpose([x_poses,y_poses]).tolist()
                 location = self.state[action_tuple].pop()
                 msg.x = location[0]

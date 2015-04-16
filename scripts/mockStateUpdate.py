@@ -11,9 +11,9 @@ def mockStateUpdate(state, failCause, failStep, prev_fail_step, hlplan, world):
         # currently set up for mocks
         print "prev fail step: ", prev_fail_step
         print "curr: ", failStep
-        for i in range(failStep+1-prev_fail_step):
-            print i+prev_fail_step
-            action = hlplan[i+prev_fail_step]
+        for i in range(failStep-prev_fail_step):
+            print "blah: ", i+prev_fail_step+1
+            action = hlplan[i+prev_fail_step+1]
             #print action
             #print state[1]
             if action[0] == 'PICKUP':

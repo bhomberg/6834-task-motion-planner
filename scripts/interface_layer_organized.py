@@ -145,15 +145,15 @@ class InterfaceLayer(object):
         self.motionServer = rospy.ServiceProxy(self.motionServerName, motion_service)
 
         # set up initial variables
-        initState = state
-        initWorld = world
-        initPose = pose
+        initState = copy.deepcopy(state)
+        initWorld = copy.deepcopy(world)
+        initPose = copy.deepcopy(pose)
         step = None
         hlplan = None
         partialTraj = []
         pose1 = None
         num_iters = 0
-        prev_fail_step = 0
+        prev_fail_step = -1
         # create our tryRefine object, since that function needs to maintain its local variables
         trajRefiner = TryRefine(self)
         
@@ -185,22 +185,31 @@ class InterfaceLayer(object):
                 print "INNER LEVEL ALG 1 ITERATION: ", trajCount
 
                 # find a partial trajectory -- how far along the high level task plan can we find motion plans for?
-                (success, pose2, partialTraj, failStep, failCause, state, world) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, mode='partialTraj')
+                (success, pose2, partialTraj, failStep, failCause, tstate, tworld) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, mode='partialTraj')
                 print "Partial traj, step: ", failStep, ", failcause: ", failCause, ", traj: ", partialTraj
                 
                 if success: # if we succeeded, return!
                     return (hlplan, partialTraj)
                     
                 # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
-                (state) = self.stateUpdate(state, failCause, failStep, prev_fail_step, hlplan, world)
+                (tempstate) = self.stateUpdate(tstate, failCause, failStep, prev_fail_step, hlplan, tworld)
                 # now, call the task planner again on the new state
-                (error, newPlan) = self._callTaskPlanner(state)
+                (error, newPlan) = self._callTaskPlanner(tempstate)
+
+                # try to refine our plan, allowing for no errors
+                (success, t6, traj, t1, t2, t3, t4) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, 'errorFree')
+
+            
+                if success: # if it worked, we're done!
+                    return (hlplan, traj)
                 
                 if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
                     # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization
                     hlplan = hlplan[0:failStep+1] + newPlan
                     pose1 = pose2
                     prev_fail_step = failStep
+                    state = tempstate
+                    world = tworld
                     step = failStep
                     print "HLPlan: ", hlplan
                     
@@ -209,11 +218,19 @@ class InterfaceLayer(object):
             # if we spend a lot of time with no success, give up and start over
             if trajCount == MAX_TRAJ_COUNT:
                 print "RESETING TRAJ COUNT"
-                state = initState
+                state = copy.deepcopy(initState)
+                world = copy.deepcopy(initWorld)
                 trajCount = 0
-                step = 1
+                step = 0
+                prev_fail_state = -1
                 partialTraj = []
-                pose1 = initPose
+                pose1 = copy.deepcopy(initPose)
+                print state
+                (error, hlplan) = self._callTaskPlanner(state) # find a high level task plan
+                hlplan.insert(0, (' ', ' ', ' ',' ', ' '))
+                print "HLPlan: ", hlplan
+                if error:
+                    print "ERROR ON TASK PLAN!"
                 
         return (False, False)
 
@@ -278,7 +295,7 @@ class TryRefine(object):
                 (world, motionPlan, succeeds) = self.interface._callMotionPlanner(self.world, self.nextaxn, self.pose2) # TODO: fix how we access the motion plan
                 if succeeds: # if it succeeds, either we're done or we can keep going keep going
                     print "CHECK: ", self.index, len(hlplan) - 1
-                    if self.index == len(hlplan) - 1:
+                    if self.index == len(hlplan) - 2:
                         return (True, self.pose1, self.traj, self.index, [], self.state, self.world)
                     self.traj.append(motionPlan)
                     self.index+=1
