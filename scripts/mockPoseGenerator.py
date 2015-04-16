@@ -14,9 +14,6 @@ class MockPoseGenerator:
         self.state = dict()
 
     def next(self, action_tuple):
-        # TODO: remove parens
-        action_tuple = re.split("[\(,\)]?",action_tuple)
-        action_tuple = action_tuple[1:-1]
         action = action_tuple[0]
         obj = action_tuple[1]
 
@@ -58,6 +55,10 @@ class MockPoseGenerator:
 
     def reset(self, action):
         if action in self.state:
+            del self.state[action]
+
+    def resetAll(self):
+        for action in self.state.keys():
             del self.state[action]
 
 if __name__ == "__main__":

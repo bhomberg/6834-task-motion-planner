@@ -6,7 +6,7 @@ from task_motion_planner.msg import *
 
 # TODO: change world to message type not dictionary
 
-def stateUpdate(self, state, failCause, failStep, hlplan, world):
+def mockStateUpdate(self, state, failCause, failStep, hlplan, world):
         # stateUpdate will need to be updated based on the specific problem
         # currently set up for mocks
         for i in range(failStep):

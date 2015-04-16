@@ -59,7 +59,7 @@ find_package(Eigen REQUIRED)
    FILES
    hl_plan.msg
    location.msg
-   world.msg
+   world_obj.msg
    world_state.msg
    motion_plan.msg
    motion_plan_parameters.msg
@@ -91,6 +91,7 @@ find_package(Eigen REQUIRED)
    std_msgs
    geometry_msgs
    moveit_msgs
+   task_motion_planner
 )
 
 ###################################

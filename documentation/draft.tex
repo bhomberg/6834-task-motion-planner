@@ -155,6 +155,10 @@ The task planner reasons over a variety of these symbolic variables, correspondi
 The motion planner and pose generators take these symbolic variables and associate them with corresponding real locations and motions in the world.  
 This is the key insight which allows the task planner to reason about continuous variables without discretizing.  
 
+-discussion of pose and traj variables
+
+-discussion of pick primitive and place primitive
+
 
 \subsection{Pose Generators}
 
@@ -164,15 +168,19 @@ veronica can probably write this section
 
 Bianca will finish writing this section and the corresponding subsections tomorrow
 
-\subsubsection{walk through the main image}
-
 Insert the figure 4 from the paper!
 
-This figure, included with text from [1], explains the flow of control of 
+This figure, included with text from [1], explains the flow of control of the interface layer through a variety of situations, including more than the simple case covers.  The subfigures in this diagram explain on a high level the different steps the interface layer takes when solving a problem.  The subfigure a shows the motion planner's backtracking search when trying to instantiate motions for each of the high level actions.  Subfigure b shows the first possible scenario, where the backtracking search succeeds.  Subfigure c shows a second possible scenario, where the backtracking search doesn't succeed.  There are multiple options of what can happen within this scenario: subfigure d shows an option where they determine that the block2 obstructs the trajectory.  This triggers the behavior discussed earlier, where the state is updated for the task planner.  Subfigure e shows the new task plan after replanning occurs.  After this, the interface layer will repeat the process of attempting to refine this new plan.  Subfigure f shows an alternative option, where the blocking object is determined to be the table, which is not movable.  Then, the state is updated as before and the task planner is called, but no solution is found, so backtracking occurs.
 
 \subsubsection{Algorithm 1}
 
+Include algorithm block 1 from paper
+
+The outer loop of the algorithm interfaces with the high level task planner.  We start with an initial state where no objects obstruct any motions.  From there, we 
+
 \subsubsection{Algorithm 2}
+
+include algorithm block 2 from paper!  go with the one from the short version of the paper, since it's the version we're actually going with.
 
 
 \subsection{API and Interfaces}

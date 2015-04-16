@@ -12,12 +12,13 @@ class generateWorldMsg:
 		self.CENTER = self.WORLD_GRID_SIZE/2 + 1
 
 	def generateWorld(self,block_shape,shape_size):
-		my_world = world()
+		my_world = world_state()
+                my_world.world = world_obj()
 		surfaceS = obj()
 		surfaceS.id = 'S'
 		surfaceI = obj()
 		surfaceI.id = 'I'
-		my_world.surfaces = [surfaceS,surfaceI]
+		my_world.world.surfaces = [surfaceS,surfaceI]
 		if block_shape=='SQUARE':
 			self.generateBlockGrid(my_world,shape_size)
 		elif block_shape=='CROSS':
@@ -33,7 +34,7 @@ class generateWorldMsg:
 		bound = block_grid_size/2
 		for j in xrange(-bound,bound+1):
 			for i in xrange(-bound,bound+1):
-				idx = self._add_block(my_world,i,j,idx)
+				idx = self._add_block(my_world, i,j,idx)
 
 	def generateBlockCross(self,my_world,block_grid_size):
 		idx = 1
@@ -67,7 +68,7 @@ class generateWorldMsg:
 		o.loc.x = self.CENTER + i
 		o.loc.y = self.CENTER + j
 		o.loc.grasped = False
-		my_world.movable_objects.append(o)
+		my_world.world.movable_objects.append(o)
 		return idx
 if __name__ == "__main__":
 	g = generateWorldMsg()

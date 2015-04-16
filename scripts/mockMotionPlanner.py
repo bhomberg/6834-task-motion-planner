@@ -15,6 +15,7 @@ class MockMotionPlannerServer(object):
         world = req.parameters.state.world
         action = re.split(',', req.parameters.action[1:-1])
         goals = req.parameters.goals
+        print "Goals: ", goals
         
         #(pickup,obj1,left_arm,pose1,pose2)
         #(putdown,obj1,left_arm,pose1,pose2,tloc)
@@ -29,7 +30,7 @@ class MockMotionPlannerServer(object):
             y = wall.loc.y
             surfaces[surface_id][y][x] = 1
             
-        for moveable_object in world.movable_objects:
+        for movable_object in world.movable_objects:
             surface_id = movable_object.loc.surface_id
             x = movable_object.loc.x
             y = movable_object.loc.y
@@ -49,6 +50,7 @@ class MockMotionPlannerServer(object):
                 return
             
             obj = world.movable_objects[obj_idx]
+            print "Direction: ", direction
             can_pickup = self._can_pickup(obj, direction, surfaces)
             
             if can_pickup:
@@ -172,7 +174,7 @@ class MockMotionPlannerServer(object):
         return False
         
     def _can_putdown(self, obj, surfaces, goal_surface_id, goal_x, goal_y):
-        if obj.loc.grasped
+        if obj.loc.grasped:
             if surfaces[goal_surface_id][goal_y][goal_x] == 0:
                 return True
         else:
@@ -183,7 +185,7 @@ class MockMotionPlannerServer(object):
     def run(self):
         rospy.init_node('motion_planner_server')
         s = rospy.Service('motion_server_service', motion_service, self.getMotionPlan)
-        print "============ Ready to serve motion plans"
+        print "Ready to serve motion plans"
         rospy.spin()
     
 if __name__ == "__main__":

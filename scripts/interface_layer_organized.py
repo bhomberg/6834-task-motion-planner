@@ -9,6 +9,12 @@ from geometry_msgs.msg import *
 import copy
 import itertools
 from random import shuffle
+from mockPoseGenerator import *
+from mockMotionPlanner import *
+import mockStateUpdate
+from interface_layer_organized import *
+from planner_server import *
+from generateWorldMsg import *
 
 MAX_TRAJ_COUNT = 3
 MAX_ITERS = 1
@@ -25,6 +31,7 @@ class InterfaceLayer(object):
         self.stateUpdate = stateUpdate
         
         self.directory = directory
+        print "Initialized interface layer!"
         
     def _callTaskPlanner(self, state):
         # plan is an array of tuples where the first thing is the action and the rest are objects it acts on
@@ -34,7 +41,7 @@ class InterfaceLayer(object):
         #    list of predicates for the goal
         msg = task_domain()
         #output state to file
-	    f = open(self.directory + 'state', 'w')
+        f = open(self.directory + 'state', 'w')
         f.write('(define (problem problemtask)\n')
         f.write('(:domain taskmotion)\n')
         f.write('(:objects ')
@@ -65,11 +72,11 @@ class InterfaceLayer(object):
         f.write(')\n)')
         f.close()
         msg.task_file = self.directory + 'state'
-        resp = task_server(msg)
+        resp = self.taskServer(msg)
         # parse plan file into appropriate action tuple
         plan = []
-	    l = resp.plan.plan.split('\n')
-	    plan = [tuple(line.split(' ')) for line in l]
+        l = resp.plan.plan.split('\n')
+        plan = [tuple(line.split(' ')) for line in l]
         plan[-1] = ('BUFFER DEFAULT ACTION', 'BLAH', 'BLAH', 'BLAH', 'BLAH')
         #print "PLAN: ", plan
         return (resp.plan.error, plan)
@@ -79,7 +86,12 @@ class InterfaceLayer(object):
         try:
             msg = motion_plan_parameters()
             msg.state = world
-            msg.action = action
+
+            str_action = '('
+            for elem in action:
+                str_action += elem + ','
+            msg.action = str_action[:-1] + ')'
+
             msg.goals = goals
         
             res = self.motionServer(msg)
@@ -113,16 +125,15 @@ class InterfaceLayer(object):
         print "ERROR IN MP ERRORS!"
         
     def run(self, state, world, pose):
-        rospy.init_node('interface_node')
-    
+        
         # start task server client
         rospy.wait_for_service(self.taskServerName)
         self.taskServer = rospy.ServiceProxy(self.taskServerName, task_service)
         
         # start motion server client
         rospy.wait_for_service(self.motionServerName)
-        self.motion_server = rospy.ServiceProxy(self.motionServerName, motion_service)
-        
+        self.motionServer = rospy.ServiceProxy(self.motionServerName, motion_service)
+
         # set up initial variables
         initState = state
         initWorld = world
@@ -194,7 +205,7 @@ class InterfaceLayer(object):
                 partialTraj = []
                 pose1 = initPose
                 
-        rospy.spin()
+        return (False, False)
 
 
 class TryRefine(object):
@@ -266,3 +277,33 @@ class TryRefine(object):
         #print (False, self.pose1, self.traj, self.index+1, [], self.state, self.world)
         return (False, self.pose1, self.traj, self.index, [], self.state, self.world)
 
+if __name__ == '__main__':
+    rospy.init_node('interface_node')
+    print "initialized node"
+
+    genWorld = generateWorldMsg()
+    
+    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/one_cover','r')
+    init_state_string = f.read()
+    
+    state = [[]]*3
+    l = init_state_string.split('\n')
+    state[0] = l[0].split(',')
+    k = l[1].split(',')
+    state[1] = [i.split(' ') for i in k]
+    k = l[2].split(',')
+    state[2] = [i.split(' ') for i in k]
+    pose = l[3]
+
+    world = genWorld.generateWorld('SQUARE',3)
+
+    poseGen = MockPoseGenerator()
+
+    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/')
+    (hlplan, traj) = interfaceLayer.run(state, world, pose)
+    
+    print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"
+    print hlplan
+    print traj
+
+    rospy.spin()

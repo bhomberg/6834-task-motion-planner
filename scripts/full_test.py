@@ -2,15 +2,15 @@
 
 from mockPoseGenerator import *
 from mockMotionPlanner import *
-from mockStateUpdate import *
-from interface_layer import *
-from plannerServer import *
+import mockStateUpdate
+from interface_layer_organized import *
+from planner_server import *
 from generateWorldMsg import *
 
 if __name__ == '__main__':
     genWorld = generateWorldMsg()
     
-    f = open('../states/one_cover','r')
+    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/one_cover','r')
     init_state_string = f.read()
     
     state = [[]]*3
@@ -23,12 +23,15 @@ if __name__ == '__main__':
     pose = l[3]
 
     world = genWorld.generateWorld('SQUARE',3)
-    pose = None
 
-    task_planner_server = TaskPlannerServer("~/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "~/indigo_ws/src/6834-task-motion-planner/domain")
-    motion_planner_server = MockMotionPlannerServer(17)
-    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', MockPoseGenerator, mockStateUpdate, '~/indigo_ws/src/6834-task-motion-planner/')
+    #task_planner_server = TaskPlannerServer("/home/bhomberg/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "/home/bhomberg/indigo_ws/src/6834-task-motion-planner/domain")
+    #task_planner_server.run()
+    #motion_planner_server = MockMotionPlannerServer(17)
+    #motion_planner_server.run()
+    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', MockPoseGenerator, mockStateUpdate, '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/')
     (hlplan, traj) = interfaceLayer.run(state, world, pose)
     
+
+    print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"
     print hlplan
     print traj
