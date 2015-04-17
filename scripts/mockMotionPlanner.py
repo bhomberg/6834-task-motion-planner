@@ -116,13 +116,22 @@ class MockMotionPlannerServer(object):
                 return True
         
         elif direction == 'NE':
+            # top row block
             if y == 0:
+                # has cells to the right
                 if x < self.surface_dim:
-                    if surfaces[surface_id][y][x+1] == 0:
-                        return True
+                    return surfaces[surface_id][y][x+1] == 0
+                # top corner
                 else:
                     return True
-            elif surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0:
+            # not on right side of grid
+            elif x < surface_dim-1:
+                # above, above & right, right
+                return surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0
+            # right side of grid 
+            elif x==surface_dim-1:
+                return surfaces[surface_id][y-1][x] == 0
+            else:
                 return True
             
         elif direction == 'E':
@@ -130,13 +139,18 @@ class MockMotionPlannerServer(object):
                 return True
             
         elif direction == 'SE':
+            # bottom of grid
             if y == self.surface_dim-1:
                 if x < self.surface_dim:
-                    if surfaces[surface_id][y][x+1] == 0:
-                        return True
+                    return surfaces[surface_id][y][x+1] == 0
                 else:
                     return True
-            elif surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0:
+            elif x < surface_dim-1:
+                return surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0
+            # right side of grid 
+            elif x==surface_dim-1:
+                return surfaces[surface_id][y+1][x] == 0
+            else:    
                 return True
             
         elif direction == 'S':
@@ -144,13 +158,19 @@ class MockMotionPlannerServer(object):
                 return True
             
         elif direction == 'SW':
+            # bottom row
             if y == self.surface_dim-1:
                 if x > 0:
-                    if surfaces[surface_id][y][x-1] == 0:
-                        return True
+                    return surfaces[surface_id][y][x-1] == 0
                 else:
                     return True
-            elif surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0:
+            # not left side
+            elif x > 0:
+                return surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0
+            # left side
+            elif x == 0:
+                return surfaces[surface_id][y+1][x] == 0
+            else:
                 return True
             
         elif direction == 'W':
@@ -158,13 +178,20 @@ class MockMotionPlannerServer(object):
                 return True
             
         elif direction == 'NW':
+            # top row
             if y == 0:
                 if x > 0:
                     if surfaces[surface_id][y][x-1] == 0:
                         return True
                 else:
                     return True
-            elif surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0:
+            # not left side
+            elif x > 0:
+                return surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0
+            # left side
+            elif x == 0:
+                return surfaces[surface_id][y-1][x] == 0
+            else:
                 return True
             
         else:
