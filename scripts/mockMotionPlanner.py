@@ -3,124 +3,101 @@
 import sys
 import rospy
 import re
-import moveit_commander
+from copy import deepcopy
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
-from moveit_msgs.msg import *
-from geometry_msgs.msg import *
-from std_msgs.msg import String
 
-
-class MotionPlannerServer(object):
-    def __init__(self, max_planning_time):
-        self.max_planning_time = max_planning_time
-        self.planning_scene_pub = rospy.Publisher('planning_scene', PlanningScene)
+class MockMotionPlannerServer(object):
+    def __init__(self, surface_dim):
+        self.surface_dim = surface_dim
         
-    def get_motion_plan(self, req):
-        print "============ Starting Moveit Commander"
-        moveit_commander.roscpp_initialize(sys.argv)
-        
-        print "============ Setting current state"
-        robot = moveit_commander.RobotCommander()
-        scene = moveit_commander.PlanningSceneInterface()
-        
-        world_start_state = req.parameters.state.world
-        robot_start_state = req.parameters.state.robot
+    def getMotionPlan(self, req):
+        state = req.parameters.state
+        world = req.parameters.state.world
         action = re.split(',', req.parameters.action[1:-1])
-        pose_goals = req.parameters.goals
+        goals = req.parameters.goals
         
-        # Set attach/detach point
-        attach_detach_idx = 2
+        #(pickup,obj1,left_arm,pose1,pose2)
+        #(putdown,obj1,left_arm,pose1,pose2,tloc)
+        
+        surfaces = dict()
+        for surface in world.surfaces:
+            surfaces[surface.id] = [[0 for i in range(self.surface_dim)] for j in range(self.surface_dim)]
+            
+        for wall in world.walls:
+            surface_id = wall.loc.surface_id
+            x = wall.loc.x
+            y = wall.loc.y
+            surfaces[surface_id][y][x] = 1
+        
+        for movable_object in world.movable_objects:
+            surface_id = movable_object.loc.surface_id
+            x = movable_object.loc.x
+            y = movable_object.loc.y
+            grasped = movable_object.loc.grasped
     
-        # Add objects to planning scene
-        planning_scene = PlanningScene()
-        planning_scene.world = world_start_state
-        planning_scene.is_diff = True
-        
-        self.planning_scene_pub.publish(planning_scene)
-        
-        #for i in range(len(world_start_state.collision_objects)):
-        #    obj = world_start_state.collision_objects[i]
-        #    pose = PoseStamped()
-        #    pose.header = obj.header
-        #    pose.pose = obj.primitive_poses[0]
-        #    h = obj.primitives[0].dimensions[0]
-        #    r = obj.primitives[0].dimensions[1]
-        #    scene.add_box(obj.id, pose, (r, r, h))
-        
-        curr_state = robot_start_state
+            if not grasped:
+                surfaces[surface_id][y][x] = 1
+    
         res = motion_plan()
-    
-        print "============ Planning actoin ", action[0]
-        for i in range(len(pose_goals)):
-            print "============ Move group ", action[2]
-            group = moveit_commander.MoveGroupCommander(action[2])
-        
-            group.set_planning_time(self.max_planning_time)
-            group.set_start_state(curr_state)
-            group.set_pose_target(pose_goals[i].pose)
-        
-            plan = group.plan()
-    
-            if len(plan.joint_trajectory.points) > 0:
-                print "============ Component ", i, " of motion plan succeeded"
+        if action[0] == 'PICKUP':
+            object_id = goals.object_id
+            direction = goals.direction
             
-                # Determine start pose for trajectory
-                start = RobotState()
-                start.joint_state.name = plan.joint_trajectory.joint_names
-                start.joint_state.position = plan.joint_trajectory.points[0].positions
-                start.joint_state.velocity = plan.joint_trajectory.points[0].velocities
-                start.joint_state.effort = plan.joint_trajectory.points[0].effort
+            obj_idx = self._search_for_object(object_id, world.movable_objects)
+            if obj_idx == -1:
+                print "The object does not exist or is not movable"
+                return
             
-                # Add trajectory plan to motion sequence list
-                motion = motion_seq()
-                motion.trajectory.trajectory_start = start 
-                motion.trajectory.trajectory.append(plan)
-                motion.gripperOpen = pose_goals[i].gripperOpen
+            obj = world.movable_objects[obj_idx]
+            can_pickup = self._can_pickup(obj, direction, surfaces)
             
-                res.motion.append(motion)
-            
-                ## Update current state for next planned trajectory
-                curr_state.joint_state.name = plan.joint_trajectory.joint_names
-                curr_state.joint_state.position = plan.joint_trajectory.points[-1].positions
-                curr_state.joint_state.velocity = plan.joint_trajectory.points[-1].velocities
-                curr_state.joint_state.effort = plan.joint_trajectory.points[-1].effort
+            if can_pickup:
+                state.world.movable_objects[obj_idx].loc.surface_id = ''
+                state.world.movable_objects[obj_idx].loc.x = -1
+                state.world.movable_objects[obj_idx].loc.y = -1
+                state.world.movable_objects[obj_idx].loc.grasped = True
                 
-                rospy.sleep(2.0)
-                
-                group.execute(plan)
-                
-                if action[0] == 'pickup' and i == attach_detach_idx:
-                    group.attach_object(action[1])
-                elif action[0] == 'putdown' and i == attach_detach_idx:
-                    pass
-                
-                #return
-                
+                res.state = state
+                res.motion = '[picked up ' + obj.id + "]"
+                res.success = True
             else:
-                print "============ Component ", i, " of motion plan failed"
-                res.state = req.parameters.state
-                res.motion = [motion_seq()]
+                res.state = state
+                res.motion = ''
                 res.success = False
-                print "============ Done"
-                return res   
-    
-        # Set state of world after action completion
-        end_state = world_state()
-        end_state.robot = curr_state
-        
-        obj_idx = self._search_for_object(action[1], world_start_state.collision_objects)
-        
-        end_state.world = world_start_state
-        if obj_idx != -1:
-            if action[0] == 'pickUp':
-                end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[-1].pose
-            elif action[0] == 'putDown':
-                end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[1].pose
-    
-        res.state = end_state
-        res.success = True        
-        print "============ Done"
+            
+        elif action[0] == 'PUTDOWN':
+            object_id = goals.object_id
+            goal_surface_id = goals.surface_id
+            goal_x = goals.x
+            goal_y = goals.y
+            
+            obj_idx = self._search_for_object(object_id, world.movable_objects)
+            if obj_idx == -1:
+                print "The object does not exist or is not movable"
+                return
+                
+            obj = world.movable_objects[obj_idx]
+            can_putdown = self._can_putdown(obj, surfaces, goal_surface_id, goal_x, goal_y)
+            
+            if can_putdown:
+                state.world.movable_objects[obj_idx].loc.surface_id = goal_surface_id
+                state.world.movable_objects[obj_idx].loc.x = goal_x
+                state.world.movable_objects[obj_idx].loc.y = goal_y
+                state.world.movable_objects[obj_idx].loc.grasped = False
+                
+                res.state = state
+                res.motion = '[put down ' + obj.id + " on surface " + goal_surface_id + " at (" + str(goal_x) + "," + str(goal_y) + ")]"
+                res.success = True
+            else:
+                res.state = state
+                res.motion = ''
+                res.success = False
+            
+        else:
+            print "Not a valid action"
+            return
+            
         return res
         
     def _search_for_object(self, obj_name, obj_list):
@@ -129,13 +106,88 @@ class MotionPlannerServer(object):
                 return i                
         return -1
     
+    def _can_pickup(self, obj, direction, surfaces):
+        surface_id = obj.loc.surface_id
+        x = obj.loc.x
+        y = obj.loc.y
+
+        if direction == 'N':
+            if y == 0 or surfaces[surface_id][y-1][x] == 0:
+                return True
+        
+        elif direction == 'NE':
+            if y == 0:
+                if x < self.surface_dim:
+                    if surfaces[surface_id][y][x+1] == 0:
+                        return True
+                else:
+                    return True
+            elif surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0:
+                return True
+            
+        elif direction == 'E':
+            if x == self.surface_dim-1 or surfaces[surface_id][y][x+1] == 0:
+                return True
+            
+        elif direction == 'SE':
+            if y == self.surface_dim-1:
+                if x < self.surface_dim:
+                    if surfaces[surface_id][y][x+1] == 0:
+                        return True
+                else:
+                    return True
+            elif surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0:
+                return True
+            
+        elif direction == 'S':
+            if y == self.surface_dim-1 or surfaces[surface_id][y+1][x] == 0:
+                return True
+            
+        elif direction == 'SW':
+            if y == self.surface_dim-1:
+                if x > 0:
+                    if surfaces[surface_id][y][x-1] == 0:
+                        return True
+                else:
+                    return True
+            elif surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0:
+                return True
+            
+        elif direction == 'W':
+            if x == 0 or surfaces[surface_id][y][x-1] == 0:
+                return True
+            
+        elif direction == 'NW':
+            if y == 0:
+                if x > 0:
+                    if surfaces[surface_id][y][x-1] == 0:
+                        return True
+                else:
+                    return True
+            elif surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0:
+                return True
+            
+        else:
+            print "Not a valid direction"
+            
+        return False
+        
+    def _can_putdown(self, obj, surfaces, goal_surface_id, goal_x, goal_y):
+        if obj.loc.grasped:
+            if surfaces[goal_surface_id][goal_y][goal_x] == 0:
+                return True
+        else:
+            print "Object is not grasped"
+        
+        return False
+    
     def run(self):
         rospy.init_node('motion_planner_server')
-        s = rospy.Service('motion_server_service', motion_service, self.get_motion_plan)
-        print "============ Ready to serve motion plans"
+        s = rospy.Service('motion_server_service', motion_service, self.getMotionPlan)
+        print "Ready to serve motion plans"
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer(10.0)
+    motion_planner_server = MockMotionPlannerServer(17)
     motion_planner_server.run()
     

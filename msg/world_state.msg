@@ -1,2 +1,2 @@
-world world
+world_obj world
 string robot

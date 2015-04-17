@@ -14,9 +14,6 @@ class MockPoseGenerator:
         self.state = dict()
 
     def next(self, action_tuple):
-        # TODO: remove parens
-        action_tuple = re.split("[\(,\)]?",action_tuple)
-        action_tuple = action_tuple[1:-1]
         action = action_tuple[0]
         obj = action_tuple[1]
 
@@ -24,13 +21,13 @@ class MockPoseGenerator:
         msg.object_id = obj
         
         # TODO get surface/obj
-        if action in self.state:
+        if action_tuple in self.state:
             # if there are letters left, return it
-            if len(self.state[action]) > 0:
+            if len(self.state[action_tuple]) > 0:
                 if action == 'PICKUP':
-                    msg.direction = self.state[action].pop()
+                    msg.direction = self.state[action_tuple].pop()
                 else:
-                    location = self.state[action].pop()
+                    location = self.state[action_tuple].pop()
                     msg.x = location[0]
                     msg.y = location[1]
                     msg.surface_id = action_tuple[-1]
@@ -40,16 +37,16 @@ class MockPoseGenerator:
         else:
             # generate list of poses
             if action == 'PICKUP':
-                self.state[action] = ['N','NE','E','SE','S','SW','W','NW']
-                shuffle(self.state[action])
-                msg.direction = self.state[action].pop()
+                self.state[action_tuple] = ['N','NE','E','SE','S','SW','W','NW']
+                shuffle(self.state[action_tuple])
+                msg.direction = self.state[action_tuple].pop()
             else:
                 x_poses =  list(xrange(17))
                 y_poses = list(xrange(17))
                 shuffle(x_poses)
                 shuffle(y_poses)
-                self.state[action]=numpy.transpose([x_poses,y_poses]).tolist()
-                location = self.state[action].pop()
+                self.state[action_tuple]=numpy.transpose([x_poses,y_poses]).tolist()
+                location = self.state[action_tuple].pop()
                 msg.x = location[0]
                 msg.y = location[1]
                 msg.surface_id = action_tuple[-1]
@@ -58,6 +55,10 @@ class MockPoseGenerator:
 
     def reset(self, action):
         if action in self.state:
+            del self.state[action]
+
+    def resetAll(self):
+        for action in self.state.keys():
             del self.state[action]
 
 if __name__ == "__main__":

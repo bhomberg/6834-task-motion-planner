@@ -26,7 +26,9 @@ class MotionPlannerServer(object):
         
         world_start_state = req.parameters.state.world
         robot_start_state = req.parameters.state.robot
+        print "PREACTION:", req.parameters.action
         action = re.split(',', req.parameters.action[1:-1])
+        print "ACTION: ", action
         pose_goals = req.parameters.goals
         
         # Set attach/detach point
