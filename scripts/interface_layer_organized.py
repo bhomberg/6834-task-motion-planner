@@ -153,7 +153,7 @@ class InterfaceLayer(object):
         partialTraj = []
         pose1 = None
         num_iters = 0
-        prev_fail_step = -1
+        prev_fail_step = 0
         # create our tryRefine object, since that function needs to maintain its local variables
         trajRefiner = TryRefine(self)
         
@@ -177,7 +177,7 @@ class InterfaceLayer(object):
             print traj
             
             if success: # if it worked, we're done!
-                return (hlplan, traj)
+                return (hlplan[1:], traj)
             trajCount = 0
             
             # if it didn't work, we need to start piece by piece
@@ -189,19 +189,18 @@ class InterfaceLayer(object):
                 print "Partial traj, step: ", failStep, ", failcause: ", failCause, ", traj: ", partialTraj
                 
                 if success: # if we succeeded, return!
-                    return (hlplan, partialTraj)
+                    return (hlplan[1:], partialTraj)
                     
                 # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
-                (tempstate) = self.stateUpdate(tstate, failCause, failStep, prev_fail_step, hlplan, tworld)
+                print "STEPs:", prev_fail_step, step, failStep
+                (tempstate) = self.stateUpdate(state, failCause, failStep, prev_fail_step, hlplan, tworld)
                 # now, call the task planner again on the new state
                 (error, newPlan) = self._callTaskPlanner(tempstate)
 
                 # try to refine our plan, allowing for no errors
                 (success, t6, traj, t1, t2, t3, t4) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, 'errorFree')
-
-            
                 if success: # if it worked, we're done!
-                    return (hlplan, traj)
+                    return (hlplan[1:], traj)
                 
                 if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
                     # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization
@@ -211,7 +210,11 @@ class InterfaceLayer(object):
                     state = tempstate
                     world = tworld
                     step = failStep
+
+                    print "STEPS: ", prev_fail_step, step, failStep
                     print "HLPlan: ", hlplan
+                if error:
+                    print "Failed to find high level plan, trying again."
                     
                 trajCount+=1
                 
@@ -222,7 +225,7 @@ class InterfaceLayer(object):
                 world = copy.deepcopy(initWorld)
                 trajCount = 0
                 step = 0
-                prev_fail_state = -1
+                prev_fail_state = 0
                 partialTraj = []
                 pose1 = copy.deepcopy(initPose)
                 print state
@@ -295,9 +298,9 @@ class TryRefine(object):
                 (world, motionPlan, succeeds) = self.interface._callMotionPlanner(self.world, self.nextaxn, self.pose2) # TODO: fix how we access the motion plan
                 if succeeds: # if it succeeds, either we're done or we can keep going keep going
                     print "CHECK: ", self.index, len(hlplan) - 1
+                    self.traj.append(motionPlan)
                     if self.index == len(hlplan) - 2:
                         return (True, self.pose1, self.traj, self.index, [], self.state, self.world)
-                    self.traj.append(motionPlan)
                     self.index+=1
                     self.pose1 = self.pose2
                     self.world = world
