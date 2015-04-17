@@ -293,6 +293,8 @@ class TryRefine(object):
                 #print "step: ", step
                 #print 'here ', len(self.worlds)
                 self.worlds = self.worlds[0:step-1].append(copy.deepcopy(world))
+                if self.worlds == None:
+                    self.worlds = [copy.deepcopy(world)]
                 #print 'there ', len(self.worlds)
             else:
                 #print 'and here too ', len(self.worlds)
