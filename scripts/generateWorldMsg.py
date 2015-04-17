@@ -9,7 +9,7 @@ MAX_BLOCK_GRID_SIZE = 17
 class generateWorldMsg:
 	def __init__(self):
 		self.WORLD_GRID_SIZE = 17
-		self.CENTER = self.WORLD_GRID_SIZE/2 + 1
+		self.CENTER = self.WORLD_GRID_SIZE/2
 
 	def generateWorld(self,block_shape,shape_size):
 		my_world = world()
