@@ -216,7 +216,7 @@ class InterfaceLayer(object):
                 if success: # if we succeeded, return!
                     return (hlplan[1:], partialTraj)
                     
-                if failCause[0] != 'immovable':
+                if len(failCause) == 0 || failCause[0] == 'immovable':
                     # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
                     (tempstate) = self.stateUpdate(state, failCause, failStep, prev_fail_step, hlplan, tworld)
                     # now, call the task planner again on the new state
@@ -361,7 +361,7 @@ if __name__ == '__main__':
 
     genWorld = generateWorldMsg()
     
-    f = open(DIR + 'states/state3Blocks_1','r')
+    f = open(DIR + 'states/fivebyfive','r')
     init_state_string = f.read()
     
     state = [[]]*3
@@ -374,7 +374,7 @@ if __name__ == '__main__':
     pose = l[3]
     print state
 
-    world = genWorld.generateWorld('SQUARE',13)
+    world = genWorld.generateWorld('SQUARE',5)
 
     poseGen = MockPoseGenerator()
 
