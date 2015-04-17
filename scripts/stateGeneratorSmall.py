@@ -46,7 +46,7 @@ class StateGeneratorSmall:
 		s += "ROBOTAT INITPOSE,EMPTY LEFTARM,"
 		s += self.concatMult(["ISGPFG GP_BLOCK", " BLOCK"],",",True)
 		for s_id in surface_ids:
-			middle = "_" + s_id + "BLOCK"
+			middle = "_" + s_id + " BLOCK"
 			end = " " + s_id
 			s += self.concatMult(["ISGPFPD PDP_BLOCK",middle, end],",")
 		for s_id in surface_ids:
