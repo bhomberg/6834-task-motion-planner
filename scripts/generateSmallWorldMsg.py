@@ -8,6 +8,7 @@ class GenerateSmallWorldMsg:
 		self.WORLD_GRID_SIZE = 17
 		self.CENTER = self.WORLD_GRID_SIZE/2
 		self.block_idx = 0
+		self.wall_idx = 0
 
 	# surface_and_blocks = a dictionary of surfaces and the number of blocks on each one
 	def generateWorld(self,surface_and_blocks):
@@ -29,28 +30,30 @@ class GenerateSmallWorldMsg:
 			self._add_block(my_world,surface_id,i)
 
 	def generateWalls(self,my_world,surface_id,lb,ub):
-		idx = 0
 		for i in xrange(lb,ub):
 			# left wall
 			o = obj()
-			o.id = "WALL" + str(idx)
+			o.id = "WALL" + str(self.wall_idx)
+			self.wall_idx += 1
 			o.loc.surface_id = surface_id
 			o.loc.x = self.CENTER - 1
 			o.loc.y = self.CENTER + i
 			my_world.walls.append(o)
 			# right wall
-			o2 = obj()
-			o2.loc.surface_id = surface_id
-			o2.loc.x = self.CENTER + 1
-			o2.loc.y = self.CENTER + i
-			my_world.walls.append(o2)
-			idx += 1
+			o = obj()
+			o.id = "WALL" + str(self.wall_idx)
+			self.wall_idx += 1
+			o.loc.surface_id = surface_id
+			o.loc.x = self.CENTER + 1
+			o.loc.y = self.CENTER + i
+			my_world.walls.append(o)
 		# top wall
-		o3 = obj()
-		o3.loc.surface_id = surface_id
-		o3.loc.x = self.CENTER
-		o3.loc.y = self.CENTER + ub
-		my_world.walls.append(o3)
+		o = obj()
+		o.id = "WALL" + str(self.wall_idx)
+		o.loc.surface_id = surface_id
+		o.loc.x = self.CENTER
+		o.loc.y = self.CENTER + ub
+		my_world.walls.append(o)
 
 
 
@@ -70,40 +73,40 @@ def generateWorlds():
 	surfaces = dict()
 	surfaces['I'] = 2
 	surfaces['S'] = 1
-	worlds['state3blocks_1'] = g.generateWorld(surfaces)
+	worlds['state3Blocks_1'] = g.generateWorld(surfaces)
 	surfaces = dict()
 	surfaces['I'] = 2
 	surfaces['A'] = 1
 	surfaces['S'] = 0
-	worlds['state3blocks_2'] = g.generateWorld(surfaces)
+	worlds['state3Blocks_2'] = g.generateWorld(surfaces)
 	surfaces = dict()
 	surfaces['I'] = 3
 	surfaces['A'] = 0
 	surfaces['S'] = 0
-	worlds['state3blocks_3'] = g.generateWorld(surfaces)
+	worlds['state3Blocks_3'] = g.generateWorld(surfaces)
 	surfaces = dict()
 	surfaces['I'] = 3
 	surfaces['A'] = 0
 	surfaces['S'] = 0
-	worlds['state3blocks_4'] = g.generateWorld(surfaces)
+	worlds['state3Blocks_4'] = g.generateWorld(surfaces)
 	surfaces = dict()
 	surfaces['I'] = 3
 	surfaces['S'] = 1
-	worlds['state4blocks_1'] = g.generateWorld(surfaces)
+	worlds['state4Blocks_1'] = g.generateWorld(surfaces)
 	surfaces = dict()
 	surfaces['I'] = 2
 	surfaces['S'] = 2
-	worlds['state4blocks_2'] = g.generateWorld(surfaces)
+	worlds['state4Blocks_2'] = g.generateWorld(surfaces)
 	surfaces = dict()
 	surfaces['I'] = 4
 	surfaces['A'] = 0
 	surfaces['S'] = 0
-	worlds['state4blocks_3'] = g.generateWorld(surfaces)
+	worlds['state4Blocks_3'] = g.generateWorld(surfaces)
 	surfaces = dict()
 	surfaces['I'] = 3
 	surfaces['A'] = 1
 	surfaces['S'] = 0
-	worlds['state4blocks_4'] = g.generateWorld(surfaces)
+	worlds['state4Blocks_4'] = g.generateWorld(surfaces)
 	return worlds
 if __name__ == "__main__":
 	g = GenerateSmallWorldMsg() 
