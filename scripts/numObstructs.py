@@ -5,14 +5,13 @@ from task_motion_planner.msg import *
 # world is a world msg from generateWorldMsg
 # surface dim --> size of grid (default 17)
 def numObstructsWorld(world, surface_dim):
-    surfaces = world.world.surfaces
-    movable_objects = world.world.movable_objects
+    world = world.world
     
     surfaces = dict()
-    for surface in surfaces:
+    for surface in world.surfaces:
         surfaces[surface.id] = [[0 for i in range(surface_dim)] for j in range(surface_dim)]
     
-    for movable_object in movable_objects:
+    for movable_object in world.movable_objects:
         surface_id = movable_object.loc.surface_id
         x = movable_object.loc.x
         y = movable_object.loc.y
@@ -22,25 +21,24 @@ def numObstructsWorld(world, surface_dim):
             surfaces[surface_id][y][x] = 1
             
     numObs = 0
-    for surface in surfaces:
-        for movable_object in movable_objects:
-            numObs += numObstructsObject(surfaces, movable_object)
+    for movable_object in world.movable_objects:
+        numObs += numObstructsObject(movable_object, surface_dim, surfaces)
             
     return numObs
             
-def numObstructsObject(surfaces, obj):
+def numObstructsObject(obj, surface_dim, surfaces):
     numObs = 0
-    numObs += obstructsN(surfaces, obj)
-    numObs += obstructsNE(surfaces, obj)
-    numObs += obstructsE(surfaces, obj)
-    numObs += obstructsSE(surfaces, obj)
-    numObs += obstructsS(surfaces, obj)
-    numObs += obstructsSW(surfaces, obj)
-    numObs += obstructsW(surfaces, obj)
-    numObs += obstructsNW(surfaces, obj)
+    numObs += obstructsN(obj, surface_dim, surfaces)
+    numObs += obstructsNE(obj, surface_dim, surfaces)
+    numObs += obstructsE(obj, surface_dim, surfaces)
+    numObs += obstructsSE(obj, surface_dim, surfaces)
+    numObs += obstructsS(obj, surface_dim, surfaces)
+    numObs += obstructsSW(obj, surface_dim, surfaces)
+    numObs += obstructsW(obj, surface_dim, surfaces)
+    numObs += obstructsNW(obj, surface_dim, surfaces)
     return numObs
     
-def obstructsN(surfaces, obj):
+def obstructsN(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
@@ -50,75 +48,87 @@ def obstructsN(surfaces, obj):
     else:
         return True
     
-def obstructsNE(surfaces, obj):
+def obstructsNE(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
     
     if y == 0:
-        if x < self.surface_dim:
-            if surfaces[surface_id][y][x+1] == 0:
+        # cell to the right empty
+        if x < surface_dim-1 and surfaces[surface_id][y][x+1] == 0:
                 return False
         else:
             return False
-    elif surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0:
-        return False
+    elif x < surface_dim-1:
+        # above, above & right, right
+        if surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0:
+            return False
+        else:
+            return True
+    elif x == 0:
+        return not surfaces[surface_id][y-1][x] == 0
     else:
         return True
     
-def obstructsE(surfaces, obj):
+def obstructsE(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
     
-    if x == self.surface_dim-1 or surfaces[surface_id][y][x+1] == 0:
+    if x == surface_dim-1 or surfaces[surface_id][y][x+1] == 0:
         return False
     else:
         return True
     
-def obstructsSE(surfaces, obj):
+def obstructsSE(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
     
-    if y == self.surface_dim-1:
-        if x < self.surface_dim:
-            if surfaces[surface_id][y][x+1] == 0:
-                return False
+    # y is bottom
+    if y == surface_dim-1:
+        # cells to the right
+        if x < surface_dim-1:
+            # no block to the right?
+            return not surfaces[surface_id][y][x+1] == 0
         else:
             return False
-    elif surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0:
-        return False
+    elif x < surface_dim-1:
+        return not (surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0)
+    elif x == surface_dim-1:
+        return not surfaces[surface_id][y+1][x] == 0
     else:
         return True
     
-def obstructsS(surfaces, obj):
+def obstructsS(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
     
-    if y == self.surface_dim-1 or surfaces[surface_id][y+1][x] == 0:
+    if y == surface_dim-1 or surfaces[surface_id][y+1][x] == 0:
         return False
     else:
         return True
     
-def obstructsSW(surfaces, obj):
+def obstructsSW(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
     
-    if y == self.surface_dim-1:
+    # y is bottom
+    if y == surface_dim-1:
         if x > 0:
-            if surfaces[surface_id][y][x-1] == 0:
-                return False
+            return not surfaces[surface_id][y][x-1] == 0
         else:
             return False
-    elif surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0:
-        return False
+    elif x > 0:
+        return not (surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0)
+    elif x == 0:
+        return not surfaces[surface_id][y+1][x] == 0
     else:
         return True
     
-def obstructsW(surfaces, obj):
+def obstructsW(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
@@ -128,19 +138,21 @@ def obstructsW(surfaces, obj):
     else:
         return True
     
-def obstructsNW(surfaces, obj):
+def obstructsNW(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
     y = obj.loc.y
     
+    # top row
     if y == 0:
+        # cells to the left
         if x > 0:
-            if surfaces[surface_id][y][x-1] == 0:
-                return False
+            return not surfaces[surface_id][y][x-1] == 0
         else:
             return False
-    elif surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0:
-        return False
+    elif x < surface_dim-1:
+        return not (surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x-1] == 0 and surfaces[surface_id][y][x-1] == 0)
+    elif x == surface_dim-1:
+        return not surfaces[surface_id][y-1][x] == 0
     else:
         return True
-    

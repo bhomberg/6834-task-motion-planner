@@ -13,7 +13,7 @@ class generateWorldMsg:
 
 	def generateWorld(self,block_shape,shape_size):
 		my_world = world_state()
-                my_world.world = world_obj()
+		my_world.world = world_obj()
 		surfaceS = obj()
 		surfaceS.id = 'S'
 		surfaceI = obj()
@@ -23,6 +23,8 @@ class generateWorldMsg:
 			self.generateBlockGrid(my_world,shape_size)
 		elif block_shape=='CROSS':
 			self.generateBlockCross(my_world,shape_size)		
+		elif block_shape=='X':
+			self.generateBlockX(my_world,shape_size)
 		elif block_shape=='HLINE':
 			self.generateBlockHLine(my_world,shape_size)		
 		elif block_shape=='VLINE':
@@ -56,6 +58,14 @@ class generateWorldMsg:
 		for i in xrange(-bound,bound+1):
 			idx = self._add_block(my_world,0,i,idx)
 
+	def generateBlockX(self,my_world,shape_size):
+		idx = 1
+		bound = shape_size/2
+		for j in xrange(-bound,bound+1):
+			for i in xrange(-bound,bound+1):
+				if i == j or j == -i:
+					idx = self._add_block(my_world,i,j,idx)
+
 	def _add_block(self,my_world,i,j,idx):
 		o = obj()
 		o.id = 'BLOCK' + str(idx)
@@ -70,11 +80,13 @@ class generateWorldMsg:
 		o.loc.grasped = False
 		my_world.world.movable_objects.append(o)
 		return idx
+		
 if __name__ == "__main__":
 	g = generateWorldMsg()
 	for i in xrange(MIN_BLOCK_GRID_SIZE,MAX_BLOCK_GRID_SIZE+1,2):
 		g.generateWorld("SQUARE",i)
 	g.generateWorld("CROSS",17)
-	g.generateWorld("HLINE",16)
-	g.generateWorld("VLINE",16)
+	g.generateWorld("HLINE",17)
+	g.generateWorld("VLINE",17)
+	print g.generateWorld("X",17)
 
