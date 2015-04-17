@@ -12,6 +12,8 @@ class GenerateSmallWorldMsg:
 
 	# surface_and_blocks = a dictionary of surfaces and the number of blocks on each one
 	def generateWorld(self,surface_and_blocks):
+		self.block_idx = 0
+		self.wall_idx = 0
 		my_world = world_state()
 		my_world.world = world_obj()
 		for s,numBlocks in surface_and_blocks.iteritems():
