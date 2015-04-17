@@ -29,9 +29,11 @@ class GenerateSmallWorldMsg:
 			self._add_block(my_world,surface_id,i)
 
 	def generateWalls(self,my_world,surface_id,lb,ub):
+		idx = 0
 		for i in xrange(lb,ub):
 			# left wall
 			o = obj()
+			o.id = "WALL" + str(idx)
 			o.loc.surface_id = surface_id
 			o.loc.x = self.CENTER - 1
 			o.loc.y = self.CENTER + i
@@ -42,6 +44,7 @@ class GenerateSmallWorldMsg:
 			o2.loc.x = self.CENTER + 1
 			o2.loc.y = self.CENTER + i
 			my_world.walls.append(o2)
+			idx += 1
 		# top wall
 		o3 = obj()
 		o3.loc.surface_id = surface_id
