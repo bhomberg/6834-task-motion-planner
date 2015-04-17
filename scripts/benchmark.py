@@ -33,9 +33,9 @@ DIR_6834 = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/'
 
 # One Cover Bechmark
 out_file = open('benchmark.output','w')
-# world_shapes = ["SQUARE","CROSS","X","HLINE","VLINE"]
-world_shapes = ["CROSS","X","HLINE","VLINE"]
-world_sizes = xrange(3,18,2)
+world_shapes = ["SQUARE","CROSS","X","HLINE","VLINE"]
+# world_shapes = ["CROSS","X","HLINE","VLINE"]
+world_sizes = xrange(3,14,2)
 
 for shape in world_shapes:
 	for size in world_sizes:
@@ -73,7 +73,7 @@ for shape in world_shapes:
 			numMotionPlannerCalls.append(interfaceLayer.numMotionPlannerCalls)
 			numTaskPlannerCalls.append(interfaceLayer.numTaskPlannerCalls)
 			runTimes.append(runTime)
-			fname=DIR_6834+"output/"+shape+str(size)+"_"+str(i)+".output"
+			fname=DIR_6834+"outputResults/"+shape+str(size)+"_"+str(i)+".output"
 			plan_traj = open(fname,'w')
 			# save hlplan & trajectory to output folder
 			plan_traj.write(str(hlplan)+"\n"+"\n")
