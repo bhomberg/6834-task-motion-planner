@@ -63,17 +63,17 @@ class InterfaceLayer(object):
                 f.write(')')
             f.write(')\n')
         f.write(')\n')
-        f.write('(:goal ')
+        f.write('(:goal (and ')
         for g in state[2]:
-            f.write('(and (')
+            f.write('(')
             for a in g:
                 f.write(a + ' ')
                 if a == 'NOT':
                     f.write('(')
             if g[0] == 'NOT':
                 f.write(')')
-            f.write('))\n')
-        f.write(')\n)')
+            f.write(')\n')
+        f.write('))\n)')
         f.close()
         msg.task_file = self.directory + 'state'
         resp = self.taskServer(msg)
