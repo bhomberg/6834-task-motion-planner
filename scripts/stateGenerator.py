@@ -19,8 +19,9 @@ def concatMult(strs,last,end=False,start=0):
 			s += strs[x]+str(i)
 		if r < len(strs):
 			s += strs[-1]
-		if not i==10:
+		if not i==NUMBLOCKS-1:
 			s += ","
+	s += last
 	return s
 def generateString():
 	s = ''
