@@ -31,6 +31,10 @@ class InterfaceLayer(object):
         self.stateUpdate = stateUpdate
         
         self.directory = directory
+        
+        self.numTaskPlannerCalls = 0
+        self.numMotionPlannerCalls = 0
+        
         print "Initialized interface layer!"
         
     def _callTaskPlanner(self, state):
@@ -78,6 +82,9 @@ class InterfaceLayer(object):
         l = resp.plan.plan.split('\n')
         plan = [tuple(line.split(' ')) for line in l]
         plan = plan[0:-1]
+        
+        self.numTaskPlannerCalls += 1
+        
         return (resp.plan.error, plan)
         
     def _callMotionPlanner(self, world, action, goals):
@@ -94,6 +101,8 @@ class InterfaceLayer(object):
             msg.goals = goals
         
             res = self.motionServer(msg)
+        
+            self.numMotionPlannerCalls += 1
         
             return (res.plan.state, res.plan.motion, res.plan.success)
         except rospy.ServiceException, e:
@@ -125,6 +134,10 @@ class InterfaceLayer(object):
                         if success:
                             return [obstacles[i].id for i in l]
         print "ERROR IN MP ERRORS!"
+        
+    def resetCallCounts(self):
+        self.numMotionPlannerCalls = 0
+        self.numTaskPlannerCalls = 0
         
     def run(self, state, world, pose):
         
@@ -294,7 +307,8 @@ if __name__ == '__main__':
 
     genWorld = generateWorldMsg()
     
-    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/one_cover','r')
+    f = open('/home/ragtz/indigo_workspace/src/6834-task-motion-planner/states/one_cover','r')
+    #f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/one_cover','r')
     init_state_string = f.read()
     
     state = [[]]*3
@@ -310,7 +324,8 @@ if __name__ == '__main__':
 
     poseGen = MockPoseGenerator()
 
-    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/')
+    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/ragtz/indigo_workspace/src/6834-task-motion-planner/')
+    #interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/')
     (hlplan, traj) = interfaceLayer.run(state, world, pose)
     
     print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"

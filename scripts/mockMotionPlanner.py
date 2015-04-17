@@ -59,7 +59,7 @@ class MockMotionPlannerServer(object):
                 state.world.movable_objects[obj_idx].loc.grasped = True
                 
                 res.state = state
-                res.motion = '[picked up ' + obj.id + " from " + direction + "]"
+                res.motion = 'picked up ' + obj.id + " from " + direction
                 res.success = True
             else:
                 res.state = state
@@ -87,7 +87,7 @@ class MockMotionPlannerServer(object):
                 state.world.movable_objects[obj_idx].loc.grasped = False
                 
                 res.state = state
-                res.motion = '[put down ' + obj.id + " on surface " + goal_surface_id + " at (" + str(goal_x) + "," + str(goal_y) + ")]"
+                res.motion = 'put down ' + obj.id + " on surface " + goal_surface_id + " at (" + str(goal_x) + "," + str(goal_y) + ")"
                 res.success = True
             else:
                 res.state = state
