@@ -141,11 +141,9 @@ In this case, there are no more obstructions, so the process works!
 
 \section{Technical Details}
 
--zoom into features, explain how they work on a technical level
-
--enough understanding to derive + implement algorithm on their own
-
-things to talk about:
+In this section, we discuss the key insight of the original paper: the ability to avoid discretization by representing continuous variables symbolically via references.  
+We also discuss the pose generators which propose real-world instantiations of these references.  
+Finally, we walk through the algorithm in detail.
 
 \subsection{Representing Continuous Variables Symbolically}
 
@@ -260,19 +258,24 @@ include algorithm block 2 from paper!  go with the one from the short version of
 In the TryRefine subroutine, the interface layer attempts to find motion plans corresponding to the various actions.  
 It has two modes: error free and partial trajectory.  
 In error free mode, it performs backtracking search to try to find a full plan from start to finish.  
-In partial trajectory mode, it goes as far as it can, but when it finds an infeasible motion plan, it returns the step at which it failed.  
+The backtracking search is over possible pose instantiations: since some poses may be infeasible and since previous choices may affect future choices, the backtracking search iterates over all possible poses in order to find a full solution if a full solution exists.  
+
+In partial trajectory mode, TryRefine goes as far as it can, but when it finds an infeasible motion plan for some action, it returns the step at which it failed.  
 In addition to returning the failed step, it returns the cause of the errors.  
 The function MPErrs removes various objects from the environment until it find a plan which succeeds.  
 It then marks all of those objects which were removed as blocking objects.
 
-NOTE TO BIANCA: include paragraph about how we utilize pose generators here
+To find the blocking objects, we start by iterating through a randomized list of the objects.  We continue removing objects until we find a successful motion plan.  
+We will eventually find a successful motion plan since if there are no other objects in the world, the motion should succeed.  
+After we find this possible list of removed objects, we iterate through all of the objects we removed.  
+We attempt to add these objects in one by one, leaving added in all of those which don't obstruct our found motion plan.  
+This leaves us with a local minimum of removed objects: it may be possible to find another smaller set of objects that, if removed, allow a valid motion plan.  
+However, for this set of this set of objects, no object can be added back in without obstructing the motion plan.
 
-there will be another couple paragraphs here extending this
+As described above in Algorithm 1, once the list of blocking objects is returned, the interface layer updates the state and attempts to replan from there.
 
 
-\subsection{API and Interfaces}
 
-Alex should write this section, probably mostly the same as the stuff he's writing for the readme/etc.
 
 \section{Benchmarking}
 
@@ -294,15 +297,22 @@ to include:
 
 \section{Limitations}
 
--realistic expectations for someone interested in applying the reasoning technique
+The most important limitation of this implementation is to remember that it is an interface layer.  
+It does not include a task planner and a motion planner: you must set those up yourself as ROS services and make sure that the output and input message types specify those outlined in the API.  
+Depending on what planners you use, setting them up and installing them may be nontrivial.  
+Different planners are effective for different tasks and some planners may require extensive installation.  
+When you pick your task and motion planners, remember that this interface layer is set up to only work with task planners that use the PDDL specification language.  
+If you choose to use another specification system, you will need to translate between PDDL and your system.
 
--still need to get a motion planner and a task planner working and need to make them have the right API interface -- not a pure out of the box working thing
+On a more detailed level, it is important to note that this planner is not guaranteed to find an optimal solution, or even to find a solution at all.  
+We refer you to [1] for a proof that this algorithm is guaranteed to find a solution for problems with certain properties.  
+However, due to the random nature of the pose generators and that there are limits set on the number of iterations, a valid plan may not be found for all problems.  
 
--is not guaranteed to find an optimal solution
+Furthermore, this system is not intended for online replanning.  
+It may be possible to use it for online replanning for some systems if it runs quickly on the particular problem, but it is not an intended feature of this algorithm.
 
--cannot do online re-planning
-
--time to run is based on speed of the motion planner and task planner
+Finally, the runtime of this algorithm is based on the speed of the motion planner and the task planner used within it.  
+If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.
 
 \section{Open Questions}
 

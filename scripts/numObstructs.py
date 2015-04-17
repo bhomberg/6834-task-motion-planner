@@ -99,7 +99,7 @@ def obstructsSE(obj, surface_dim, surfaces):
         return not surfaces[surface_id][y+1][x] == 0
     else:
         return True
-    
+
 def obstructsS(obj, surface_dim, surfaces):
     surface_id = obj.loc.surface_id
     x = obj.loc.x
