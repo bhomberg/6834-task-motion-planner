@@ -116,7 +116,42 @@ class InterfaceLayer(object):
         a_whole_new_world.robot = copy.deepcopy(world.robot)
         a_whole_new_world.world = copy.deepcopy(world.world)
 	
-        for i in range(len(obstacles)):
+        updated_obstacles = copy.deepcopy(obstacles)
+        shuffle(updated_obstacles)
+        removed = []
+
+        o = []
+        for i in range(len(updated_obstacles)):
+            obj = updated_obstacles.pop()
+            if obj.id == action[1]:
+                updated_obstacles.insert(0, obj)
+            else:
+                removed.append(obj)
+                a_whole_new_world.world.movable_objects = updated_obstacles
+                #print action
+                #print [obstacle.id for obstacle in updated_obstacles]
+                (a, b, success) = self._callMotionPlanner(a_whole_new_world, action, pose2)
+                if success:
+                    break
+        
+        actual = []
+        for i in range(len(removed)):
+            updated_obstacles.append(removed[i])
+            a_whole_new_world.world.movable_objects = updated_obstacles
+            (a, b, success) = self._callMotionPlanner(a_whole_new_world, action, pose2)
+            if not success:
+                updated_obstacles.pop()
+                actual.append(removed[i])
+
+        a_whole_new_world.world.movable_objects = updated_obstacles
+        (a, b, success) = self._callMotionPlanner(a_whole_new_world, action, pose2)
+        if success:
+            #print "MPErrs obstacles: ", [obstacle.id for obstacle in actual]
+            return [obstacle.id for obstacle in actual]
+        else:
+            print "ERROR IN MP ERRORS!"
+        
+        '''for i in range(len(obstacles)):
             if i == 0:
                 (a, b, success) = self._callMotionPlanner(world, action, pose2)
                 if success:
@@ -132,7 +167,7 @@ class InterfaceLayer(object):
                         a_whole_new_world.world.movable_objects = updated_obstacles
                         (a, b, success) = self._callMotionPlanner(a_whole_new_world, action, pose2)
                         if success:
-                            return [obstacles[i].id for i in l]
+                            return [obstacles[i].id for i in l]'''
         print "ERROR IN MP ERRORS!"
         
     def resetCallCounts(self):
@@ -168,13 +203,14 @@ class InterfaceLayer(object):
             partialTraj = []
             pose1 = initPose
             if error:
-                return "Error! Cannot find any high level plan. :("
+                print "Error! Cannot find any high level plan. :("
+                return (False, False)
             hlplan.insert(0, (' ', ' ', ' ',' ', ' '))
-            # print "HLPlan: ", hlplan
+            print "HLPlan: ", hlplan
             # now that we have a high level plan, we try to actually turn it into motions in the real world
             
         while(num_iters < MAX_ITERS):
-            # print "HIGHEST LEVEL ALG 1 ITERATION: ", num_iters
+            print "HIGHEST LEVEL ALG 1 ITERATION: ", num_iters
             num_iters+=1
             
             # try to refine our plan, allowing for no errors
@@ -187,7 +223,7 @@ class InterfaceLayer(object):
             
             # if it didn't work, we need to start piece by piece
             while not success and trajCount < MAX_TRAJ_COUNT:
-                # print "INNER LEVEL ALG 1 ITERATION: ", trajCount
+                print "INNER LEVEL ALG 1 ITERATION: ", trajCount
 
                 # find a partial trajectory -- how far along the high level task plan can we find motion plans for?
                 (success, pose2, partialTraj, failStep, failCause, tstate, tworld) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, mode='partialTraj')
@@ -209,7 +245,7 @@ class InterfaceLayer(object):
                 if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
                     # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization
                     hlplan = hlplan[0:failStep+1] + newPlan
-                    # print "HLPlan: ", hlplan
+                    print "HLPlan: ", hlplan
                     pose1 = pose2
                     prev_fail_step = failStep
                     state = tempstate
@@ -232,7 +268,7 @@ class InterfaceLayer(object):
                 pose1 = copy.deepcopy(initPose)
                 (error, hlplan) = self._callTaskPlanner(state) # find a high level task plan
                 hlplan.insert(0, (' ', ' ', ' ',' ', ' '))
-                # print "HLPlan: ", hlplan
+                print "HLPlan: ", hlplan
                 if error:
                     print "ERROR ON TASK PLAN!"
                 
@@ -253,11 +289,12 @@ class TryRefine(object):
         self.axn = None
         self.nextaxn = None
         self.interface = interface
+        self.worlds = []
         
     def tryRefine(self, initPose, state, world, hlplan, step, trajprefix, mode):
         # if this is the first time it's been called or if there's a new high level plan, update variables!
         if self.called == False or self.old_hlplan != hlplan:
-            # print "TRY REFINE: FIRST TIME BEING CALLED OR NEW HLPLAN"
+            print "TRY REFINE: FIRST TIME BEING CALLED OR NEW HLPLAN"
             self.index = step
             self.state = state
             self.traj = trajprefix
@@ -265,12 +302,19 @@ class TryRefine(object):
             self.called = True
             self.old_hlplan = hlplan
             self.hlplan = hlplan
+            if len(self.worlds) > 1:
+                self.worlds = self.worlds[0:step-1].append(copy.deepcopy(world))
+            else:
+                self.worlds = [copy.deepcopy(world)]
+            print "index: ", self.index
+            print "len worlds: ", len(self.worlds)
             self.interface.poseGenerator.resetAll()
             self.world = world
             
+        print "Try refine mode: ", mode
         # progressively try and find a motion plan for each action as we go through the plan
         while step <= self.index and self.index < len(hlplan) - 1: #NOTE: changed this from <= to < because of out of bounds error
-            # print "TRY REFINE ITERATING LOOP: ", self.index
+            print "TRY REFINE ITERATING LOOP: ", self.index
             # start by figuring out our actions and poses, use the pose generators to do that
             self.axn = hlplan[self.index]
             self.nextaxn = hlplan[self.index+1]
@@ -279,25 +323,45 @@ class TryRefine(object):
             if self.pose2 == None: # pose 2 is already defined, so we should backtrack if in Error free mode, otherwise return that we've failed
                 self.interface.poseGenerator.reset(self.axn)
                 self.pose1 = self.interface.poseGenerator.next(self.axn)
+                #print "index: ", self.index
+                #print "worlds: ", len(self.worlds)
                 self.index-=1
+                if len(self.worlds) > 1:
+                    self.worlds = self.worlds[0:-1]
+                if len(self.worlds) > 0:
+                    self.world = self.worlds[-1]
+                else:
+                    print "NO WORLDS LEFT AHH"
+                #print "index: ", self.index
+                #print "worlds: ", len(self.worlds)
                 self.traj = self.traj[0:-1] #cut off the motion plan corresponding to that action
             else:
                 # try and find a motion plan!
-                (world, motionPlan, succeeds) = self.interface._callMotionPlanner(self.world, self.nextaxn, self.pose2)
+                #print "action: ", self.nextaxn
+                #print "pose: ", self.pose2
+                #print "index: ", self.index, "   worlds: ", len(self.worlds)
+                #print self.world.world.movable_objects
+                #print [(obj.id, obj.loc.grasped) for obj in self.world.world.movable_objects]
+                #print [(obj.id, obj.loc.grasped) for obj in self.worlds[-1].world.movable_objects]
+                (world, motionPlan, succeeds) = self.interface._callMotionPlanner(copy.deepcopy(self.world), self.nextaxn, self.pose2)
                 if succeeds: # if it succeeds, either we're done or we can keep going keep going
                     self.traj.append(motionPlan)
                     if self.index == len(hlplan) - 2:
                         return (True, self.pose1, self.traj, self.index, [], self.state, self.world)
                     self.index+=1
                     self.pose1 = self.pose2
-                    self.world = world
+                    self.world = copy.deepcopy(world)
+                    self.worlds.append(copy.deepcopy(world))
                 elif mode == 'partialTraj':
                     # if it fails, then we need to find out why it failed -- what's blocking?
                     return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.nextaxn), self.state, self.world)
+
+            print "\n\n"
                 
         # we finished
-        # print "FINISHED ITERATING, ABOUT TO RETURN"
+        print "FINISHED ITERATING, ABOUT TO RETURN"
         self.index += 1
+        #self.worlds.append(copy.deepcopy(self.world))
         self.interface.poseGenerator.resetAll()
         return (False, self.pose1, self.traj, self.index, [], self.state, self.world)
 
@@ -307,7 +371,8 @@ if __name__ == '__main__':
 
     genWorld = generateWorldMsg()
     
-    f = open('/home/vmlane/catkin_ws/src/6834-task-motion-planner/states/one_cover','r')
+    #f = open('/home/vmlane/catkin_ws/src/6834-task-motion-planner/states/one_cover','r')
+    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/sevenbyseven','r')
     init_state_string = f.read()
     
     state = [[]]*3
@@ -318,12 +383,14 @@ if __name__ == '__main__':
     k = l[2].split(',')
     state[2] = [tuple(i.split(' ')) for i in k]
     pose = l[3]
+    print state
 
-    world = genWorld.generateWorld('SQUARE',3)
+    world = genWorld.generateWorld('SQUARE',7)
 
     poseGen = MockPoseGenerator()
 
-    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/vmlane/catkin_ws/src/6834-task-motion-planner/')
+    #interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/vmlane/catkin_ws/src/6834-task-motion-planner/')
+    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/')
     (hlplan, traj) = interfaceLayer.run(state, world, pose)
     
     print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"
