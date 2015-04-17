@@ -65,14 +65,14 @@ class InterfaceLayer(object):
         f.write(')\n')
         f.write('(:goal ')
         for g in state[2]:
-            f.write('(')
+            f.write('(and (')
             for a in g:
                 f.write(a + ' ')
                 if a == 'NOT':
                     f.write('(')
             if g[0] == 'NOT':
                 f.write(')')
-            f.write(')\n')
+            f.write('))\n')
         f.write(')\n)')
         f.close()
         msg.task_file = self.directory + 'state'
@@ -377,7 +377,7 @@ if __name__ == '__main__':
     genWorld = generateWorldMsg()
     
     #f = open('/home/vmlane/catkin_ws/src/6834-task-motion-planner/states/one_cover','r')
-    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/thirteenby','r')
+    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/state3Blocks_1','r')
     init_state_string = f.read()
     
     state = [[]]*3
