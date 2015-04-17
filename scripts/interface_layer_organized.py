@@ -236,8 +236,8 @@ class InterfaceLayer(object):
                         state = tempstate
                         world = tworld
                         step = failStep
-                    if error:
-                        print "Failed to find high level plan, trying again."
+                    #if error:
+                    #    print "Failed to find high level plan, trying again."
                     
                 trajCount+=1
                 
@@ -289,11 +289,20 @@ class TryRefine(object):
             self.called = True
             self.old_hlplan = hlplan
             self.hlplan = hlplan
-            if len(self.worlds) > 1:
+            if len(self.worlds) > 1 and step > 0:
+                #print "step: ", step
+                #print 'here ', len(self.worlds)
                 self.worlds = self.worlds[0:step-1].append(copy.deepcopy(world))
+                if self.worlds == None:
+                    self.worlds = [copy.deepcopy(world)]
+                #print 'there ', len(self.worlds)
             else:
+                #print 'and here too ', len(self.worlds)
                 self.worlds = [copy.deepcopy(world)]
+                #print 'and here ', len(self.worlds)
             #print "index: ", self.index
+            #print "world: ", world
+            #print "self.world: ", self.world
             #print "len worlds: ", len(self.worlds)
             self.interface.poseGenerator.resetAll()
             self.world = world
@@ -310,8 +319,17 @@ class TryRefine(object):
             self.pose2 = self.interface.poseGenerator.next(self.nextaxn)
             
             if self.pose2 == None: # pose 2 is already defined, so we should backtrack if in Error free mode, otherwise return that we've failed
-                self.interface.poseGenerator.reset(self.axn)
+                self.interface.poseGenerator.reset(self.nextaxn)
                 self.pose1 = self.interface.poseGenerator.next(self.axn)
+                if self.pose1 == None:
+                    #self.worlds.append(copy.deepcopy(self.world))
+                    self.interface.poseGenerator.resetAll()
+                    #print "index: ", self.index
+                    #print "worlds: ", len(self.worlds)
+                    #print "world", self.world
+                    return (False, self.pose1, self.traj, self.index, [], self.state, self.world)
+                    #print "ERRRRRRRRRRRR"
+                    #return 'woeighwoe'
                 #print "index: ", self.index
                 #print "worlds: ", len(self.worlds)
                 self.index-=1
@@ -329,6 +347,7 @@ class TryRefine(object):
                 #print "action: ", self.nextaxn
                 #print "pose: ", self.pose2
                 #print "index: ", self.index, "   worlds: ", len(self.worlds)
+                #print "Num iters: ", self.num_iters
                 #print self.world.world.movable_objects
                 #print [(obj.id, obj.loc.grasped) for obj in self.world.world.movable_objects]
                 #print [(obj.id, obj.loc.grasped) for obj in self.worlds[-1].world.movable_objects]
@@ -344,8 +363,11 @@ class TryRefine(object):
                 elif mode == 'partialTraj':
                     # if it fails, then we need to find out why it failed -- what's blocking?
                     return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.nextaxn), self.state, self.world)
-                elif self.num_iters > self.max_iters:
-                    return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.nextaxn), self.state, self.world)
+                #elif self.num_iters > self.max_iters:
+                #    self.called = False
+                #    print "reset called -- ", self.index
+                #    print "blah - ", self.worlds
+                #    return (False, self.pose1, self.traj, self.index, [], self.state, self.world)
             #print "\n\n"
                 
         # we finished

@@ -90,7 +90,7 @@ class StateGeneratorSmall:
 		# state3Blocks_2
 		filename = "state3Blocks_2"
 		initialPoses = [("BLOCK0","I"),("BLOCK1","I"),("BLOCK2","A")]
-		goals = [("BLOCK0","S"),("BLOCK2","S")]
+		goals = [("BLOCK1","S"),("BLOCK2","S")]
 		self.generateFile(filename,["I","A","S"],initialPoses,goals)
 		# state3Blocks_3
 		filename = "state3Blocks_3"
