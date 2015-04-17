@@ -60,27 +60,28 @@ for filename,world in worlds.iteritems():
 	numTaskPlannerCalls = []
 	runTimes = []
 
+	fname=DIR_6834+"outputResults/"+filename+".output"
+	outFile = open(fname,'w')
 	# run multiple tests for this world
 	for i in range(numTests):
 		poseGen = MockPoseGenerator()
 		interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, DIR_6834)
 		tic = time.time()
 		ret = interfaceLayer.run(state, world, pose)
-		print ret
 		runTime = time.time() - tic
 		numMotionPlannerCalls.append(interfaceLayer.numMotionPlannerCalls)
 		numTaskPlannerCalls.append(interfaceLayer.numTaskPlannerCalls)
 		runTimes.append(runTime)
-		fname=DIR_6834+"outputResults/"+filename+str(i)+".output"
-		plan_traj = open(fname,'w')
+		outFile.write(str(ret)+"\n\n")
+	outFile.close()
 
 	# Averaging
 	avgMotionPlannerCalls = sum(numMotionPlannerCalls)/len(numMotionPlannerCalls)
 	avgTaskPlannerCalls = sum(numTaskPlannerCalls)/len(numTaskPlannerCalls)
 	avgRunTimes = sum(runTimes)/len(runTimes)
 
-	#print  TODO: print world description
 	s = 'State File: ' + filename + "\n"
+	s += 'Number of Surfaces: ' + str(len(world.world.surfaces))  + "\n"
 	s += 'Number of Blocks: ' + str(numBlocks) + "\n"
 	s += 'Number of Obstructions: ' + str(numObs) + "\n"
 	s += 'Run Time: ' + str(avgRunTimes) + "\n"
