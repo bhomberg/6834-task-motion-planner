@@ -36,4 +36,4 @@ if __name__ == '__main__':
     print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"
     print hlplan
     print traj
-w
+
