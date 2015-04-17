@@ -45,7 +45,8 @@ class StateGenerator:
 		s += self.concatMult(["ISGPFPD PDP_BLOCK","_S BLOCK", " S"],",")
 		s += self.concatMult(["ISGPFPD PDP_BLOCK","_I BLOCK", " I"],",")
 		s += self.concatMult(["ISLFPD S BLOCK"],",",True)
-		s += self.concatMult(["ISLFPD I BLOCK"],"\n",True)
+		s += self.concatMult(["ISLFPD I BLOCK"],",",True)
+		s += self.concatMult(["AT BLOCK", " I"],"\n",True)
 		# goal
 		s += "AT BLOCK0 S\n"
 		# initial pose
