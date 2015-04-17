@@ -12,7 +12,7 @@ import sys
 # whether or not to add a number after the last substring
 # the block # to start at
 class StateGenerator:
-	def __init___(self):
+	def __init__(self):
 		self.NUMBLOCKS = 10
 
 	def concatMult(self,strs,last,end=False,start=0):
@@ -46,7 +46,7 @@ class StateGenerator:
 		s += self.concatMult(["ISGPFPD PDP_BLOCK","_I BLOCK", " I"],",")
 		s += self.concatMult(["ISLFPD S BLOCK"],",",True)
 		s += self.concatMult(["ISLFPD I BLOCK"],",",True)
-		s += self.concatMult(["AT BLOCK", " I"],"\n",True)
+		s += self.concatMult(["AT BLOCK", " I"],"\n")
 		# goal
 		s += "AT BLOCK0 S\n"
 		# initial pose
@@ -68,14 +68,15 @@ if __name__ == "__main__":
 	# single argument: Number of blocks
 	# 2 arguments: filename, number of blocks
 	if len(sys.argv) == 1:
-		filename = 'state'
+		filename = 'tmp'
 		NUMBLOCKS = 10
-	if len(sys.argv) == 2:
-		filename = 'state'
+	elif len(sys.argv) == 2:
+		filename = 'tmp'
 		NUMBLOCKS = int(sys.argv[1])
 	else:
 		filename = sys.argv[1]
 		NUMBLOCKS = int(sys.argv[2])
 
 	stateGen = StateGenerator()
+	stateGen.NUMBLOCKS = 17
 	stateGen.generateFile(filename)
