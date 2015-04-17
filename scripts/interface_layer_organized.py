@@ -49,8 +49,6 @@ class InterfaceLayer(object):
             f.write(o + ' ')
         f.write(')\n')
         f.write('(:init ')
-        #print "state[1]: ", state[1]
-        #print "first one: ", state[1][1]
         for i in state[1]:
             f.write('(')
             for a in i:
@@ -79,9 +77,7 @@ class InterfaceLayer(object):
         plan = []
         l = resp.plan.plan.split('\n')
         plan = [tuple(line.split(' ')) for line in l]
-        #plan.insert(0, ('BUFFER DEFAULT ACTION', 'BLAH', 'BLAH', 'BLAH', 'BLAH'))
         plan = plan[0:-1]
-        #print "PLAN: ", plan
         return (resp.plan.error, plan)
         
     def _callMotionPlanner(self, world, action, goals):
@@ -113,20 +109,16 @@ class InterfaceLayer(object):
 	
         for i in range(len(obstacles)):
             if i == 0:
-                print "Pose: ", pose2
                 (a, b, success) = self._callMotionPlanner(world, action, pose2)
                 if success:
                     return []
             else:
                 for l_tuple in itertools.combinations(range(len(obstacles)), i):
-                    updated_obstacles = copy.deepcopy(obstacles) #double check that this is a deep copy
+                    updated_obstacles = copy.deepcopy(obstacles)
                     l = list(l_tuple)
                     l.reverse()
-                    #print "index of things to pop: ", l
-                    #print "initial list of obstacles: ", [obstacle.id for obstacle in obstacles]
                     for item in l:
                         updated_obstacles.pop(item)
-                    #print "updated: ", [obstacle.id for obstacle in updated_obstacles]
                     if action[1] in [obstacle.id for obstacle in updated_obstacles]:
                         a_whole_new_world.world.movable_objects = updated_obstacles
                         (a, b, success) = self._callMotionPlanner(a_whole_new_world, action, pose2)
@@ -174,7 +166,7 @@ class InterfaceLayer(object):
             
             # try to refine our plan, allowing for no errors
             (success, t6, traj, t1, t2, t3, t4) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, 'errorFree')
-            print traj
+            #print traj
             
             if success: # if it worked, we're done!
                 return (hlplan[1:], traj)
@@ -186,13 +178,12 @@ class InterfaceLayer(object):
 
                 # find a partial trajectory -- how far along the high level task plan can we find motion plans for?
                 (success, pose2, partialTraj, failStep, failCause, tstate, tworld) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, mode='partialTraj')
-                print "Partial traj, step: ", failStep, ", failcause: ", failCause, ", traj: ", partialTraj
+                #print "Partial traj, step: ", failStep, ", failcause: ", failCause, ", traj: ", partialTraj
                 
                 if success: # if we succeeded, return!
                     return (hlplan[1:], partialTraj)
                     
                 # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
-                print "STEPs:", prev_fail_step, step, failStep
                 (tempstate) = self.stateUpdate(state, failCause, failStep, prev_fail_step, hlplan, tworld)
                 # now, call the task planner again on the new state
                 (error, newPlan) = self._callTaskPlanner(tempstate)
@@ -205,14 +196,12 @@ class InterfaceLayer(object):
                 if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
                     # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization
                     hlplan = hlplan[0:failStep+1] + newPlan
+                    print "HLPlan: ", hlplan
                     pose1 = pose2
                     prev_fail_step = failStep
                     state = tempstate
                     world = tworld
                     step = failStep
-
-                    print "STEPS: ", prev_fail_step, step, failStep
-                    print "HLPlan: ", hlplan
                 if error:
                     print "Failed to find high level plan, trying again."
                     
@@ -228,7 +217,6 @@ class InterfaceLayer(object):
                 prev_fail_state = 0
                 partialTraj = []
                 pose1 = copy.deepcopy(initPose)
-                print state
                 (error, hlplan) = self._callTaskPlanner(state) # find a high level task plan
                 hlplan.insert(0, (' ', ' ', ' ',' ', ' '))
                 print "HLPlan: ", hlplan
@@ -267,37 +255,23 @@ class TryRefine(object):
             self.interface.poseGenerator.resetAll()
             self.world = world
             
-        print "MODE: ", mode
         # progressively try and find a motion plan for each action as we go through the plan
         while step <= self.index and self.index < len(hlplan) - 1: #NOTE: changed this from <= to < because of out of bounds error
             print "TRY REFINE ITERATING LOOP: ", self.index
             # start by figuring out our actions and poses, use the pose generators to do that
             self.axn = hlplan[self.index]
-            #if self.index+1 < len(hlplan):
             self.nextaxn = hlplan[self.index+1]
-            #else:
-            #    self.nextaxn = ('End')
-            print "this action: ", self.axn
-            print "next action: ", self.nextaxn
-            print "index: ", self.index
             self.pose2 = self.interface.poseGenerator.next(self.nextaxn)
             
             if self.pose2 == None: # pose 2 is already defined, so we should backtrack if in Error free mode, otherwise return that we've failed
-                #if mode == 'partialTraj': # we failed -- don't bother backtracking since we're just looking for a partial trajectory, so let's figure out what's blocking it -- BIANCA's MODIFICATION
-                #    return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.axn), self.state, self.world)
                 self.interface.poseGenerator.reset(self.axn)
                 self.pose1 = self.interface.poseGenerator.next(self.axn)
                 self.index-=1
                 self.traj = self.traj[0:-1] #cut off the motion plan corresponding to that action
-                #self.traj = traj.delSuffixFor(self.axn)
             else:
                 # try and find a motion plan!
-                #print 'world: ', self.world
-                #print 'nextaxn: ', self.nextaxn
-                #print 'pose2: ', self.pose2
-                (world, motionPlan, succeeds) = self.interface._callMotionPlanner(self.world, self.nextaxn, self.pose2) # TODO: fix how we access the motion plan
+                (world, motionPlan, succeeds) = self.interface._callMotionPlanner(self.world, self.nextaxn, self.pose2)
                 if succeeds: # if it succeeds, either we're done or we can keep going keep going
-                    print "CHECK: ", self.index, len(hlplan) - 1
                     self.traj.append(motionPlan)
                     if self.index == len(hlplan) - 2:
                         return (True, self.pose1, self.traj, self.index, [], self.state, self.world)
@@ -310,10 +284,8 @@ class TryRefine(object):
                 
         # we finished
         print "FINISHED ITERATING, ABOUT TO RETURN"
-        print self.index
         self.index += 1
         self.interface.poseGenerator.resetAll()
-        #print (False, self.pose1, self.traj, self.index+1, [], self.state, self.world)
         return (False, self.pose1, self.traj, self.index, [], self.state, self.world)
 
 if __name__ == '__main__':
@@ -333,7 +305,6 @@ if __name__ == '__main__':
     k = l[2].split(',')
     state[2] = [tuple(i.split(' ')) for i in k]
     pose = l[3]
-    print state
 
     world = genWorld.generateWorld('SQUARE',3)
 
