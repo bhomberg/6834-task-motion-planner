@@ -18,7 +18,8 @@ from generateWorldMsg import *
 
 MAX_TRAJ_COUNT = 50
 MAX_ITERS = 1000
-DIR = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/'
+DIR = '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/'
+#DIR = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/'
 
 class InterfaceLayer(object):    
     def __init__(self, taskServerName, motionServerName, poseGenerator, stateUpdate, directory):        
@@ -150,26 +151,8 @@ class InterfaceLayer(object):
             #print "MPErrs obstacles: ", [obstacle.id for obstacle in actual]
             return [obstacle.id for obstacle in actual]
         else:
-            print "ERROR IN MP ERRORS!"
-        
-        '''for i in range(len(obstacles)):
-            if i == 0:
-                (a, b, success) = self._callMotionPlanner(world, action, pose2)
-                if success:
-                    return []
-            else:
-                for l_tuple in itertools.combinations(range(len(obstacles)), i):
-                    updated_obstacles = copy.deepcopy(obstacles)
-                    l = list(l_tuple)
-                    l.reverse()
-                    for item in l:
-                        updated_obstacles.pop(item)
-                    if action[1] in [obstacle.id for obstacle in updated_obstacles]:
-                        a_whole_new_world.world.movable_objects = updated_obstacles
-                        (a, b, success) = self._callMotionPlanner(a_whole_new_world, action, pose2)
-                        if success:
-                            return [obstacles[i].id for i in l]'''
-        print "ERROR IN MP ERRORS!"
+            # if this doesn't work, there must be an immovable object in the way
+            return ['immovable']
         
     def resetCallCounts(self):
         self.numMotionPlannerCalls = 0
@@ -233,27 +216,28 @@ class InterfaceLayer(object):
                 if success: # if we succeeded, return!
                     return (hlplan[1:], partialTraj)
                     
-                # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
-                (tempstate) = self.stateUpdate(state, failCause, failStep, prev_fail_step, hlplan, tworld)
-                # now, call the task planner again on the new state
-                (error, newPlan) = self._callTaskPlanner(tempstate)
+                if failCause[0] != 'immovable':
+                    # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
+                    (tempstate) = self.stateUpdate(state, failCause, failStep, prev_fail_step, hlplan, tworld)
+                    # now, call the task planner again on the new state
+                    (error, newPlan) = self._callTaskPlanner(tempstate)
 
-                # try to refine our plan, allowing for no errors
-                (success, t6, traj, t1, t2, t3, t4) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, 'errorFree')
-                if success: # if it worked, we're done!
-                    return (hlplan[1:], traj)
+                    # try to refine our plan, allowing for no errors
+                    (success, t6, traj, t1, t2, t3, t4) = trajRefiner.tryRefine(pose1, state, world, hlplan, step, partialTraj, 'errorFree')
+                    if success: # if it worked, we're done!
+                        return (hlplan[1:], traj)
                 
-                if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
-                    # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization
-                    hlplan = hlplan[0:failStep+1] + newPlan
-                    print "HLPlan: ", hlplan
-                    pose1 = pose2
-                    prev_fail_step = failStep
-                    state = tempstate
-                    world = tworld
-                    step = failStep
-                if error:
-                    print "Failed to find high level plan, trying again."
+                    if not error: # it may not be possible to find a new plan; if it is, update our high level plan 
+                        # if it wasn't possible to find a new plan, we'll start over to try and refine, but we'll pick different things because of the randomization
+                        hlplan = hlplan[0:failStep+1] + newPlan
+                        print "HLPlan: ", hlplan
+                        pose1 = pose2
+                        prev_fail_step = failStep
+                        state = tempstate
+                        world = tworld
+                        step = failStep
+                    if error:
+                        print "Failed to find high level plan, trying again."
                     
                 trajCount+=1
                 
