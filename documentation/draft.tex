@@ -297,15 +297,22 @@ to include:
 
 \section{Limitations}
 
--realistic expectations for someone interested in applying the reasoning technique
+The most important limitation of this implementation is to remember that it is an interface layer.  
+It does not include a task planner and a motion planner: you must set those up yourself as ROS services and make sure that the output and input message types specify those outlined in the API.  
+Depending on what planners you use, setting them up and installing them may be nontrivial.  
+Different planners are effective for different tasks and some planners may require extensive installation.  
+When you pick your task and motion planners, remember that this interface layer is set up to only work with task planners that use the PDDL specification language.  
+If you choose to use another specification system, you will need to translate between PDDL and your system.
 
--still need to get a motion planner and a task planner working and need to make them have the right API interface -- not a pure out of the box working thing
+On a more detailed level, it is important to note that this planner is not guaranteed to find an optimal solution, or even to find a solution at all.  
+We refer you to [1] for a proof that this algorithm is guaranteed to find a solution for problems with certain properties.  
+However, due to the random nature of the pose generators and that there are limits set on the number of iterations, a valid plan may not be found for all problems.  
 
--is not guaranteed to find an optimal solution
+Furthermore, this system is not intended for online replanning.  
+It may be possible to use it for online replanning for some systems if it runs quickly on the particular problem, but it is not an intended feature of this algorithm.
 
--cannot do online re-planning
-
--time to run is based on speed of the motion planner and task planner
+Finally, the runtime of this algorithm is based on the speed of the motion planner and the task planner used within it.  
+If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.
 
 \section{Open Questions}
 
