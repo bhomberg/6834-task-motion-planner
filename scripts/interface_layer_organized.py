@@ -216,7 +216,7 @@ class InterfaceLayer(object):
                 if success: # if we succeeded, return!
                     return (hlplan[1:], partialTraj)
                     
-                if len(failCause) == 0 || failCause[0] == 'immovable':
+                if len(failCause) == 0 || failCause[0] != 'immovable':
                     # when we eventually failed, we failed because some object(s) were in the way -- we need to update our new task planning problem to incorporate that
                     (tempstate) = self.stateUpdate(state, failCause, failStep, prev_fail_step, hlplan, tworld)
                     # now, call the task planner again on the new state
