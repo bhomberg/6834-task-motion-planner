@@ -15,6 +15,7 @@ MAX_ITERS = 1
 task_server = None
 motion_server = None
 # TODO: if necessary, add in random seed for pose generators later
+DIR = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/state'
 
 class InterfaceLayer(object):
     # This class is NOT a complete class.  Several functions must be implemented in order
@@ -136,7 +137,7 @@ class SpecificInterfaceLayer(InterfaceLayer):
         #    list of predicates for the goal
         msg = task_domain()
         #output state to file
-	f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state', 'w')
+	f = open(DIR, 'w')
         f.write('(define (problem problemtask)\n')
         f.write('(:domain taskmotion)\n')
         f.write('(:objects ')
@@ -166,7 +167,7 @@ class SpecificInterfaceLayer(InterfaceLayer):
             f.write(')\n')
         f.write(')\n)')
         f.close()
-        msg.task_file = '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/state'
+        msg.task_file = DIR
         resp = task_server(msg)
         # parse plan file into appropriate action tuple
         plan = []

@@ -18,6 +18,7 @@ from generateWorldMsg import *
 
 MAX_TRAJ_COUNT = 50
 MAX_ITERS = 1000
+DIR = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/'
 
 class InterfaceLayer(object):    
     def __init__(self, taskServerName, motionServerName, poseGenerator, stateUpdate, directory):        
@@ -376,8 +377,7 @@ if __name__ == '__main__':
 
     genWorld = generateWorldMsg()
     
-    #f = open('/home/vmlane/catkin_ws/src/6834-task-motion-planner/states/one_cover','r')
-    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/state3Blocks_1','r')
+    f = open(DIR + 'states/state3Blocks_1','r')
     init_state_string = f.read()
     
     state = [[]]*3
@@ -394,8 +394,7 @@ if __name__ == '__main__':
 
     poseGen = MockPoseGenerator()
 
-    #interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/vmlane/catkin_ws/src/6834-task-motion-planner/')
-    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, '/home/bhomberg/indigo_ws/src/6834-task-motion-planner/')
+    interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, DIR)
     (hlplan, traj) = interfaceLayer.run(state, world, pose)
     
     print "\n\n\n OUTPUT FROM INTERFACE LAYER\n\n"
