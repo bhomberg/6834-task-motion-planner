@@ -215,8 +215,6 @@ veronica can probably write this section
 
 \subsection{Main Interface Layer}
 
-Bianca will finish writing this section and the corresponding subsections tomorrow
-
 Insert the figure 4 from the paper!
 
 This figure, included with text from [1], explains the flow of control of the interface layer through a variety of situations, including more than the simple case covers.  
@@ -253,7 +251,7 @@ Since the TryRefine subroutine has randomization from pose generators, re-runnin
 
 We have several checks where, if we fail to find a solution, we clear all of our information and start over.  Due to the randomization of the pose generators, we may make better choices during subsequent iterations.  
 
-NOTE TO BIANCA: include paragraph about how our version differs from the paper's version as a speedup
+The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
 
 \subsubsection{Algorithm 2}
 
@@ -276,6 +274,23 @@ there will be another couple paragraphs here extending this
 
 Alex should write this section, probably mostly the same as the stuff he's writing for the readme/etc.
 
+\section{Benchmarking}
+
+\subsection{Testing}
+
+\subsection{Procedure}
+
+\subsection{Results}
+
+to include:
+
+-tables of results
+
+-description of how we did benchmarking
+
+-in particular, description of why we did number of calls to task and motion planner instead of total time taken
+
+-discussion of testing procedure as well
 
 \section{Limitations}
 
