@@ -125,11 +125,11 @@ class MockMotionPlannerServer(object):
                 else:
                     return True
             # not on right side of grid
-            elif x < surface_dim-1:
+            elif x < self.surface_dim-1:
                 # above, above & right, right
                 return surfaces[surface_id][y-1][x] == 0 and surfaces[surface_id][y-1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0
             # right side of grid 
-            elif x==surface_dim-1:
+            elif x==self.surface_dim-1:
                 return surfaces[surface_id][y-1][x] == 0
             else:
                 return True
@@ -145,10 +145,10 @@ class MockMotionPlannerServer(object):
                     return surfaces[surface_id][y][x+1] == 0
                 else:
                     return True
-            elif x < surface_dim-1:
+            elif x < self.surface_dim-1:
                 return surfaces[surface_id][y+1][x] == 0 and surfaces[surface_id][y+1][x+1] == 0 and surfaces[surface_id][y][x+1] == 0
             # right side of grid 
-            elif x==surface_dim-1:
+            elif x==self.surface_dim-1:
                 return surfaces[surface_id][y+1][x] == 0
             else:    
                 return True

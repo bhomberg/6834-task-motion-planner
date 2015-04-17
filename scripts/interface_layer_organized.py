@@ -290,6 +290,8 @@ class TryRefine(object):
         self.nextaxn = None
         self.interface = interface
         self.worlds = []
+        self.max_iters = 999
+        self.num_iters = 0
         
     def tryRefine(self, initPose, state, world, hlplan, step, trajprefix, mode):
         # if this is the first time it's been called or if there's a new high level plan, update variables!
@@ -310,11 +312,13 @@ class TryRefine(object):
             print "len worlds: ", len(self.worlds)
             self.interface.poseGenerator.resetAll()
             self.world = world
+            self.num_iters = 0
             
         print "Try refine mode: ", mode
         # progressively try and find a motion plan for each action as we go through the plan
         while step <= self.index and self.index < len(hlplan) - 1: #NOTE: changed this from <= to < because of out of bounds error
             print "TRY REFINE ITERATING LOOP: ", self.index
+            self.num_iters+=1
             # start by figuring out our actions and poses, use the pose generators to do that
             self.axn = hlplan[self.index]
             self.nextaxn = hlplan[self.index+1]
@@ -355,7 +359,8 @@ class TryRefine(object):
                 elif mode == 'partialTraj':
                     # if it fails, then we need to find out why it failed -- what's blocking?
                     return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.nextaxn), self.state, self.world)
-
+                elif self.num_iters > self.max_iters:
+                    return (False, self.pose1, self.traj, self.index, self.interface._mpErrs(self.pose1, self.pose2, self.state, self.world, self.nextaxn), self.state, self.world)
             print "\n\n"
                 
         # we finished
@@ -372,7 +377,7 @@ if __name__ == '__main__':
     genWorld = generateWorldMsg()
     
     #f = open('/home/vmlane/catkin_ws/src/6834-task-motion-planner/states/one_cover','r')
-    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/sevenbyseven','r')
+    f = open('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/states/thirteenby','r')
     init_state_string = f.read()
     
     state = [[]]*3
@@ -385,7 +390,7 @@ if __name__ == '__main__':
     pose = l[3]
     print state
 
-    world = genWorld.generateWorld('SQUARE',7)
+    world = genWorld.generateWorld('SQUARE',13)
 
     poseGen = MockPoseGenerator()
 
