@@ -46,6 +46,6 @@ class TaskPlannerServer(object):
         rospy.spin()
 
 if __name__ == "__main__":
-    task_planner_server = TaskPlannerServer("/home/bhomberg/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "/home/bhomberg/indigo_ws/src/6834-task-motion-planner/domain")
+    task_planner_server = TaskPlannerServer("/home/vmlane/catkin_ws/src/6834-task-motion-planner/FF-v2.3/", "/home/vmlane/catkin_ws/src/6834-task-motion-planner/domain")
     task_planner_server.run()
     

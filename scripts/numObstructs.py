@@ -2,6 +2,8 @@
 
 from task_motion_planner.msg import *
 
+# world is a world msg from generateWorldMsg
+# surface dim --> size of grid (default 17)
 def numObstructsWorld(world, surface_dim):
     surfaces = world.world.surfaces
     movable_objects = world.world.movable_objects
