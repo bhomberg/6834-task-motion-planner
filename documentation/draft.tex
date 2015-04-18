@@ -24,7 +24,7 @@
 \newcommand{\tab}{\hspace*{2em}}
 
 \title{Combined Task and Motion Planner through an Interface Layer}
-\author{Alex Gutierrez, Bianca Homberg, and Veronica Lane}
+\author{Alex Gutierrez (ragtz@mit.edu), Bianca Homberg (bhomberg@mit.edu), and Veronica Lane (vmlane@mit.edu)}
 
 
 %% ONE SENTENCE PER LINE TO MAKE THIS WORK NICELY IN GIT
@@ -95,7 +95,7 @@ This update adds predicates corresponding to the object obstructions, and the ta
 \centering
 \def\svgwidth{0.5\textwidth}
 \input{figures/walkthrough.pdf_tex}
-\caption{Walkthrough Example. The goal was for the red block to be on surface S.\label{fig:walkthrough}}
+\caption{Walkthrough Example. The goal is for the red block to be on surface S.\label{fig:walkthrough}}
 \end{figure}
 
 In this environment, we have two objects, blocks 1 and 2, and our goal is to put block 1 into area S.  
@@ -238,7 +238,7 @@ Then, the state is updated as before and the task planner is called, but no solu
 
 \subsubsection{Algorithm Improvements}
 
-The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
+The original version of the algorithm, as shown in (Fig. \ref{fig:algorithms}), only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification. Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses will not work but others will, so it is better to try to make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
 
 \subsubsection{Algorithm 1}
 
