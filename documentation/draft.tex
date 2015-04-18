@@ -34,7 +34,7 @@
 In order to achieve high level goals a robot must combine task and motion planning. 
 A robot uses task planning to determine its long term strategy and motion planning to determine the movements it  will execute to achieve the task. 
 Effectively combining task and motion planning is an open research problem. 
-We implemented an interface between the motion and task planning. 
+We implemented an interface between the motion and task planning based on that outlined in [1]. 
 Our system uses off-the-shelf task and motion planners and makes few assumptions about their implementation.
  
 An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. 
@@ -56,10 +56,6 @@ The main contribution of this implementation is an interface layer.
 This interface layer is designed to be planner-independent: that is, it can work with any motion planner and task planner, so long as the outputs from each are conformed to the interface specification.  
 The interface layer interleaves calls between the task planner and the motion planner, using geometric feasibility determined through the motion planner to affect the state given to the task planner to plan from.
 
-Specifically, we start by generating a high level plan and attempting to generate motion plans corresponding to each action.  
-When it's not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner in an appropriate format.  
-Then, the task planner replans from that set state and the process continues.  
-When necessary, backtracking occurs.
 
 
 
@@ -152,7 +148,8 @@ This is the key insight which allows the task planner to reason about continuous
 We will follow [1] in using manipulation as an example environment.  For any planning domain with some continuous variables and some discrete variables, it will be possible to transform the continuous variables to discrete symbolic references to continuous positions.  For this example, we talk through the PICKUP action for a simple manipulator; the PUTDOWN action is analagous.
 
 
-\vspace{10}
+\vspace{10pt}
+
 $PICKUP(obj_1, gripper, pose_1, pose_2, traj)$
 
 $\; precon \; EMPTY(gripper), ROBOTAT(pose_1), $
@@ -167,13 +164,13 @@ $\; \; \;\; \; \; \forall obj', traj' \neg OBSTRUCTS(obj_1, traj', obj'), $
 
 $\; \; \; \; \; \;\forall obj' traj', tloc' \neg PDOBSTRUCTS(obj_1, traj', obj', tloc')$
 
-\vspace{10}
+\vspace{10pt}
 
 Here, we have three continuous variables that we represent symbolically: $traj$, for each of the trajectories, and $pose_1$ and $pose_2$, representing start and end locations for the robot's gripper.
 The preconditions and effects can also iterate over all of these symbolic variables, allowing us to mark that a picked up object doesn't obstruct any other objects, etc. 
 We have various predicates which describe different things about both the discrete variables and the continuous variables.
 
-\vspace{10}
+\vspace{10pt}
 
 $EMPTY(gripper)$ -- gripper is empty and thus available to hold a block.
 
@@ -189,7 +186,7 @@ $PDOBSTRUCTS(obj_1, traj, obj_2, tloc)$ -- $obj_1$ blocks $obj_2$ from placement
 
 $IN(obj_1, gripper)$ -- $obj_1$ currently grasped by $gripper$.
 
-\vspace{10}
+\vspace{10pt}
 
 How do we come up with all of these symbolic references?  
 We create as many as we need.  
@@ -208,7 +205,7 @@ This allows the task planner to have the robot first move the blocking objects s
 
 \subsection{Pose Generators}
 
-When the pose generator is called by the interface layer, it generates a set of random poses for each action. Each pose is made up of a set of waypoints. For example for the \textit{pickup} action, it generates the following waypoints: near the cylinder and pointing towards it, touching the cylinder, lifting the cylinder, and a standard home position. It passes one pose to the interface layer at a time, if none of the poses are feasible, the interface layer backtracks resets the pose generator. The TryRefine method of the interface layer attempts to generate a feasible motion plan linking a set of waypoints.
+When the pose generator is called by the interface layer, it generates a set of random poses for each action. Each pose is made up of a set of waypoints. For example for the PICKUP action, it generates the following waypoints: near the cylinder and pointing towards it, touching the cylinder, lifting the cylinder, and a standard home position. It passes one pose to the interface layer at a time.  if none of the poses are feasible, the interface layer backtracks and resets the pose generator. The TryRefine method of the interface layer attempts to generate a feasible motion plan between each pose.  The motion planner is called to create this motion plan, including motion plans between waypoints.
 
 \subsection{Main Interface Layer}
 
@@ -232,10 +229,10 @@ Include algorithm block 1 from paper
 The outer loop of the algorithm interfaces with the high level task planner.  
 We start with an initial state where no objects obstruct any motions.  
 From there, we look for a high level plan.  
-If the problem is not solvable without any problematic environmental information, then the problem is unsolvable and we immediately return that information.  
+If the problem is not solvable even without any obstructions from the environment, then the problem is unsolvable and we immediately return that information.  
 If we do succeed at finding a high level task plan, we begin the process of attempting to find a motion corresponding to each action.
 
-First, we start by attempting to find a full refinement of the whole plan,calling the TryRefine subroutine in error-free mode.  
+First, we start by attempting to find a full refinement of the whole plan, calling the TryRefine subroutine in error-free mode.  
 If that succeeds, then we return the plan.  
 
 If that doesn't succeed, we find a partial trajectory that goes as far as it can by calling the TryRefine subroutine in partial trajectory mode.  
@@ -345,6 +342,8 @@ Finally, the runtime of this algorithm is based on the speed of the motion plann
 If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.
 
 \section{Open Questions}
+
+The two immediately relevant open questions are whether it's possible to design a similar interface between task and motion plans which returns optimal plans or which can be used to do online planning.
 
 -include more grasp primitives (e.g. push grasps)
 
