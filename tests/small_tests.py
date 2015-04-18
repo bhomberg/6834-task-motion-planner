@@ -28,10 +28,10 @@ numTests = 10
 
 genState =  StateGeneratorSmall()
 
-DIR_6834 = '/home/ragtz/indigo_workspace/src/6834-task-motion-planner/'
+DIR_6834 = os.path.abspath(os.path.dirname(__file__) + '/../') + '/'
 
 # One Cover Bechmark
-out_file = open('smallTests.output','w')
+out_file = open(DIR_6834 + 'tests/smallTests.output','w')
 
 # set up the world
 worlds = generateWorlds()

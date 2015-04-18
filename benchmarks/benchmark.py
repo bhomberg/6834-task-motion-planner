@@ -29,10 +29,10 @@ numTests = 10
 genWorld = generateWorldMsg()
 genState = StateGenerator()
 
-DIR_6834 = '/home/ragtz/indigo_workspace/src/6834-task-motion-planner/'
+DIR_6834 = os.path.abspath(os.path.dirname(__file__) + '/../') + '/'
 
 # One Cover Bechmark
-out_file = open('benchmark.output','w')
+out_file = open(DIR_6834 + 'benchmarks/benchmark.output','w')
 world_shapes = ["SQUARE","CROSS","X","HLINE","VLINE"]
 # world_shapes = ["CROSS","X","HLINE","VLINE"]
 world_sizes = xrange(3,14,2)

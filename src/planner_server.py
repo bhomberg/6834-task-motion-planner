@@ -47,7 +47,7 @@ class TaskPlannerServer(object):
 
 if __name__ == "__main__":
     #task_planner_server = TaskPlannerServer("/home/vmlane/catkin_ws/src/6834-task-motion-planner/FF-v2.3/", "/home/vmlane/catkin_ws/src/6834-task-motion-planner/domain")
-    task_planner_server = TaskPlannerServer("/home/ragtz/Downloads/FF-v2.3/", "/home/ragtz/indigo_workspace/src/6834-task-motion-planner/domain")
+    task_planner_server = TaskPlannerServer(os.path.abspath(os.path.dirname(__file__) + '/../') + '/FF-v2.3/', os.path.abspath(os.path.dirname(__file__) + '/../') + '/domain')
     #task_planner_server = TaskPlannerServer("/home/bhomberg/indigo_ws/src/6834-task-motion-planner/FF-v2.3/", "/home/bhomberg/indigo_ws/src/6834-task-motion-planner/domain")
     task_planner_server.run()
     
