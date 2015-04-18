@@ -94,8 +94,8 @@ This update adds predicates corresponding to the object obstructions, and the ta
 \begin{figure}[t]
 \centering
 \def\svgwidth{0.5\textwidth}
-\input{figures/smallEnv.pdf_tex}
-\caption{Small Environment Test Example. The goal was for the blue blocks to be on surface I and the red blocks to be on surface S.\label{fig:smallEnv}}
+\input{figures/walkthrough.pdf_tex}
+\caption{Walkthrough Example. The goal was for the red block to be on surface S.\label{fig:walkthrough}}
 \end{figure}
 
 In this environment, we have two objects, blocks 1 and 2, and our goal is to put block 1 into area S.  
@@ -296,7 +296,16 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 
 
 \section{Benchmarking}
+\subsection{Testing}
+\begin{figure}[t]
+\centering
+\def\svgwidth{0.5\textwidth}
+\input{figures/smallEnv.pdf_tex}
+\caption{Small Environment Test Example. The goal was for the blue blocks to be on surface I and the red blocks to be on surface S.\label{fig:smallEnv}}
+\end{figure}
+We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded on 3 sides and others on all sides by walls and blocks. For blocks surrounded on 3 sides, the interface layer had to find the pose that picked up the block in the correct direction. For blocks surrounded on all sides, the interface layer needed to generate actions to move blocks in the way.
 
+\subsection{Procedure}
 \begin{figure}[t]
 \centering
 \def\svgwidth{\textwidth}
@@ -304,10 +313,6 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 \caption{Benchmarking Test Examples. The goal was to move the green block to another surface.\label{fig:benchmark}}
 
 \end{figure}
-\subsection{Testing}
-We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded on 3 sides and others on all sides by walls and blocks. For blocks surrounded on 3 sides, the interface layer had to find the pose that picked up the block in the correct direction. For blocks surrounded on all sides, the interface layer needed to generate actions to move blocks in the way.
-
-\subsection{Procedure}
 
 We performed a variety of benchmarking tests to measure the performance of the interface. We measured the performance of each test by the number of calls to both the task planner and motion planner and the runtime. ref{table-benchmarkTable}
 The difficulty of a benchmark increased as the total number \textit{obstructions} increased. The total number of obstructions was counted by summing the number of directions around each block that were obstructed. For the ordinal directions, a neighboring block in any one of three locations obstructs the direction. For example, a neighboring block above, to the right or to the top right corner of a block obstructs the northeast direction of the block. Furthermore, as the number of blocks for a particular grid shape increased, the test difficulty increased, since the total number of obstructions increased.
