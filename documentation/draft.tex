@@ -209,7 +209,7 @@ This allows the task planner to have the robot first move the blocking objects s
 
 \subsection{Pose Generators}
 
-veronica can probably write this section
+When the pose generator is called by the interface layer, it generates a set of random poses for each action. Each pose is made up of a set of waypoints. For example for the \textit{pickup} action, it generates the following waypoints: near the cylinder and pointing towards it, touching the cylinder, lifting the cylinder, and a standard home position. It passes one pose to the interface layer at a time, if none of the poses are feasible, the interface layer backtracks resets the pose generator. The TryRefine method of the interface layer attempts to generate a feasible motion plan linking a set of waypoints.
 
 \subsection{Main Interface Layer}
 
@@ -275,26 +275,64 @@ However, for this set of this set of objects, no object can be added back in wit
 As described above in Algorithm 1, once the list of blocking objects is returned, the interface layer updates the state and attempts to replan from there.
 
 
-
-
 \section{Benchmarking}
 
 \subsection{Testing}
+We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded by three walls, and others were surrounded by 3 walls. This required the interface layer to find the pose that picked up the block in the correct location. Furthermore, some blocks which needed to be moved in order to achieve the goal were obstructed by other blocks, meaning that the other block had to be moved first.
 
 \subsection{Procedure}
 
+We performed a variety of benchmarking tests to measure the performance of the interface. We measured the performance of each test by the number of calls to both the task planner and motion planner and the runtime. ref{table-benchmarkTable}
+The difficulty of a benchmark increased as the total number \textit{obstructions} increased. The total number of obstructions was counted by summing the number of directions around each block that were obstructed. For the ordinal directions, a neighboring block in any one of three locations obstructs the direction. For example, a neighboring block above, to the right or to the top right corner of a block obstructs the northeast direction of the block. Furthermore, as the number of blocks for a particular grid shape increased, the test difficulty increased, since the total number of obstructions increased.
+
 \subsection{Results}
+The goal of each test was to move the green block, at the center of a grid of blocks, to a goal surface. We tested a variety of different grid shapes, including a square grid, an X, a cross, and lines. We tested each grid shape over a range of sizes ranging from 3 to 13. ref{fig-benchmarks} The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault.
+The interface layer is designed to be independent of any specific task and motion planner libraries, therefore number of calls to the motion and task planner measures the performance of the interface layer.
 
-to include:
+\begin{figure}
+\begin{tabular}[t]{|l|l|l|l|l|l|}
+\hline
+Shape & Blocks & obstructions & Motion Planner Calls & Task Planner Calls & runtime \\ \hline
+Horizontal Line & 3 & ? & ? & ? & ?\\
+& 5 & ? & ? & ? & ?\\
+& 7 & ? & ? & ? & ?\\
+& 9 & ? & ? & ? & ?\\
+& 11 & ? & ? & ? & ?\\
+& 13 & ? & ? & ? & ?\\
+\hline
+Vertical lLne & 3 & ? & ? & ? & ?\\
+& 5 & ? & ? & ? & ?\\
+& 7 & ? & ? & ? & ?\\
+& 9 & ? & ? & ? & ?\\
+& 11 & ? & ? & ? & ?\\
+& 13 & ? & ? & ? & ?\\ 
+\hline
+X & 5 & ? & ? & ? & ?\\
+& 9 & ? & ? & ? & ?\\
+& 13 & ? & ? & ? & ?\\
+& 17 & ? & ? & ? & ?\\
+& 21 & ? & ? & ? & ?\\
+& 25 & ? & ? & ? & ?\\ 
+\hline
+Cross & 5 & ? & ? & ? & ?\\
+& 9 & ? & ? & ? & ?\\
+& 13 & ? & ? & ? & ?\\
+& 17 & ? & ? & ? & ?\\
+& 21 & ? & ? & ? & ?\\
+& 25 & ? & ? & ? & ?\\ 
+\hline
+Square & 9 & ? & ? & ? & ?\\
+& 25 & ? & ? & ? & ?\\
+& 49 & ? & ? & ? & ?\\
+& 81 & ? & ? & ? & ?\\
+& 121 & ? & ? & ? & ?\\
+& 169 & ? & ? & ? & ?\\ 
+\hline
 
--tables of results
-
--description of how we did benchmarking
-
--in particular, description of why we did number of calls to task and motion planner instead of total time taken
-
--discussion of testing procedure as well
-
+\end {tabular}
+\caption{Benchmark Tests}
+\label{benchmark}
+\end{figure}
 \section{Limitations}
 
 The most important limitation of this implementation is to remember that it is an interface layer.  
