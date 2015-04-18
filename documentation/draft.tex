@@ -238,7 +238,7 @@ Then, the state is updated as before and the task planner is called, but no solu
 
 \subsubsection{Algorithm Improvements}
 
-The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
+The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
 
 \subsubsection{Algorithm 1}
 
@@ -269,7 +269,7 @@ Since the TryRefine subroutine has randomization from pose generators, re-runnin
 
 We have several checks where, if we fail to find a solution, we clear all of our information and start over.  Due to the randomization of the pose generators, we may make better choices during subsequent iterations.  
 
-The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
+The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
 
 \subsubsection{Algorithm 2}
 
