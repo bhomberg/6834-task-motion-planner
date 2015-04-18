@@ -1,2 +1,0 @@
-moveit_msgs/DisplayTrajectory trajectory
-bool gripperOpen
