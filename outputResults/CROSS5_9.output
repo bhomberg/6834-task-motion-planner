@@ -1,0 +1,4 @@
+[('PICKUP', 'BLOCK7', 'LEFTARM', 'INITPOSE', 'GP_BLOCK7'), ('PUTDOWN', 'BLOCK7', 'LEFTARM', 'GP_BLOCK7', 'PDP_BLOCK7_I', 'I'), ('PICKUP', 'BLOCK4', 'LEFTARM', 'PDP_BLOCK7_I', 'GP_BLOCK4'), ('PUTDOWN', 'BLOCK4', 'LEFTARM', 'GP_BLOCK4', 'PDP_BLOCK4_I', 'I'), ('PICKUP', 'BLOCK0', 'LEFTARM', 'PDP_BLOCK4_I', 'GP_BLOCK0'), ('PUTDOWN', 'BLOCK0', 'LEFTARM', 'GP_BLOCK0', 'PDP_BLOCK0_S', 'S')]
+
+['picked up BLOCK7 from W', 'put down BLOCK7 on surface I at (10,13)', 'picked up BLOCK4 from N', 'put down BLOCK4 on surface I at (10,15)', 'picked up BLOCK0 from W', 'put down BLOCK0 on surface S at (2,14)']
+
