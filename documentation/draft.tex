@@ -32,10 +32,10 @@
 \section{Introduction}
 
 In order to achieve high level goals a robot must combine task and motion planning. 
-A robot uses task planning to determine its long term strategy and motion planning to determine the movements movements it  will execute to achieve the task. 
+A robot uses task planning to determine its long term strategy and motion planning to determine the movements it  will execute to achieve the task. 
 Effectively combining task and motion planning is an open research problem. 
-We developed an interface between the motion and task planning. 
-Our system uses off-the-shelf task and motion planners and makes no assumptions about their implementation.
+We implemented an interface between the motion and task planning. 
+Our system uses off-the-shelf task and motion planners and makes few assumptions about their implementation.
  
 An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. 
 However, the number of required discretizations to solve the problem is generally very large and results in extremely large or infeasible problems. 
@@ -53,7 +53,7 @@ This approach allows the motion planner to give information to the task planner 
 This prevents a combinatorial explosion of the state space that the task planner needs to search over.
 
 The main contribution of this implementation is an interface layer.  
-This interface layer is designed to be planner-independent: that is, it can work with any motion planner and task planner, so long as the outputs from each are conformed to the interface specified by the API.  
+This interface layer is designed to be planner-independent: that is, it can work with any motion planner and task planner, so long as the outputs from each are conformed to the interface specification.  
 The interface layer interleaves calls between the task planner and the motion planner, using geometric feasibility determined through the motion planner to affect the state given to the task planner to plan from.
 
 Specifically, we start by generating a high level plan and attempting to generate motion plans corresponding to each action.  
@@ -65,33 +65,28 @@ When necessary, backtracking occurs.
 
 \section{High Level Approach}
 
-Specifically, the interface layer starts by generating a high level plan and attempting to generate motion plans corresponding to each action.  
-When it's not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner in an appropriate format.  
-Then, the task planner replans from that set state and the process continues.  
+The interface layer starts by asking the task planner to generate a high level plan and has the motion planner instaniate motion plans corresponding to each action.  
+When it's not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner.  
+Then, the task planner replans from that state and the process continues.  
 When necessary, backtracking occurs.
-
-In order to communicate with the task planner and motion planner, the interface layer utilizes ROS services.  
-For the task planner, the interface layer instantiates a server with a given PDDL domain file.  
-This domain file specifies the different actions that are feasible along with their preconditions and postconditions.  
-For individual service calls, the interface layer takes an internal `state' variable, converts it to PDDL format, and sends it to the server to be solved.  
-The task planner service responds with a high level plan or a notification that finding a plan failed.  
+ 
+At start time, the task planner is given a PDDL domain specifying the different actions that are feasible along with their preconditions and postconditions.  
+For individual calls to the task planner, the interface layer takes an internal `state' variable, converts it to PDDL format, and sends it along to be solved.  
+The task planner responds with a high level plan or a notification that finding a plan failed.  
 If finding a plan failed, the interface layer begins backtracking.  
 If a high level plan is found, the interface layer begins searching for refinements of each action as a motion plan.
 
-For the motion planner, the interface layer again communicates via a ROS service.  
-The motion planner is given an action, a world state, and a pose or set of poses corresponding to sub-parts of the action.  
-If it is possible to perform the action using the intermediary poses specified, the motion plan returns the trajectory.  
+On each call to the motion planner, the interface layer provides the motion planner with the intended action, the world state, and a pose or set of poses  
+corresponding to sub-parts of the action. These poses are randomly generated for each action by a pose generator within the interface layer. 
+If it is possible to perform the action using the intermediary poses specified, the motion plan returns the trajectory and the updated world state.  
 If not, it returns an error message.
 
 If the motion plan does not succeed, a variety of poses are tried.  
-Poses are generated randomly from a pose generator.  
-If no poses are successful, the interface layer determines what is blocking the motion plan from succeeding.  
-Specifically, it removes objects from the environment until a feasible motion plan is found.  
+Again, poses are generated randomly from a pose generator.  
+If no poses are successful, the interface layer determines what is blocking the motion plan from succeeding by removing objects from the environment until a feasible motion plan is found.  
 If still no feasible motion plan is found, backtracking is required.  
-If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner.  
-The task planner replans from the step where we failed to find a motion plan.  
-At that state, we add in predicates corresponding to the object obstructions.  
-Then, the task planner replans from there.  
+If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner after the PDDL state is appropriatedly updated.
+This update adds predicates corresponding to the object obstructions, and the task planner is asked to replan starting from the step where we failed to find a motion plan. This whole process continues until a feasible motion plan has been found.  
 
 
 \subsection{Simple Example Walkthrough}
@@ -157,7 +152,7 @@ This is the key insight which allows the task planner to reason about continuous
 We will follow [1] in using manipulation as an example environment.  For any planning domain with some continuous variables and some discrete variables, it will be possible to transform the continuous variables to discrete symbolic references to continuous positions.  For this example, we talk through the PICKUP action for a simple manipulator; the PUTDOWN action is analagous.
 
 
-Veronica: probably should fix this to be a nice alignment environment within LaTeX
+\vspace{10}
 $PICKUP(obj_1, gripper, pose_1, pose_2, traj)$
 
 $\; precon \; EMPTY(gripper), ROBOTAT(pose_1), $
@@ -172,25 +167,29 @@ $\; \; \;\; \; \; \forall obj', traj' \neg OBSTRUCTS(obj_1, traj', obj'), $
 
 $\; \; \; \; \; \;\forall obj' traj', tloc' \neg PDOBSTRUCTS(obj_1, traj', obj', tloc')$
 
+\vspace{10}
+
 Here, we have three continuous variables that we represent symbolically: $traj$, for each of the trajectories, and $pose_1$ and $pose_2$, representing start and end locations for the robot's gripper.
 The preconditions and effects can also iterate over all of these symbolic variables, allowing us to mark that a picked up object doesn't obstruct any other objects, etc. 
 We have various predicates which describe different things about both the discrete variables and the continuous variables.
 
-$EMPTY(gripper)$ -- this specifies whether the gripper is empty and thus available to hold a block.
+\vspace{10}
 
-$ROBOTAT(pose_1)$ -- this specifies where the robot is.  $pose_1$ is a symbolic reference to a continuous variable.
+$EMPTY(gripper)$ -- gripper is empty and thus available to hold a block.
 
-$ISGPFG(pose, obj)$ -- this specifies whether a pose is a Gripper Pose For Grasping (GPFG) an object.
+$ROBOTAT(pose_1)$ -- robot pose,  $pose_1$ is a symbolic reference to a continuous variable.
 
-$ISMP(traj, pose_1, pose_2)$ -- this specifies whether a trajectory is a motion plan from one pose to another.
+$ISGPFG(pose, obj)$ -- $pose$ is a Gripper Pose For Grasping (GPFG) an object $obj$.
 
-$OBSTRUCTS(obj_1, traj, obj_2)$ -- this specifies whether an object blocks another object from being picked up along a trajectory.
+$ISMP(traj, pose_1, pose_2)$ -- $traj$ is a motion plan from $pose_1$ to $pose_2$.
 
-$PDOBSTRUCTS(obj_1, traj, obj_2, tloc)$ -- this specifies whether an object blocks another object from being put down at a particular location along a trajectory.
+$OBSTRUCTS(obj_1, traj, obj_2)$ -- $obj_1$ blocks $obj_2$ from being picked up along $traj$.
 
-$IN(obj_1, gripper)$ -- this specifies whether an object is currently grasped by the gripper.
+$PDOBSTRUCTS(obj_1, traj, obj_2, tloc)$ -- $obj_1$ blocks $obj_2$ from placement at $tloc$ along $traj$.
 
+$IN(obj_1, gripper)$ -- $obj_1$ currently grasped by $gripper$.
 
+\vspace{10}
 
 How do we come up with all of these symbolic references?  
 We create as many as we need.  
@@ -335,14 +334,7 @@ Square & 9 & ? & ? & ? & ?\\
 \end{figure}
 \section{Limitations}
 
-The most important limitation of this implementation is to remember that it is an interface layer.  
-It does not include a task planner and a motion planner: you must set those up yourself as ROS services and make sure that the output and input message types specify those outlined in the API.  
-Depending on what planners you use, setting them up and installing them may be nontrivial.  
-Different planners are effective for different tasks and some planners may require extensive installation.  
-When you pick your task and motion planners, remember that this interface layer is set up to only work with task planners that use the PDDL specification language.  
-If you choose to use another specification system, you will need to translate between PDDL and your system.
-
-On a more detailed level, it is important to note that this planner is not guaranteed to find an optimal solution, or even to find a solution at all.  
+It is important to note that this planner is not guaranteed to find an optimal solution, or even to find a solution at all.  
 We refer you to [1] for a proof that this algorithm is guaranteed to find a solution for problems with certain properties.  
 However, due to the random nature of the pose generators and that there are limits set on the number of iterations, a valid plan may not be found for all problems.  
 

@@ -1,0 +1,4 @@
+[('PICKUP', 'BLOCK25', 'LEFTARM', 'INITPOSE', 'GP_BLOCK25'), ('PUTDOWN', 'BLOCK25', 'LEFTARM', 'GP_BLOCK25', 'PDP_BLOCK25_I', 'I'), ('PICKUP', 'BLOCK0', 'LEFTARM', 'PDP_BLOCK25_I', 'GP_BLOCK0'), ('PUTDOWN', 'BLOCK0', 'LEFTARM', 'GP_BLOCK0', 'PDP_BLOCK0_S', 'S')]
+
+['picked up BLOCK25 from E', 'put down BLOCK25 on surface I at (12,7)', 'picked up BLOCK0 from S', 'put down BLOCK0 on surface S at (0,2)']
+
