@@ -222,6 +222,10 @@ After this, the interface layer will repeat the process of attempting to refine 
 Subfigure f shows an alternative option, where the blocking object is determined to be the table, which is not movable.  
 Then, the state is updated as before and the task planner is called, but no solution is found, so backtracking occurs.
 
+\subsubsection{Algorithm Improvements}
+
+The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
+
 \subsubsection{Algorithm 1}
 
 Include algorithm block 1 from paper
@@ -245,7 +249,7 @@ Since the TryRefine subroutine has randomization from pose generators, re-runnin
 
 We have several checks where, if we fail to find a solution, we clear all of our information and start over.  Due to the randomization of the pose generators, we may make better choices during subsequent iterations.  
 
-The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
+The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
 
 \subsubsection{Algorithm 2}
 
@@ -289,40 +293,40 @@ The interface layer is designed to be independent of any specific task and motio
 \begin{tabular}[t]{|l|l|l|l|l|l|}
 \hline
 Shape & Blocks & obstructions & Motion Planner Calls & Task Planner Calls & runtime \\ \hline
-Horizontal Line & 3 & ? & ? & ? & ?\\
-& 5 & ? & ? & ? & ?\\
-& 7 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 11 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\
+Horizontal Line & 3 & 12 & 3 & 1 & .023\\
+& 5 & 24 & 4 & 1 & .028\\
+& 7 & 36 & 4 & 1 & .029\\
+& 9 & 48 & 4 & 1 & .029\\
+& 11 & 60 & 4 & 1 & .034\\
+& 13 & 72 & 4 & 1 & .037\\
 \hline
-Vertical lLne & 3 & ? & ? & ? & ?\\
-& 5 & ? & ? & ? & ?\\
-& 7 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 11 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\ 
+Vertical Line & 3 & 12 & 4 & 1 & .024\\
+& 5 & 24 & 4 & 1 & .027\\
+& 7 & 36 & 4 & 1 & .028\\
+& 9 & 48 & 4 & 1 & .028\\
+& 11 & 60 & 4 & 1 & .037\\
+& 13 & 72 & 4 & 1 & .036\\ 
 \hline
-X & 5 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\
-& 17 & ? & ? & ? & ?\\
-& 21 & ? & ? & ? & ?\\
-& 25 & ? & ? & ? & ?\\ 
+X & 5 & 8 & 2 & 1 & .026\\
+& 9 & 16 & 2 & 1 & .034\\
+& 13 & 24 & 2 & 1 & .036\\
+& 17 & 32 & 2 & 1 & .047\\
+& 21 & 40 & 2 & 1 & .066\\
+& 25 & 48 & 2 & 1 & .079\\ 
 \hline
-Cross & 5 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\
-& 17 & ? & ? & ? & ?\\
-& 21 & ? & ? & ? & ?\\
-& 25 & ? & ? & ? & ?\\ 
+Cross & 5 & 20 & 39 & 3 & .16\\
+& 9 & 44 & 50 & 2 & .20\\
+& 13 & 68 & 59 & 2 & .23\\
+& 17 & 92 & 71 & 3 & .26\\
+& 21 & 116 & 78 & 3 & .31\\
+& 25 & 140 & 77 & 3 & .39\\ 
 \hline
-Square & 9 & ? & ? & ? & ?\\
-& 25 & ? & ? & ? & ?\\
-& 49 & ? & ? & ? & ?\\
-& 81 & ? & ? & ? & ?\\
-& 121 & ? & ? & ? & ?\\
-& 169 & ? & ? & ? & ?\\ 
+Square & 9 & 56 & 54 & 2 & .16\\
+& 25 & 176 & 294 & 6 & 1.06\\
+& 49 & 360 & 818 & 10 & 5.07\\
+& 81 & 608 & 3177 & 24 & 34.68\\
+& 121 & 920 & 3681 & 22 & 87.06\\
+& 169 & 1296 & 14216 & 57 & 518.61\\ 
 \hline
 
 \end {tabular}
