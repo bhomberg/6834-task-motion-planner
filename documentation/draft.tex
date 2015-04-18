@@ -8,6 +8,9 @@
 \usepackage{amssymb}
 \usepackage{enumerate}
 \usepackage{svg}
+\usepackage{caption}
+\usepackage{subfig}
+
 
 % Margins
 \topmargin=-.5in
@@ -211,9 +214,14 @@ When the pose generator is called by the interface layer, it generates a set of 
 
 \subsection{Main Interface Layer}
 
-Insert the figure 4 from the paper!
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figure4.png}
+\caption{Illustration of the interface layer’s refinement process. Action arguments have been abbreviated. [1]
+\label{fig:figure4}}
+\end{figure}
 
-This figure, included with text from [1], explains the flow of control of the interface layer through a variety of situations, including more than the simple case covers.  
+This figure (Fig. \ref{fig:figure4}), included with text from [1], explains the flow of control of the interface layer through a variety of situations, including more than the simple case covers.  
 The subfigures in this diagram explain on a high level the different steps the interface layer takes when solving a problem.  
 The subfigure a shows the motion planner's backtracking search when trying to instantiate motions for each of the high level actions.  
 Subfigure b shows the first possible scenario, where the backtracking search succeeds.  Subfigure c shows a second possible scenario, where the backtracking search doesn't succeed.  
@@ -226,7 +234,13 @@ Then, the state is updated as before and the task planner is called, but no solu
 
 \subsubsection{Algorithm 1}
 
-Include algorithm block 1 from paper
+\begin{figure}[t]
+	\centering
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm1}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm2}}
+	\caption{Taken from[1]\label{fig:algorithms}}
+\end{figure}
 
 The outer loop of the algorithm interfaces with the high level task planner.  
 We start with an initial state where no objects obstruct any motions.  
