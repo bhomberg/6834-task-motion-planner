@@ -7,6 +7,9 @@
 \usepackage{graphicx} % Required to insert images
 \usepackage{amssymb}
 \usepackage{enumerate}
+\usepackage{svg}
+\usepackage{caption}
+\usepackage{subfig}
 
 % Margins
 \topmargin=-.5in
@@ -16,11 +19,12 @@
 \textheight=9in
 \headsep=0.25in
 
+\DeclareGraphicsExtensions{.jpg,.png,.svg}
 
 \newcommand{\tab}{\hspace*{2em}}
 
 \title{Combined Task and Motion Planner through an Interface Layer}
-\author{Alex Gutierrez, Bianca Homberg, and Veronica Lane}
+\author{Alex Gutierrez (ragtz@mit.edu), Bianca Homberg (bhomberg@mit.edu), and Veronica Lane (vmlane@mit.edu)}
 
 
 %% ONE SENTENCE PER LINE TO MAKE THIS WORK NICELY IN GIT
@@ -39,17 +43,17 @@ Our system uses off-the-shelf task and motion planners and makes few assumptions
  
 An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. 
 However, the number of required discretizations to solve the problem is generally very large and results in extremely large or infeasible problems. 
-The interface allows the task planner state space to use an abstract state space which ignores geometry. 
+An interface allows the task planner state space to use an abstract state space which ignores geometry. 
 The interface layer translates geometric constraints and passes them to the task planner.
 
 \section{Problem Statement}
 
-In robotics, it is often necessary to create a plan for a series of motions of the robot in order to complete some high level plan.
+In robotics, it is often necessary to create a plan for a series of motions of the robot in order to achieve some high level objective.
 In order to find a task plan which is actually feasible, the task planner must have some knowledge of the geometry of the world.
-Without knowledge of the actual spatial configurations of objects in the world, the task planner would create plans where some actions cannot be completed, due to infeasible motion plans from blocking objects or interference between the robot and the environment.
+Without knowledge of the actual spatial configurations of objects in the world, the task planner would create plans that could not complete some actions, due to infeasible motion plans from blocking objects or interference between the robot and the environment.
 
 The high level problem this implementation addresses is to create a combined task and motion planner, following that presented in [1].  
-This approach allows the motion planner to give information to the task planner and allows us to keep the continuous variables continuous, rather than discretizing.  
+This approach allows the motion planner to give information to the task planner and keeps continuous variables continuous, rather than discretizing.  
 This prevents a combinatorial explosion of the state space that the task planner needs to search over.
 
 The main contribution of this implementation is an interface layer.  
@@ -61,7 +65,7 @@ The interface layer interleaves calls between the task planner and the motion pl
 
 \section{High Level Approach}
 
-The interface layer starts by asking the task planner to generate a high level plan and has the motion planner instaniate motion plans corresponding to each action.  
+The interface layer starts by asking the task planner to generate a high level plan and has the motion planner instantiate motion plans corresponding to each action.  
 When it's not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner.  
 Then, the task planner replans from that state and the process continues.  
 When necessary, backtracking occurs.
@@ -81,13 +85,18 @@ If the motion plan does not succeed, a variety of poses are tried.
 Again, poses are generated randomly from a pose generator.  
 If no poses are successful, the interface layer determines what is blocking the motion plan from succeeding by removing objects from the environment until a feasible motion plan is found.  
 If still no feasible motion plan is found, backtracking is required.  
-If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner after the PDDL state is appropriatedly updated.
+If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner after the PDDL state is appropriately updated.
 This update adds predicates corresponding to the object obstructions, and the task planner is asked to replan starting from the step where we failed to find a motion plan. This whole process continues until a feasible motion plan has been found.  
 
 
 \subsection{Simple Example Walkthrough}
 
-Consider the environment in FIGURE.  ***** include Fig 2 from the paper
+\begin{figure}[t]
+\centering
+\def\svgwidth{0.5\textwidth}
+\input{figures/walkthrough.pdf_tex}
+\caption{Walkthrough Example. The goal is for the red block to be on surface S.\label{fig:walkthrough}}
+\end{figure}
 
 In this environment, we have two objects, blocks 1 and 2, and our goal is to put block 1 into area S.  
 However, we cannot pick up block 1 directly since the walls and block 2 surround it.  
@@ -209,9 +218,14 @@ When the pose generator is called by the interface layer, it generates a set of 
 
 \subsection{Main Interface Layer}
 
-Insert the figure 4 from the paper!
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figure4.png}
+\caption{Illustration of the interface layer’s refinement process. Action arguments have been abbreviated. Taken from [1]
+\label{fig:figure4}}
+\end{figure}
 
-This figure, included with text from [1], explains the flow of control of the interface layer through a variety of situations, including more than the simple case covers.  
+This figure (Fig. \ref{fig:figure4}), included with text from [1], explains the flow of control of the interface layer through a variety of situations, including more than the simple case covers.  
 The subfigures in this diagram explain on a high level the different steps the interface layer takes when solving a problem.  
 The subfigure a shows the motion planner's backtracking search when trying to instantiate motions for each of the high level actions.  
 Subfigure b shows the first possible scenario, where the backtracking search succeeds.  Subfigure c shows a second possible scenario, where the backtracking search doesn't succeed.  
@@ -222,9 +236,19 @@ After this, the interface layer will repeat the process of attempting to refine 
 Subfigure f shows an alternative option, where the blocking object is determined to be the table, which is not movable.  
 Then, the state is updated as before and the task planner is called, but no solution is found, so backtracking occurs.
 
+\subsubsection{Algorithm Improvements}
+
+The original version of the algorithm, as shown in (Fig. \ref{fig:algorithms}), only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification. Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses will not work but others will, so it is better to try to make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
+
 \subsubsection{Algorithm 1}
 
-Include algorithm block 1 from paper
+\begin{figure}[t]
+	\centering
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm1}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm2}}
+	\caption{Taken from[1]\label{fig:algorithms}}
+\end{figure}
 
 The outer loop of the algorithm interfaces with the high level task planner.  
 We start with an initial state where no objects obstruct any motions.  
@@ -245,11 +269,10 @@ Since the TryRefine subroutine has randomization from pose generators, re-runnin
 
 We have several checks where, if we fail to find a solution, we clear all of our information and start over.  Due to the randomization of the pose generators, we may make better choices during subsequent iterations.  
 
-The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
+The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
 
 \subsubsection{Algorithm 2}
 
-include algorithm block 2 from paper!  go with the one from the short version of the paper, since it's the version we're actually going with.  the algorithm block is shorter too
 
 In the TryRefine subroutine, the interface layer attempts to find motion plans corresponding to the various actions.  
 It has two modes: error free and partial trajectory.  
@@ -272,62 +295,111 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 
 
 \section{Benchmarking}
-
 \subsection{Testing}
-We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded by three walls, and others were surrounded by 3 walls. This required the interface layer to find the pose that picked up the block in the correct location. Furthermore, some blocks which needed to be moved in order to achieve the goal were obstructed by other blocks, meaning that the other block had to be moved first.
+\begin{figure}[t]
+\centering
+\def\svgwidth{0.5\textwidth}
+\input{figures/smallEnv.pdf_tex}
+\caption{Small Environment Test Example. The goal was for the blue blocks to be on surface I and the red blocks to be on surface S.\label{fig:smallEnv}}
+\end{figure}
+We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded on 3 sides and others on all sides by walls and blocks. For blocks surrounded on 3 sides, the interface layer had to find the pose that picked up the block in the correct direction. For blocks surrounded on all sides, the interface layer needed to generate actions to move blocks in the way.
 
 \subsection{Procedure}
+\begin{figure}[t]
+\centering
+\def\svgwidth{\textwidth}
+\input{figures/benchmarks.pdf_tex}
+\caption{Benchmarking Test Examples. The goal was to move the green block to another surface.\label{fig:benchmark}}
+
+\end{figure}
 
 We performed a variety of benchmarking tests to measure the performance of the interface. We measured the performance of each test by the number of calls to both the task planner and motion planner and the runtime. ref{table-benchmarkTable}
 The difficulty of a benchmark increased as the total number \textit{obstructions} increased. The total number of obstructions was counted by summing the number of directions around each block that were obstructed. For the ordinal directions, a neighboring block in any one of three locations obstructs the direction. For example, a neighboring block above, to the right or to the top right corner of a block obstructs the northeast direction of the block. Furthermore, as the number of blocks for a particular grid shape increased, the test difficulty increased, since the total number of obstructions increased.
 
 \subsection{Results}
-The goal of each test was to move the green block, at the center of a grid of blocks, to a goal surface. We tested a variety of different grid shapes, including a square grid, an X, a cross, and lines. We tested each grid shape over a range of sizes ranging from 3 to 13. ref{fig-benchmarks} The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault.
-The interface layer is designed to be independent of any specific task and motion planner libraries, therefore number of calls to the motion and task planner measures the performance of the interface layer.
+The goal of each test was to move the green block, at the center of a grid of blocks, to a goal surface. 
+We tested a variety of different grid shapes, including a square grid, an X, a cross, and lines. 
+We tested each grid shape over a range of sizes ranging from 3 to 13. ref{fig-benchmarks} 
+The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault.
+
+Figure \ref{benchmark2} shows the results for the original algorithm, minus our modification.  (Our modification always tries to find a perfect plan after adding a new high level plan section to the plan, rather than immediately trying to find a new partial trajectory.)  For the very simplest cases, the original algorithm performs better, since it makes the same number of motion and task planner calls but has less backtracking overhead.  However, for the more complicated environments, the cross and the square, our algorithm was significantly faster, as shown in \ref{benchmark}.
+
+The interface layer is designed to be independent of any specific task and motion planner libraries, therefore number of calls to the motion and task planner measures the performance of the interface layer better than the total runtime, since the actual runtime will be very dependent on the motion planner and task planner chosen.
 
 \begin{figure}
 \begin{tabular}[t]{|l|l|l|l|l|l|}
 \hline
 Shape & Blocks & obstructions & Motion Planner Calls & Task Planner Calls & runtime \\ \hline
-Horizontal Line & 3 & ? & ? & ? & ?\\
-& 5 & ? & ? & ? & ?\\
-& 7 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 11 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\
+Horizontal Line & 3 & 12 & 3 & 1 & .023\\
+& 5 & 24 & 4 & 1 & .028\\
+& 7 & 36 & 4 & 1 & .029\\
+& 9 & 48 & 4 & 1 & .029\\
+& 11 & 60 & 4 & 1 & .034\\
+& 13 & 72 & 4 & 1 & .037\\
 \hline
-Vertical lLne & 3 & ? & ? & ? & ?\\
-& 5 & ? & ? & ? & ?\\
-& 7 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 11 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\ 
+Vertical Line & 3 & 12 & 4 & 1 & .024\\
+& 5 & 24 & 4 & 1 & .027\\
+& 7 & 36 & 4 & 1 & .028\\
+& 9 & 48 & 4 & 1 & .028\\
+& 11 & 60 & 4 & 1 & .037\\
+& 13 & 72 & 4 & 1 & .036\\ 
 \hline
-X & 5 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\
-& 17 & ? & ? & ? & ?\\
-& 21 & ? & ? & ? & ?\\
-& 25 & ? & ? & ? & ?\\ 
+X & 5 & 8 & 2 & 1 & .026\\
+& 9 & 16 & 2 & 1 & .034\\
+& 13 & 24 & 2 & 1 & .036\\
+& 17 & 32 & 2 & 1 & .047\\
+& 21 & 40 & 2 & 1 & .066\\
+& 25 & 48 & 2 & 1 & .079\\ 
 \hline
-Cross & 5 & ? & ? & ? & ?\\
-& 9 & ? & ? & ? & ?\\
-& 13 & ? & ? & ? & ?\\
-& 17 & ? & ? & ? & ?\\
-& 21 & ? & ? & ? & ?\\
-& 25 & ? & ? & ? & ?\\ 
+Cross & 5 & 20 & 39 & 3 & .16\\
+& 9 & 44 & 50 & 2 & .20\\
+& 13 & 68 & 59 & 2 & .23\\
+& 17 & 92 & 71 & 3 & .26\\
+& 21 & 116 & 78 & 3 & .31\\
+& 25 & 140 & 77 & 3 & .39\\ 
 \hline
-Square & 9 & ? & ? & ? & ?\\
-& 25 & ? & ? & ? & ?\\
-& 49 & ? & ? & ? & ?\\
-& 81 & ? & ? & ? & ?\\
-& 121 & ? & ? & ? & ?\\
-& 169 & ? & ? & ? & ?\\ 
+Square & 9 & 56 & 54 & 2 & .16\\
+& 25 & 176 & 294 & 6 & 1.06\\
+& 49 & 360 & 818 & 10 & 5.07\\
+& 81 & 608 & 3177 & 24 & 34.68\\
+& 121 & 920 & 3681 & 22 & 87.06\\
+& 169 & 1296 & 14216 & 57 & 518.61\\ 
 \hline
 
 \end {tabular}
-\caption{Benchmark Tests}
+\caption{Benchmark Tests - Our Modified Algorithm}
 \label{benchmark}
+\end{figure}
+
+
+\begin{figure}
+\begin{tabular}[t]{|l|l|l|l|l|l|}
+\hline
+Shape & Blocks & obstructions & Motion Planner Calls & Task Planner Calls & runtime \\ \hline
+Horizontal Line & 3 & 12 & 3 & 1 & .016\\
+& 9 & 48 & 4 & 1 & .025\\
+& 13 & 72 & 4 & 1 & .033\\
+\hline
+Vertical Line & 3 & 12 & 4 & 1 & .022\\
+& 9 & 48 & 4 & 1 & .027\\
+& 13 & 72 & 4 & 1 & .031\\ 
+\hline
+X & 5 & 8 & 2 & 1 & .014\\
+& 17 & 32 & 2 & 1 & .031\\
+& 25 & 48 & 2 & 1 & .056\\ 
+\hline
+Cross & 5 & 20 & 47 & 5 & .15\\
+& 17 & 92 & 206 & 10 & .68\\
+& 25 & 140 & 390 & 14 & 1.56\\ 
+\hline
+Square & 9 & 56 & 145 & 11 & .45\\
+& 25 & 176 & 4354 & 143 & 16.55\\
+
+\hline
+
+\end {tabular}
+\caption{Benchmark Tests - Original Algorithm}
+\label{benchmark2}
 \end{figure}
 \section{Limitations}
 
@@ -339,7 +411,9 @@ Furthermore, this system is not intended for online replanning.
 It may be possible to use it for online replanning for some systems if it runs quickly on the particular problem, but it is not an intended feature of this algorithm.
 
 Finally, the runtime of this algorithm is based on the speed of the motion planner and the task planner used within it.  
-If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.
+If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.  
+In particular, the number of calls to the motion planner is very large in order to gather the environmental information needed to pass on to the task planner.  
+So in particular, the running time of this algorithm will depend on the running time of the motion planner.
 
 \section{Open Questions}
 
