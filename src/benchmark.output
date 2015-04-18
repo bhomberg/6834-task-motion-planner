@@ -1,0 +1,10 @@
+State File: /home/vmlane/catkin_ws/src/6834-task-motion-planner/states/SQUARE_3
+Shape: SQUARE
+Size: 3
+Number of Blocks: 9
+Number of Obstructions: 56
+Run Time: 0.18449511528
+Task Planner Calls: 3
+Motion Planner Calls: 54
+
+

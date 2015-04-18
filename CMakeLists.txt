@@ -7,12 +7,7 @@ project(task_motion_planner)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  std_msgs
-  geometry_msgs
-  moveit_msgs
-  moveit_core 
-  moveit_ros_planning 
-  moveit_ros_planning_interface
+  std_msgs 
   cmake_modules
   message_generation
 )
@@ -63,9 +58,7 @@ find_package(Eigen REQUIRED)
    world_state.msg
    motion_plan.msg
    motion_plan_parameters.msg
-   motion_seq.msg
    obj.msg
-   pose_gen.msg
    pose.msg
    task_domain.msg
  )
@@ -75,7 +68,6 @@ find_package(Eigen REQUIRED)
    FILES
    task_service.srv
    motion_service.srv
-   task_service.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -89,8 +81,6 @@ find_package(Eigen REQUIRED)
  generate_messages(
    DEPENDENCIES
    std_msgs
-   geometry_msgs
-   moveit_msgs
    task_motion_planner
 )
 
@@ -104,7 +94,7 @@ find_package(Eigen REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs moveit_msgs message_runtime moveit_core moveit_ros_planning_interface
+  CATKIN_DEPENDS roscpp rospy std_msgs 
 #  DEPENDS system_lib
 )
 #  INCLUDE_DIRS include
