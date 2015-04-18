@@ -2,11 +2,11 @@
 
 import time
 import sys
+import os
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/../src/'))
 import rospy
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
-from moveit_msgs.msg import *
-from geometry_msgs.msg import *
 import copy
 import itertools
 from random import shuffle
@@ -28,7 +28,7 @@ numTests = 10
 
 genState =  StateGeneratorSmall()
 
-DIR_6834 = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/'
+DIR_6834 = '/home/ragtz/indigo_workspace/src/6834-task-motion-planner/'
 
 # One Cover Bechmark
 out_file = open('smallTests.output','w')

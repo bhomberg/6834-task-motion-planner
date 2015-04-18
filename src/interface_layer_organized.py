@@ -4,8 +4,6 @@ import sys
 import rospy
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
-from moveit_msgs.msg import *
-from geometry_msgs.msg import *
 import copy
 import itertools
 from random import shuffle

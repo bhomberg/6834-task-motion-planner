@@ -1,3 +1,0 @@
-<launch>
-  <node name="motion_palnner_server" pkg="task_motion_planner" type="task_motion_planner"/>
-</launch>

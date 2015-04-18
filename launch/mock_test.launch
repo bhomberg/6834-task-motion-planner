@@ -1,5 +1,0 @@
-<launch>
-  <node name="task_planner_server" pkg="task_motion_planner" type="planner_server.py" output="screen"/>
-  <node name="interface_node" pkg="task_motion_planner" type="interface_layer_organized.py" output="screen"/> 
-  <node name="motion_planner_server" pkg="task_motion_planner" type="mockMotionPlanner.py" output="screen"/>
-</launch>

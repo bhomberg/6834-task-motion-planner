@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-DIR = '../states/'
+import os
+
+DIR = os.path.abspath(os.path.dirname(__file__) + '/../states/') + '/'
 
 class StateGeneratorSmall:
 	def __init__(self):
