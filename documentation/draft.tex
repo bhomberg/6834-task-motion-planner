@@ -286,8 +286,14 @@ We performed a variety of benchmarking tests to measure the performance of the i
 The difficulty of a benchmark increased as the total number \textit{obstructions} increased. The total number of obstructions was counted by summing the number of directions around each block that were obstructed. For the ordinal directions, a neighboring block in any one of three locations obstructs the direction. For example, a neighboring block above, to the right or to the top right corner of a block obstructs the northeast direction of the block. Furthermore, as the number of blocks for a particular grid shape increased, the test difficulty increased, since the total number of obstructions increased.
 
 \subsection{Results}
-The goal of each test was to move the green block, at the center of a grid of blocks, to a goal surface. We tested a variety of different grid shapes, including a square grid, an X, a cross, and lines. We tested each grid shape over a range of sizes ranging from 3 to 13. ref{fig-benchmarks} The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault.
-The interface layer is designed to be independent of any specific task and motion planner libraries, therefore number of calls to the motion and task planner measures the performance of the interface layer.
+The goal of each test was to move the green block, at the center of a grid of blocks, to a goal surface. 
+We tested a variety of different grid shapes, including a square grid, an X, a cross, and lines. 
+We tested each grid shape over a range of sizes ranging from 3 to 13. ref{fig-benchmarks} 
+The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault.
+
+Figure \ref{benchmark2} shows the results for the original algorithm, minus our modification.  (Our modification always tries to find a perfect plan after adding a new high level plan section to the plan, rather than immediately trying to find a new partial trajectory.)  For the very simplest cases, the original algorithm performs better, since it makes the same number of motion and task planner calls but has less backtracking overhead.  However, for the more complicated environments, the cross and the square, our algorithm was significantly faster, as shown in \ref{benchmark}.
+
+The interface layer is designed to be independent of any specific task and motion planner libraries, therefore number of calls to the motion and task planner measures the performance of the interface layer better than the total runtime, since the actual runtime will be very dependent on the motion planner and task planner chosen.
 
 \begin{figure}
 \begin{tabular}[t]{|l|l|l|l|l|l|}
@@ -374,7 +380,9 @@ Furthermore, this system is not intended for online replanning.
 It may be possible to use it for online replanning for some systems if it runs quickly on the particular problem, but it is not an intended feature of this algorithm.
 
 Finally, the runtime of this algorithm is based on the speed of the motion planner and the task planner used within it.  
-If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.
+If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.  
+In particular, the number of calls to the motion planner is very large in order to gather the environmental information needed to pass on to the task planner.  
+So in particular, the running time of this algorithm will depend on the running time of the motion planner.
 
 \section{Open Questions}
 
