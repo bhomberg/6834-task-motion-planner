@@ -7,6 +7,7 @@
 \usepackage{graphicx} % Required to insert images
 \usepackage{amssymb}
 \usepackage{enumerate}
+\usepackage{svg}
 
 % Margins
 \topmargin=-.5in
@@ -16,6 +17,7 @@
 \textheight=9in
 \headsep=0.25in
 
+\DeclareGraphicsExtensions{.jpg,.png,.svg}
 
 \newcommand{\tab}{\hspace*{2em}}
 
@@ -274,12 +276,27 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 \section{Benchmarking}
 
 \subsection{Testing}
-We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded by three walls, and others were surrounded by 3 walls. This required the interface layer to find the pose that picked up the block in the correct location. Furthermore, some blocks which needed to be moved in order to achieve the goal were obstructed by other blocks, meaning that the other block had to be moved first.
+We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded on 3 sides and others on all sides by walls and blocks. For blocks surrounded on 3 sides, the interface layer had to find the pose that picked up the block in the correct direction. For blocks surrounded on all sides, the interface layer needed to generate actions to move blocks in the way.
+
+\begin{figure}[t]
+\centering
+\def\svgwidth{0.5\textwidth}
+\input{figures/smallEnv.pdf_tex}
+\caption{Small Environment Test Example. The goal was for the blue blocks to be on surface I and the red blocks to be on surface S.}
+\end{figure}
+
 
 \subsection{Procedure}
 
 We performed a variety of benchmarking tests to measure the performance of the interface. We measured the performance of each test by the number of calls to both the task planner and motion planner and the runtime. ref{table-benchmarkTable}
 The difficulty of a benchmark increased as the total number \textit{obstructions} increased. The total number of obstructions was counted by summing the number of directions around each block that were obstructed. For the ordinal directions, a neighboring block in any one of three locations obstructs the direction. For example, a neighboring block above, to the right or to the top right corner of a block obstructs the northeast direction of the block. Furthermore, as the number of blocks for a particular grid shape increased, the test difficulty increased, since the total number of obstructions increased.
+
+\begin{figure}[t]
+\centering
+\def\svgwidth{\textwidth}
+\input{figures/benchmarks.pdf_tex}
+\caption{Benchmarking Test Examples. The goal was to move the green block to another surface.}
+\end{figure}
 
 \subsection{Results}
 The goal of each test was to move the green block, at the center of a grid of blocks, to a goal surface. We tested a variety of different grid shapes, including a square grid, an X, a cross, and lines. We tested each grid shape over a range of sizes ranging from 3 to 13. ref{fig-benchmarks} The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault.
