@@ -19,6 +19,7 @@
 \textheight=9in
 \headsep=0.25in
 
+\DeclareGraphicsExtensions{.jpg,.png,.svg}
 
 \newcommand{\tab}{\hspace*{2em}}
 
@@ -64,7 +65,7 @@ The interface layer interleaves calls between the task planner and the motion pl
 
 \section{High Level Approach}
 
-The interface layer starts by asking the task planner to generate a high level plan and has the motion planner instaniate motion plans corresponding to each action.  
+The interface layer starts by asking the task planner to generate a high level plan and has the motion planner instantiate motion plans corresponding to each action.  
 When it's not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner.  
 Then, the task planner replans from that state and the process continues.  
 When necessary, backtracking occurs.
@@ -84,13 +85,18 @@ If the motion plan does not succeed, a variety of poses are tried.
 Again, poses are generated randomly from a pose generator.  
 If no poses are successful, the interface layer determines what is blocking the motion plan from succeeding by removing objects from the environment until a feasible motion plan is found.  
 If still no feasible motion plan is found, backtracking is required.  
-If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner after the PDDL state is appropriatedly updated.
+If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner after the PDDL state is appropriately updated.
 This update adds predicates corresponding to the object obstructions, and the task planner is asked to replan starting from the step where we failed to find a motion plan. This whole process continues until a feasible motion plan has been found.  
 
 
 \subsection{Simple Example Walkthrough}
 
-Consider the environment in FIGURE.  ***** include Fig 2 from the paper
+\begin{figure}[t]
+\centering
+\def\svgwidth{0.5\textwidth}
+\input{figures/smallEnv.pdf_tex}
+\caption{Small Environment Test Example. The goal was for the blue blocks to be on surface I and the red blocks to be on surface S.\label{fig:smallEnv}}
+\end{figure}
 
 In this environment, we have two objects, blocks 1 and 2, and our goal is to put block 1 into area S.  
 However, we cannot pick up block 1 directly since the walls and block 2 surround it.  
@@ -215,7 +221,7 @@ When the pose generator is called by the interface layer, it generates a set of 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/figure4.png}
-\caption{Illustration of the interface layer’s refinement process. Action arguments have been abbreviated. [1]
+\caption{Illustration of the interface layer’s refinement process. Action arguments have been abbreviated. Taken from [1]
 \label{fig:figure4}}
 \end{figure}
 
@@ -291,8 +297,15 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 
 \section{Benchmarking}
 
+\begin{figure}[t]
+\centering
+\def\svgwidth{\textwidth}
+\input{figures/benchmarks.pdf_tex}
+\caption{Benchmarking Test Examples. The goal was to move the green block to another surface.\label{fig:benchmark}}
+
+\end{figure}
 \subsection{Testing}
-We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded by three walls, and others were surrounded by 3 walls. This required the interface layer to find the pose that picked up the block in the correct location. Furthermore, some blocks which needed to be moved in order to achieve the goal were obstructed by other blocks, meaning that the other block had to be moved first.
+We generated a set of small-scale tests to check the correctness of the interface layer. ref{fig-smallTest} Each test had three to four blocks initially placed on one or two surfaces. Some blocks were surrounded on 3 sides and others on all sides by walls and blocks. For blocks surrounded on 3 sides, the interface layer had to find the pose that picked up the block in the correct direction. For blocks surrounded on all sides, the interface layer needed to generate actions to move blocks in the way.
 
 \subsection{Procedure}
 
