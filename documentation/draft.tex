@@ -43,17 +43,17 @@ Our system uses off-the-shelf task and motion planners and makes few assumptions
  
 An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. 
 However, the number of required discretizations to solve the problem is generally very large and results in extremely large or infeasible problems. 
-The interface allows the task planner state space to use an abstract state space which ignores geometry. 
+An interface allows the task planner state space to use an abstract state space which ignores geometry. 
 The interface layer translates geometric constraints and passes them to the task planner.
 
 \section{Problem Statement}
 
-In robotics, it is often necessary to create a plan for a series of motions of the robot in order to complete some high level plan.
+In robotics, it is often necessary to create a plan for a series of motions of the robot in order to achieve some high level objective.
 In order to find a task plan which is actually feasible, the task planner must have some knowledge of the geometry of the world.
-Without knowledge of the actual spatial configurations of objects in the world, the task planner would create plans where some actions cannot be completed, due to infeasible motion plans from blocking objects or interference between the robot and the environment.
+Without knowledge of the actual spatial configurations of objects in the world, the task planner would create plans that could not complete some actions, due to infeasible motion plans from blocking objects or interference between the robot and the environment.
 
 The high level problem this implementation addresses is to create a combined task and motion planner, following that presented in [1].  
-This approach allows the motion planner to give information to the task planner and allows us to keep the continuous variables continuous, rather than discretizing.  
+This approach allows the motion planner to give information to the task planner and keeps continuous variables continuous, rather than discretizing.  
 This prevents a combinatorial explosion of the state space that the task planner needs to search over.
 
 The main contribution of this implementation is an interface layer.  
@@ -238,7 +238,7 @@ Then, the state is updated as before and the task planner is called, but no solu
 
 \subsubsection{Algorithm Improvements}
 
-The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
+The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  Our algorithm has a slight modification where, every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In some scenarios, some poses won't work but others will, so it is in our benefit to try and make the simplest possible plan work before giving up and making the high level plan more complicated.  In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  An analysis of the benefits of this approach are outlined in the benchmarking section.  
 
 \subsubsection{Algorithm 1}
 
@@ -269,7 +269,7 @@ Since the TryRefine subroutine has randomization from pose generators, re-runnin
 
 We have several checks where, if we fail to find a solution, we clear all of our information and start over.  Due to the randomization of the pose generators, we may make better choices during subsequent iterations.  
 
-The original version of the algorithm, as shown in FIGURE, only attempts to find partial trajectories when it replans partway through the procedure.  For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
+The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
 
 \subsubsection{Algorithm 2}
 
