@@ -1,3 +1,2 @@
-obj[] movable_objects
-obj[] walls
-obj[] surfaces
+moveit_msgs/CollisionObject[] movable_objects
+moveit_msgs/CollisionObject[] surfaces

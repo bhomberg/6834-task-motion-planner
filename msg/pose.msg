@@ -1,6 +1,2 @@
-string object_id
-string direction
-
-string surface_id
-int64 x
-int64 y
+geometry_msgs/Pose pose
+bool gripperOpen
