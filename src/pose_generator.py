@@ -9,41 +9,60 @@ import random
 import copy
 import re
 
+
+MAX_ACTIONS = 7
 #TODO: right/left arm ---> standard pose is different
 
 # Generates a set of gripper poses given an action and a world description
 # The motion planner verifies that the set of candidate poses is valid 
 # (not obstructed by objects & objects are reachable) 
 class PoseGenerator:
+    pickup_counter = 0
+    putdown_counter = 0
+
     def __init__(self, GRIPPER_OFFSET = .015):
         # the height of the table in world coordinates
         self.DIST_FROM_CYLINDER = .1
         self.GRIPPER_OFFSET = GRIPPER_OFFSET
 
-    # Generates a set of gripper poses given an action and a world description
+    # Generates a gripper pose given an action and a world description
     # action = a string containing (action, arm, object_name)
     # world = a WorldState msg
-    def generate(self, action, world):
+    # return = a gripper pose, which is a set of waypoints
+    def next(self, action, world):
         action = re.split(',', action[1:-1])
         objects = world.world.collision_objects
         obj = self._search_for_object(action[1], objects)
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
         
-        if action[0] == 'pickup':
-            pose = obj.primitive_poses[0]
-            return self.pickup(pose,height,radius)
-        elif action[0] == 'putdown':
-            table = self._search_for_object(action[-1], objects)
-            return self.putdown(table,height,radius)
-        else:
-            return
+        if action[0] == 'PICKUP':
+            if pickup_counter <= MAX_ACTIONS:
+                pickup_counter += 1
+                pose = obj.primitive_poses[0]
+                return self.pickup(pose,height,radius)
+        elif action[0] == 'PUTDOWN':
+            if putdown_counter <= MAX_ACTIONS:
+                putdown_counter += 1
+                table = self._search_for_object(action[-1], objects)
+                return self.putdown(table,height,radius)
+        return None
 
-    # Generates a set of gripper poses for a pickup action of a cylinder
+    def reset(self,action):
+        if action == 'PICKUP':
+            pickup_counter = 0
+        elif action == 'PUTDOWN':
+            putdown_counter = 0
+    
+    def resetAll():
+        putdown_counter = 0
+        pickup_counter = 0
+
+    # Generates a gripper pose for a pickup action of a cylinder
     # obj_pose = cylinder pose (position, orientation)
     # height = cylinder height
     # radius = cylinder radius
-    # return =  an array of 5 pose_gen messages each containing a pose and a
+    # return =  a list of 5 pose_gen messages each containing a waypoint and a
     #           boolean - true if the gripper is open, false if closed
     #           poses = stage, pre-grasp, grasp, lifted, standard pose
     def pickup(self, obj_pose, height, radius):
@@ -110,9 +129,9 @@ class PoseGenerator:
     # given an area in which to place the object
     # x1, y1 = bottom left corner of area (from top view)
     # x2, y2 = top right corner of area (from top view)
-    # return =  an array of 6 pose_gen messages containing a pose and a
+    # return =  a list of 6 pose_gen messages containing a waypoint and a
     #           boolean - true if the gripper is open, false if closed
-    #           poses = stage, set-down, let-go, back away, lift arm, standard pose
+    #           waypoints = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,table,height,radius):
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
@@ -208,6 +227,5 @@ if __name__ == "__main__":
     poseGen = PoseGenerator()
     # test case
     # yaw, roll, pitch
-    print poseGen._rpy_to_orientation(-math.pi/4.0,0,math.pi/2.0)
-    print poseGen._rpy_to_orientation(0,0,math.pi/4.0)
+    # print poseGen.next('PUTDOWN')
     
