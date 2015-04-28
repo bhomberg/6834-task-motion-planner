@@ -1,13 +1,18 @@
-1. Connect yellow ethernet cable to black box
-2. Connect USB cable from black box to computer
-3. Baxter on button back left side on bottom base
-4. baxter.sh at top of indigo ws
+Connect yellow ethernet cable to black box
+Connect USB cable from black box to computer
+Turn on Baxter - button on back left side of base
+Edit the wired connections ipV4 Settings
+	Hit Add
+		ipV4 169.254.10.1
+		netmask 255.255.0.0
+		gateway 0.0.0.0
 
-5. edit wired connections
-	ipV4 169.254.10.1
-	netmask 255.255.0.0
-	gateway 0.0.0.0
-cd to workspace & run ./baxter.sh
+Add 169.254.10.157 drl-baxter to your /etc/hosts
+
+Make sure Baxter has a green ring at the top.
+
+cd indigo_ws
+./baxter.sh
 To enable Baxter:
 	rosrun baxter_tools enable_robot.py -e 
 To disable

@@ -55,13 +55,15 @@ find_package(Eigen REQUIRED)
    FILES
    hl_plan.msg
    location.msg
-   world_obj.msg
-   world_state.msg
    motion_plan.msg
    motion_plan_parameters.msg
-   obj.msg
+   motion_seq.msg
+   obj.msg 
    pose.msg
+   robot.msg
    task_domain.msg
+   world_obj.msg
+   world_state.msg
  )
 
 ## Generate services in the 'srv' folder

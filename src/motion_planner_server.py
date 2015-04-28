@@ -17,7 +17,7 @@ class MotionPlannerServer(object):
         self.planning_scene_pub = rospy.Publisher('planning_scene', PlanningScene)
         
         self.objects = None
-        rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, _update_world_state)
+        rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
         
     def get_motion_plan(self, req):
         print "============ Starting Moveit Commander"
@@ -110,9 +110,9 @@ class MotionPlannerServer(object):
                 
                 group.execute(plan)
                 
-                if action[0] == 'pickup' and i == attach_detach_idx:
+                if action[0] == 'PICKUP' and i == attach_detach_idx:
                     group.attach_object(action[1])
-                elif action[0] == 'putdown' and i == attach_detach_idx:
+                elif action[0] == 'PUTDOWN' and i == attach_detach_idx:
                     group.detach_object(action[1])
                 
                 #return
@@ -137,7 +137,7 @@ class MotionPlannerServer(object):
         end_state.world = world_start_state
         if mov_obj_idx != -1 and obj_idx != -1:
             end_state.world.movable_objects[mov_obj_idx] = self.objects[obj_idx]
-            #if action[0] == 'pickUp':
+            #if action[0] == 'PICKUP':
             #    end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[-1].pose
             #elif action[0] == 'putDown':
             #    end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[1].pose
