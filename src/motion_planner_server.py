@@ -14,7 +14,8 @@ from std_msgs.msg import String
 class MotionPlannerServer(object):
     def __init__(self, max_planning_time):
         self.max_planning_time = max_planning_time
-        self.planning_scene_pub = rospy.Publisher('planning_scene', PlanningScene)
+        self.planning_scene_pub = rospy.Publisher('/planning_scene', PlanningScene)
+        self.collision_object_pub = rospy.Publisher('/collision_object', CollisionObject)
         
         self.objects = None
         rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
@@ -37,37 +38,29 @@ class MotionPlannerServer(object):
         # Set attach/detach point
         attach_detach_idx = 2
         
-        # Cleanup world
-        planning_scene = PlanningScene()
-        planning_scene.is_diff = True
-        
-        self.planning_scene_pub.publish(planning_scene)
+        # Clean up world
+        co = CollisionObject()
+        co.operation = CollisionObject.REMOVE
+        self.collision_object_pub.publish(co)
         
         # Set up robot in start configuration
         curr_state = robot_start_state.state
         group = moveit_commander.MoveGroupCommander(action[2])
         group.go(curr_state.joint_state)
         
-        # Set up planning scene world
+        # Set up world
         planning_scene_world = PlanningSceneWorld()
-        planning_scene_world.collision_objects.append(world_start_state.movable_objects)
-        planning_scene_world.collision_objects.append(world_start_state.surfaces)
+        for movable_object in world_start_state.movable_objects:
+            planning_scene_world.collision_objects.append(movable_object)
+        for surface in world_start_state.surfaces:
+            planning_scene_world.collision_objects.append(surface)
     
         # Add objects to planning scene
         planning_scene = PlanningScene()
         planning_scene.world = planning_scene_world
         planning_scene.is_diff = True
-        
+
         self.planning_scene_pub.publish(planning_scene)
-        
-        #for i in range(len(world_start_state.collision_objects)):
-        #    obj = world_start_state.collision_objects[i]
-        #    pose = PoseStamped()
-        #    pose.header = obj.header
-        #    pose.pose = obj.primitive_poses[0]
-        #    h = obj.primitives[0].dimensions[0]
-        #    r = obj.primitives[0].dimensions[1]
-        #    scene.add_box(obj.id, pose, (r, r, h))
         
         res = motion_plan()
     
