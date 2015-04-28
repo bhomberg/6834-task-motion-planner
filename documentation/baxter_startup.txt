@@ -1,0 +1,19 @@
+## open terminal
+source /opt/ros/indigo/setup.bash
+cd ~/indigo_workspace
+./baxter sim
+roslaunch baxter_gazebo baxter_world.launch
+
+## open a terminal
+source /opt/ros/indigo/setup.bash
+cd ~/indigo_workspace
+./baxter sim
+rosrun baxter_tools enable_robot.py -e
+rosrun baxter_interface joint_trajectory_action_server.py
+
+## open a terminal
+source /opt/ros/indigo/setup.bash
+cd ~/indigo_workspace
+./baxter sim
+roslaunch baxter_moveit_config demo_baxter.launch
+
