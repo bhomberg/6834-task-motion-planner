@@ -24,7 +24,7 @@
 \newcommand{\tab}{\hspace*{2em}}
 
 \title{Combined Task and Motion Planner through an Interface Layer}
-\author{Alex Gutierrez (ragtz@mit.edu), Bianca Homberg (bhomberg@mit.edu), and Veronica Lane (vmlane@mit.edu)}
+\author{Alex Gutierrez (ragtz@mit.edu), Bianca Homberg (bhomberg@mit.edu), \\and Veronica Lane (vmlane@mit.edu)}
 
 
 %% ONE SENTENCE PER LINE TO MAKE THIS WORK NICELY IN GIT
@@ -317,10 +317,27 @@ We performed a variety of benchmarking tests to measure the performance of the i
 The difficulty of a benchmark increased as the total number \textit{obstructions} increased. The total number of obstructions was counted by summing the number of directions around each block that were obstructed. For the ordinal directions, a neighboring block in any one of three locations obstructs the direction. For example, a neighboring block above, to the right or to the top right corner of a block obstructs the northeast direction of the block. Furthermore, as the number of blocks for a particular grid shape increased, the test difficulty increased, since the total number of obstructions increased.
 
 \subsection{Results}
+\begin{figure}[t]
+	\centering
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/bvm}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/bvt}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/bvrt}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/ovm}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/ovt}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/ovrt}}
+	\qquad
+	\subfloat{\includegraphics[width=.45\linewidth]{figures/square}}
+	\caption{Benchmarking plots\label{fig:benchmarkPlots}}
+\end{figure}
 The goal of each test was to move the green block, at the center of a grid of blocks, to a goal surface. 
 We tested a variety of different grid shapes, including a square grid, an X, a cross, and lines. 
 We tested each grid shape over a range of sizes ranging from 3 to 13. ref{fig-benchmarks} 
-The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault.
+The most difficult benchmark we tested was the 13x13 square grid. Larger tests caused the FF planner to segfault. As seen in \ref{fig:benchmarkPlots}, as the size of the problem increases the number of calls increases.
 
 Figure \ref{benchmark2} shows the results for the original algorithm, minus our modification.  (Our modification always tries to find a perfect plan after adding a new high level plan section to the plan, rather than immediately trying to find a new partial trajectory.)  For the very simplest cases, the original algorithm performs better, since it makes the same number of motion and task planner calls but has less backtracking overhead.  However, for the more complicated environments, the cross and the square, our algorithm was significantly faster, as shown in \ref{benchmark}.
 

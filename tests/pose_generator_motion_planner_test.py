@@ -42,8 +42,8 @@ def pickupTest(action, motion_server, poseGen):
     primitive.dimensions = [.25, .02]
     obj1.primitives.append(primitive)
     pose = Pose()
-    pose.position.x = 0.9
-    pose.position.y = -.15
+    pose.position.x = 0.8
+    pose.position.y = 0.15
     pose.position.z = 0.16
     pose.orientation.w = 1
     obj1.primitive_poses.append(pose)
@@ -137,10 +137,10 @@ if __name__ == "__main__":
     poseGen = PoseGenerator()
     
     #(pickup,obj1,left_arm,pose1,pose2)
-    for i in range(8):
-        pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
+    # for i in range(8):
+    #     pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
-    #(putdown,obj1,left_arm,pose1,pose2,tloc)
-    #for i in range(10):
-    #    putdownTest('(putdown,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+    # (putdown,obj1,left_arm,pose1,pose2,tloc)
+    for i in range(8):
+       putdownTest('(putdown,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
         

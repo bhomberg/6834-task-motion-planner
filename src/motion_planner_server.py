@@ -25,7 +25,7 @@ class MotionPlannerServer(object):
         moveit_commander.roscpp_initialize(sys.argv)
         
         print "============ Setting current state"
-        robot = moveit_commander.RobotCommander()
+        # robot = moveit_commander.RobotCommander
         scene = moveit_commander.PlanningSceneInterface()
         
         world_start_state = req.parameters.state.world

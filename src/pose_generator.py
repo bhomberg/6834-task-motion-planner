@@ -79,11 +79,13 @@ class PoseGenerator:
         poseGen1 = pose()
         pose1 = poseGen1.pose
         # random yaw position
-        yaw = random.uniform(-math.pi, math.pi)
-        # x position along the circle around the cylinder
-        pose1.position.x = obj_pose.position.x + r*math.cos(yaw) + self.GRIPPER_OFFSET
-        pose1.position.y = obj_pose.position.y + r*math.sin(yaw)
+        # yaw = random.uniform(-math.pi, math.pi)
+        yaw = -math.pi/4
+        # x,y position along a circle around the cylinder
+        pose1.position.x = obj_pose.position.x + r * math.cos(yaw - math.pi)
+        pose1.position.y = obj_pose.position.y - r * math.sin(yaw - math.pi)
         pose1.position.z = z
+        print yaw
         pose1.orientation = self._rpy_to_orientation(math.pi/2.0,0,yaw)
         # yaw position s.t. the gripper points towards the cylinder
         poseGen1.gripperOpen = True
@@ -115,10 +117,10 @@ class PoseGenerator:
         # Standard Pose: A pose s.t. the group is out of the way of the other 
         # objects in a standard position
         poseGen5 = pose()
-        pose5 = poseGen5.pose
-        # x,y = 0,0
-        pose5.position.z = CLEARANCE_HEIGHT
-        pose5.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
+        poseGen5.pose.position.x = .8
+        poseGen5.pose.position.y = 1
+        poseGen5.pose.position.z = CLEARANCE_HEIGHT
+        poseGen5.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen5.gripperOpen = False
 
         # An array of pose messages
@@ -188,8 +190,10 @@ class PoseGenerator:
             
         # Move out of the way to the standard position
         poseGen6 = pose()
+        poseGen6.pose.position.x = .8
+        poseGen6.pose.position.y = 1
         poseGen6.pose.position.z = CLEARANCE_HEIGHT
-        poseGen6.pose.orientation = poseGen5.pose.orientation
+        poseGen6.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen6.gripperOpen = True
 
         # Return array of custom pose messages
