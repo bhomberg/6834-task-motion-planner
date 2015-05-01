@@ -17,6 +17,7 @@ class MotionPlannerServer(object):
         self.planning_scene_pub = rospy.Publisher('/planning_scene', PlanningScene)
         self.collision_object_pub = rospy.Publisher('/collision_object', CollisionObject)
         
+        self.attach_obj = None
         self.objects = None
         rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
         
@@ -35,17 +36,21 @@ class MotionPlannerServer(object):
         print "ACTION: ", action
         pose_goals = req.parameters.goals
         
+        # Set up moved group
+        group = moveit_commander.MoveGroupCommander(action[2])
+        
         # Set attach/detach point
         attach_detach_idx = 2
         
         # Clean up world
+        if self.attach_obj:
+            group.detach_object(self.attach_obj)
         co = CollisionObject()
         co.operation = CollisionObject.REMOVE
         self.collision_object_pub.publish(co)
         
         # Set up robot in start configuration
         curr_state = robot_start_state.state
-        group = moveit_commander.MoveGroupCommander(action[2])
         group.go(curr_state.joint_state)
         
         # Set up world
@@ -67,7 +72,6 @@ class MotionPlannerServer(object):
         print "============ Planning actoin ", action[0]
         for i in range(len(pose_goals)):
             print "============ Move group ", action[2]
-            group = moveit_commander.MoveGroupCommander(action[2])
         
             group.set_planning_time(self.max_planning_time)
             group.set_start_state(curr_state)
@@ -104,6 +108,7 @@ class MotionPlannerServer(object):
                 group.execute(plan)
                 
                 if action[0] == 'PICKUP' and i == attach_detach_idx:
+                    self.attach_obj = action[1]
                     group.attach_object(action[1])
                 elif action[0] == 'PUTDOWN' and i == attach_detach_idx:
                     group.detach_object(action[1])
@@ -156,6 +161,6 @@ class MotionPlannerServer(object):
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer(10.0)
+    motion_planner_server = MotionPlannerServer(5.0)
     motion_planner_server.run()
     
