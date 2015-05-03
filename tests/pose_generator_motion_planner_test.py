@@ -145,5 +145,5 @@ if __name__ == "__main__":
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
     #for i in range(8):
-    #   putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
-        
+    #  putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+      
