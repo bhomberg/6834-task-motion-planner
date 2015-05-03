@@ -9,6 +9,7 @@ from task_motion_planner.msg import *
 from moveit_msgs.msg import *
 from geometry_msgs.msg import *
 from std_msgs.msg import String
+from threading import *
 
 
 class MotionPlannerServer(object):
@@ -19,6 +20,8 @@ class MotionPlannerServer(object):
         
         self.attach_obj = None
         self.objects = None
+        self.object_lock = RLock()
+        
         rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
         
     def get_motion_plan(self, req):
@@ -48,6 +51,9 @@ class MotionPlannerServer(object):
         co = CollisionObject()
         co.operation = CollisionObject.REMOVE
         self.collision_object_pub.publish(co)
+        
+        with self.objects_lock:
+            self.objects = None 
         
         # Set up robot in start configuration
         curr_state = robot_start_state.state
@@ -150,7 +156,31 @@ class MotionPlannerServer(object):
         return res
     
     def _update_world_state(self, msg):
-        self.objects = msg.world.collision_objects
+        with self.objects_lock:
+            if not self.objects:
+                collision_objects = msg.world.collision_objects
+                attached_objects = msg.robot_state.attached_collision_objects
+            
+                if collision_objects and attached_objects:
+                    self.objects = collision_objects + attached_objects
+                elif collision_objects:
+                    self.objects = collision_objects
+                elif attached_objects:
+                    self.objects = attached_objects
+                
+            else:
+                collision_objects = msg.world.collision_objects
+                attached_objects = msg.robot_state.attached_collision_objects
+                
+                # Update state of objects
+                for idx,obj in enumerate(self.objects):
+                    if obj in collision_objects:
+                        i = self._search_for_object(obj.id, collision_objects)
+                        self.objects[idx] = collision_objects[i]
+                    
+                    if obj in attached_objects:
+                        i = self._search_for_object(obj.id, attached_objects)
+                        self.objects[idx] = attached_objects[i]
         
     def _search_for_object(self, obj_name, obj_list):
         for i in range(len(obj_list)):
