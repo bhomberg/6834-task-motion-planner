@@ -12,6 +12,8 @@ from moveit_msgs.msg import *
 from shape_msgs.msg import *
 from geometry_msgs.msg import *
 from sensor_msgs.msg import *
+from motion_plan_playback import *
+
 
 def pickupTest(action, motion_server, poseGen):
     state = world_state()
@@ -76,6 +78,7 @@ def pickupTest(action, motion_server, poseGen):
     print msg.goals
     
     resp = motion_server(msg)
+    #record('/home/ragtz/test.bag', [resp.plan])
 
 def putdownTest(action, motion_server, poseGen):
     state = world_state()
@@ -136,11 +139,11 @@ if __name__ == "__main__":
     
     poseGen = PoseGenerator()
     
-    #(pickup,obj1,left_arm,pose1,pose2)
-    # for i in range(8):
-    #     pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
+    # (pickup,obj1,left_arm,pose1,pose2)
+    for i in range(1):
+        pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
-    for i in range(8):
-       putdownTest('(putdown,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+    #for i in range(8):
+    #   putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
         

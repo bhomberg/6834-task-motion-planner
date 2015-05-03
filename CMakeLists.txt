@@ -64,6 +64,7 @@ find_package(Eigen REQUIRED)
    task_domain.msg
    world_obj.msg
    world_state.msg
+   recorded_motion_plan.msg
  )
 
 ## Generate services in the 'srv' folder

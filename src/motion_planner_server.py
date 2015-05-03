@@ -67,10 +67,14 @@ class MotionPlannerServer(object):
 
         self.planning_scene_pub.publish(planning_scene)
         
+        # Attach grasped objects
+        if action[0] == 'PUTDOWN':
+            group.attach_object(action[1])            
+        
         res = motion_plan()
     
         print "============ Planning actoin ", action[0]
-        for i in range(len(pose_goals)):
+        for i in range(len(pose_goals)-1):
             print "============ Move group ", action[2]
         
             group.set_planning_time(self.max_planning_time)
