@@ -20,7 +20,7 @@ class MotionPlannerServer(object):
         
         self.attach_obj = None
         self.objects = None
-        self.object_lock = RLock()
+        self.objects_lock = RLock()
         
         rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
         
