@@ -147,7 +147,7 @@ class PoseGenerator:
         poseGen2 = pose()
         poseGen2.pose.position.x = poseGen1.pose.position.x
         poseGen2.pose.position.y = poseGen1.pose.position.y
-        poseGen2.pose.position.z = table_height
+        poseGen2.pose.position.z = table_height + height/2.0
         poseGen2.pose.orientation = poseGen1.pose.orientation
         poseGen2.gripperOpen = False
 
