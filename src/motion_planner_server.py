@@ -4,12 +4,12 @@ import sys
 import rospy
 import re
 import moveit_commander
+import threading
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
 from moveit_msgs.msg import *
 from geometry_msgs.msg import *
 from std_msgs.msg import String
-from threading import *
 
 
 class MotionPlannerServer(object):
@@ -20,7 +20,7 @@ class MotionPlannerServer(object):
         
         self.attach_obj = None
         self.objects = None
-        self.objects_lock = RLock()
+        self.objects_lock = threading.RLock()
         
         rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
         
@@ -156,11 +156,13 @@ class MotionPlannerServer(object):
         return res
     
     def _update_world_state(self, msg):
+        collision_objects = msg.world.collision_objects
+        attached_objects = []
+        for obj in msg.robot_state.attached_collision_objects:
+            attached_objects.append(obj.object)
+            
         with self.objects_lock:
             if not self.objects:
-                collision_objects = msg.world.collision_objects
-                attached_objects = msg.robot_state.attached_collision_objects
-            
                 if collision_objects and attached_objects:
                     self.objects = collision_objects + attached_objects
                 elif collision_objects:
@@ -168,10 +170,7 @@ class MotionPlannerServer(object):
                 elif attached_objects:
                     self.objects = attached_objects
                 
-            else:
-                collision_objects = msg.world.collision_objects
-                attached_objects = msg.robot_state.attached_collision_objects
-                
+            else:                
                 # Update state of objects
                 for idx,obj in enumerate(self.objects):
                     if obj in collision_objects:

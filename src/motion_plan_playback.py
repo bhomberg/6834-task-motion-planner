@@ -41,10 +41,12 @@ class BaxterPlayback(object):
         return -1    
         
     def _update_world_state(self, msg):
-        if not self.objects:
-            collision_objects = msg.world.collision_objects
-            attached_objects = msg.robot_state.attached_collision_objects
+        collision_objects = msg.world.collision_objects
+        attached_objects = []
+        for obj in msg.robot_state.attached_collision_objects:
+            attached_objects.append(obj.object)
             
+        if not self.objects:
             if collision_objects and attached_objects:
                 self.objects = collision_objects + attached_objects
             elif collision_objects:
@@ -52,16 +54,13 @@ class BaxterPlayback(object):
             elif attached_objects:
                 self.objects = attached_objects
                 
-        else:
-            collision_objects = msg.world.collision_objects
-            attached_objects = msg.robot_state.attached_collision_objects
-            
+        else:                
             # Update state of objects
             for idx,obj in enumerate(self.objects):
                 if obj in collision_objects:
                     i = self._search_for_object(obj.id, collision_objects)
                     self.objects[idx] = collision_objects[i]
-                
+                    
                 if obj in attached_objects:
                     i = self._search_for_object(obj.id, attached_objects)
                     self.objects[idx] = attached_objects[i]
