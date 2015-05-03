@@ -139,10 +139,11 @@ if __name__ == "__main__":
     
     poseGen = PoseGenerator()
     
-    # # (pickup,obj1,left_arm,pose1,pose2)
-    # for i in range(1):
-    #     pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
+    # (pickup,obj1,left_arm,pose1,pose2)
+    for i in range(8):
+        pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
-    for i in range(8):
-      putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+    #for i in range(8):
+    #  putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+      
