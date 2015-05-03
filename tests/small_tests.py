@@ -1,90 +1,94 @@
 #!/usr/bin/env python
 
+import time
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/../src/'))
 import rospy
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
-from std_msgs.msg import *
-from moveit_msgs.msg import *
-from shape_msgs.msg import *
-from geometry_msgs.msg import *
-from sensor_msgs.msg import *
+import copy
+import itertools
+from random import shuffle
+from mockPoseGenerator import *
+from mockMotionPlanner import *
+from mockStateUpdate import *
+from interface_layer_organized import *
+from planner_server import *
+from generateWorldMsg import *
+from numObstructs import *
+import re
+from stateGeneratorSmall import *
+from generateSmallWorldMsg import *
 
-#TODO: method to get the table center
+# rosrun mock motion planner srv
+# rosrun mock task planner srv
 
-CYLINDER_HEIGHT = 0.2
-CYLINDER_RADIUS = 0.035
+numTests = 10
 
-def makeWorld():
-    state = world_state()
-    state.world = world_obj()
+genState =  StateGeneratorSmall()
 
-    state.robot = robot()
-    state.robot.id = 'left_arm'
-    state.robot.state = RobotState()
-    state.robot.state.joint_state.name = ['head_pan', 'left_e0', 'left_e1', 'left_s0', 'left_s1', 'left_w0', 'left_w1', 'left_w2', 'right_e0', 'right_e1', 'right_s0', 'right_s1', 'right_w0', 'right_w1', 'right_w2']
-    state.robot.state.joint_state.position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    state.robot.state.joint_state.velocity = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    state.robot.state.joint_state.effort = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+DIR_6834 = os.path.abspath(os.path.dirname(__file__) + '/../') + '/'
 
-    # add surfaces
-    addSurf(state.world.surfaces,1,[1,.5,0.05],[0,0,0])
-    addSurf(state.world.surfaces,2,[1,.5,0.05],[0,.5,0])
+# One Cover Bechmark
+out_file = open(DIR_6834 + 'tests/smallTests.output','w')
 
-    # add objects
-    addCylinder(state.world.movable_objects,0,getCenterCylinderPose(state.world.surfaces[0]))
+# set up the world
+worlds = generateWorlds()
+genState.generateStates()
 
-# add a surface object to the workd
-def addSurf(surfaces,i,dim,position):
-    # table surface 2
-    surf = CollisionObject()
-    surf.header = Header()
-    surf.header.frame_id = '1'
-    surf.id = 'surf' + str(i)
-    primitive = SolidPrimitive()
-    primitive.type = 1
-    primitive.dimensions = dim
-    surf.primitives.append(primitive)
-    pose = Pose()
-    pose.position.x = position[0]
-    pose.position.y = position[1]
-    pose.position.z = position[2]
-    pose.orientation.w = 1
-    surf.primitive_poses.append(pose)
-    surfaces.append(surf)
+for filename,world in worlds.iteritems():
+	print world
+	
+	filepath = DIR_6834+"states/" + filename		
+	f = open(filepath,'r')
+	init_state_string = f.read()
+	state = [[]]*3
+	l = init_state_string.split('\n')
+	state[0] = l[0].split(',')
+	k = l[1].split(',')
+	state[1] = [tuple(i.split(' ')) for i in k]
+	k = l[2].split(',')
+	state[2] = [tuple(i.split(' ')) for i in k]
+	pose = l[3]
 
-# add a cylinder object to the world
-def addCylinder(movable_objects,i,loc):
-    obj = CollisionObject()
-    obj.header = Header()
-    obj.header.frame_id = '1'
-    obj.id = 'obj' + str(i)
-    primitive = SolidPrimitive()
-    primitive.type = 3
-    primitive.dimensions = [CYLINDER_HEIGHT, CYLINDER_RADIUS]
-    obj.primitives.append(primitive)
-    pose = Pose()
-    pose.position.x = loc[0]
-    pose.position.y = loc[1]
-    pose.position.z = loc[2]
-    pose.orientation.w = 1
-    obj.primitive_poses.append(pose)
-    movable_objects.append(obj)
+	# Difficulty Metric
+	numBlocks = len(world.world.movable_objects)
+	numObs = numObstructsWorld(world, 17)
 
-# get the position of and object centered on the surface
-def getCenterCylinderPose(surf):
-    x = surf.primitive_poses[0].position.x
-    y = surf.primitive_poses[0].position.y
-    z = surf.primitive_poses[0].position.z + surf.primitives[0].dimensions[2]/2.0 + CYLINDER_HEIGHT/2.0
-    return [x,y,z]
+	numMotionPlannerCalls = []
+	numTaskPlannerCalls = []
+	runTimes = []
 
-# get the height of cylinder resting on surface
-def getCylinderHeight(surf):
-    z = surf.primitive_poses[0].position.z + surf.primitives[0].dimensions[2]/2.0 + CYLINDER_HEIGHT/2.0
-    return [x,y,z]
+	fname=DIR_6834+"outputResults/"+filename+".output"
+	outFile = open(fname,'w')
+	# run multiple tests for this world
+	for i in range(numTests):
+		poseGen = MockPoseGenerator()
+		interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, DIR_6834)
+		tic = time.time()
+		ret = interfaceLayer.run(state, world, pose)
+		runTime = time.time() - tic
+		numMotionPlannerCalls.append(interfaceLayer.numMotionPlannerCalls)
+		numTaskPlannerCalls.append(interfaceLayer.numTaskPlannerCalls)
+		runTimes.append(runTime)
+		outFile.write(str(ret)+"\n\n")
+	outFile.close()
 
-if __name__ == "__main__":
-    makeWorld()
-    print state.world
+	# Averaging
+	avgMotionPlannerCalls = sum(numMotionPlannerCalls)/len(numMotionPlannerCalls)
+	avgTaskPlannerCalls = sum(numTaskPlannerCalls)/len(numTaskPlannerCalls)
+	avgRunTimes = sum(runTimes)/len(runTimes)
+
+	s = 'State File: ' + filename + "\n"
+	s += 'Number of Surfaces: ' + str(len(world.world.surfaces))  + "\n"
+	s += 'Number of Blocks: ' + str(numBlocks) + "\n"
+	s += 'Number of Obstructions: ' + str(numObs) + "\n"
+	s += 'Run Time: ' + str(avgRunTimes) + "\n"
+	s += 'Task Planner Calls: ' + str(avgTaskPlannerCalls) + "\n"
+	s += 'Motion Planner Calls: ' + str(avgMotionPlannerCalls) + "\n"
+	s += "\n\n"
+	print s
+	out_file.write(s)
+	# TODO save to file
+out_file.close()
