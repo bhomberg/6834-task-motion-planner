@@ -147,7 +147,7 @@ class PoseGenerator:
         poseGen2 = pose()
         poseGen2.pose.position.x = poseGen1.pose.position.x
         poseGen2.pose.position.y = poseGen1.pose.position.y
-        poseGen2.pose.position.z = table_height + height
+        poseGen2.pose.position.z = table_height
         poseGen2.pose.orientation = poseGen1.pose.orientation
         poseGen2.gripperOpen = False
 
@@ -166,8 +166,8 @@ class PoseGenerator:
             
         # Move out of the way to the standard position
         poseGen5 = pose()
-        poseGen5.pose.position.x = .8
-        poseGen5.pose.position.y = .8
+        poseGen5.pose.position.x = .6
+        poseGen5.pose.position.y = .6
         poseGen5.pose.position.z = CLEARANCE_HEIGHT
         poseGen5.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen5.gripperOpen = True
