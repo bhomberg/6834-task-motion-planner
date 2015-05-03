@@ -80,7 +80,7 @@ class MotionPlannerServer(object):
         res = motion_plan()
     
         print "============ Planning actoin ", action[0]
-        for i in range(len(pose_goals)-1):
+        for i in range(len(pose_goals)):
             print "============ Move group ", action[2]
         
             group.set_planning_time(self.max_planning_time)

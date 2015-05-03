@@ -109,9 +109,9 @@ def putdownTest(action, motion_server, poseGen):
     primitive.dimensions = [.25, .02]
     obj1.primitives.append(primitive)
     pose = Pose()
-    pose.position.x = -2
-    pose.position.y = 0
-    pose.position.z = 0.16
+    pose.position.x = .85
+    pose.position.y = 1.05
+    pose.position.z = 0.32
     pose.orientation.w = 1
     obj1.primitive_poses.append(pose)
     state.world.movable_objects.append(obj1)
@@ -140,10 +140,10 @@ if __name__ == "__main__":
     poseGen = PoseGenerator()
     
     # (pickup,obj1,left_arm,pose1,pose2)
-    for i in range(8):
-        pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
+    #for i in range(8):
+    #    pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
-    #for i in range(8):
-    #  putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+    for i in range(8):
+      putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
       
