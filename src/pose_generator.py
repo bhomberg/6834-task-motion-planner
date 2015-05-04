@@ -126,7 +126,7 @@ class PoseGenerator:
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
         x1 = table_center.x - table.primitives[0].dimensions[0]/2.0
         y1 = table_center.y - table.primitives[0].dimensions[1]/2.0
-        x2 = table_center.x + table.primitives[0].dimensions[0]/2.0
+        x2 = (table_center.x + table.primitives[0].dimensions[0]/2.0)/2
         y2 = table_center.y + table.primitives[0].dimensions[1]/2.0
 
         CLEARANCE_HEIGHT = table_height + 2*height
@@ -134,12 +134,12 @@ class PoseGenerator:
 
         # Generate a pose hovering over a sampled (x,y) point
         poseGen1 = pose()
-        poseGen1.pose.position.x = 0.5404280204592858#random.uniform(x1,x2)
-        poseGen1.pose.position.y = -0.24242412863462548#random.uniform(y1,y2)
+        poseGen1.pose.position.x = random.uniform(x1,x2)
+        poseGen1.pose.position.y = random.uniform(y1,y2)
         print "(x,y): ", (poseGen1.pose.position.x, poseGen1.pose.position.y)
         poseGen1.pose.position.z = CLEARANCE_HEIGHT
         # yaw = random.uniform(-math.pi/4.0,math.pi/4.0)
-        yaw = -math.pi/4.0
+        yaw = -math.pi/6
         poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,yaw)
         poseGen1.gripperOpen = False
 
@@ -158,8 +158,8 @@ class PoseGenerator:
 
         # Move back
         poseGen4 = pose()
-        poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(yaw - math.pi)/2.0
-        poseGen4.pose.position.y = poseGen3.pose.position.y - r * math.sin(yaw - math.pi)/2.0
+        poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(yaw)
+        poseGen4.pose.position.y = poseGen3.pose.position.y - r * math.sin(yaw)
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True
