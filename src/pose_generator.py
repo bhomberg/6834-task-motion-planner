@@ -78,8 +78,7 @@ class PoseGenerator:
         poseGen1 = pose()
         pose1 = poseGen1.pose
         # random yaw position
-        # yaw = random.uniform(-math.pi, math.pi)
-        yaw = -math.pi/4
+        yaw = random.uniform(-math.pi, math.pi)
         # x,y position along a circle around the cylinder
         pose1.position.x = obj_pose.position.x + r * math.cos(yaw - math.pi)
         pose1.position.y = obj_pose.position.y - r * math.sin(yaw - math.pi)
@@ -135,11 +134,12 @@ class PoseGenerator:
 
         # Generate a pose hovering over a sampled (x,y) point
         poseGen1 = pose()
-        poseGen1.pose.position.x = random.uniform(x1,x2)
-        poseGen1.pose.position.y = random.uniform(y1,y2)
+        poseGen1.pose.position.x = 0.5404280204592858#random.uniform(x1,x2)
+        poseGen1.pose.position.y = -0.24242412863462548#random.uniform(y1,y2)
         print "(x,y): ", (poseGen1.pose.position.x, poseGen1.pose.position.y)
         poseGen1.pose.position.z = CLEARANCE_HEIGHT
-        yaw = random.uniform(-math.pi/4.0,math.pi/4.0)
+        # yaw = random.uniform(-math.pi/4.0,math.pi/4.0)
+        yaw = -math.pi/4.0
         poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,yaw)
         poseGen1.gripperOpen = False
 
@@ -158,8 +158,8 @@ class PoseGenerator:
 
         # Move back
         poseGen4 = pose()
-        poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(yaw)
-        poseGen4.pose.position.y = poseGen3.pose.position.y - r * math.sin(yaw)
+        poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(yaw - math.pi)/2.0
+        poseGen4.pose.position.y = poseGen3.pose.position.y - r * math.sin(yaw - math.pi)/2.0
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True
@@ -173,7 +173,7 @@ class PoseGenerator:
         poseGen5.gripperOpen = True
 
         # Return array of custom pose messages
-        return [poseGen1,poseGen2,poseGen3,poseGen4,poseGen5]
+        return [poseGen1,poseGen2,poseGen3,poseGen4]#,poseGen5]
 
     # Gets an objects index from a list given the object's name
     # obj_name = object's name

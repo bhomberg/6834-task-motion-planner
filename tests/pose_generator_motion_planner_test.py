@@ -128,8 +128,7 @@ def putdownTest(action, motion_server, poseGen):
     msg.state = state
     msg.action = action
     msg.goals = poseGen.next(action, state)
-    
-    #print msg.goals
+    print msg.goals
     
     resp = motion_server(msg)
     
@@ -144,6 +143,6 @@ if __name__ == "__main__":
     #    pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
-    for i in range(8):
+    for i in range(3):
       putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
       
