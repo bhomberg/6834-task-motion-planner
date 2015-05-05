@@ -5,7 +5,6 @@ import rospy
 import math
 import re
 import moveit_commander
-import threading
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
 from moveit_msgs.msg import *
@@ -23,10 +22,6 @@ class MotionPlannerServer(object):
         self.collision_object_pub = rospy.Publisher('/collision_object', CollisionObject)
         
         self.attach_obj = None
-        self.objects = None
-        self.objects_lock = threading.RLock()
-        
-        rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
         
     def get_motion_plan(self, req):
         print "============ Starting Moveit Commander"
@@ -54,17 +49,14 @@ class MotionPlannerServer(object):
             group.detach_object(self.attach_obj)
         co = CollisionObject()
         co.operation = CollisionObject.REMOVE
-        self.collision_object_pub.publish(co)
-        
-        with self.objects_lock:
-            self.objects = None 
+        self.collision_object_pub.publish(co) 
         
         # Set up robot in start configuration
         curr_state = robot_start_state.state
-        group.go(curr_state.joint_state)
+        #group.go(curr_state.joint_state)
         
         # Wait for execution to complete
-        rospy.sleep(10.0)
+        #rospy.sleep(10.0)
         
         # Set up world
         planning_scene_world = PlanningSceneWorld()
@@ -86,7 +78,7 @@ class MotionPlannerServer(object):
         
         res = motion_plan()
     
-        print "============ Planning actoin ", action[0]
+        print "============ Planning action ", action[0]
         for i in range(len(pose_goals)):
             print "============ Move group ", action[2]
         
@@ -120,7 +112,7 @@ class MotionPlannerServer(object):
                 curr_state.joint_state.velocity = plan.joint_trajectory.points[-1].velocities
                 curr_state.joint_state.effort = plan.joint_trajectory.points[-1].effort
                 
-                group.execute(plan)
+                #group.execute(plan)
                 
                 if action[0] == 'PICKUP' and i == attach_detach_idx:
                     self.attach_obj = action[1]
@@ -128,7 +120,7 @@ class MotionPlannerServer(object):
                 elif action[0] == 'PUTDOWN' and i == attach_detach_idx:
                     group.detach_object(action[1])
                 
-                rospy.sleep(2.0)
+                #rospy.sleep(2.0)
                 #return
                 
             else:
@@ -146,11 +138,11 @@ class MotionPlannerServer(object):
         end_state.robot.state = curr_state
         
         mov_obj_idx = self._search_for_object(action[1], world_start_state.movable_objects)
-        obj_idx = self._search_for_object(action[1], self.objects)
         
         end_state.world = world_start_state
-        if mov_obj_idx != -1 and obj_idx != -1:
+        if mov_obj_idx != -1:
             end_pose = Pose()
+            
             if action[0] == 'PICKUP':
                 end_pose.position.x = 0
                 end_pose.position.y = 0
@@ -175,11 +167,6 @@ class MotionPlannerServer(object):
             
             end_state.world.movable_objects[mov_obj_idx].primitive_poses[0] = end_pose
             
-            #if action[0] == 'PICKUP':
-            #    end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[-1].pose
-            #elif action[0] == 'putDown':
-            #    end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[1].pose
-    
         res.state = end_state
         res.success = True        
         print "============ Done"
@@ -208,34 +195,6 @@ class MotionPlannerServer(object):
             yaw = math.atan2(2*x*w - 2*y*z, 1 - 2*x*x - 2*z*z)
             
         return (roll, pitch, yaw)
-    
-    def _update_world_state(self, msg):
-        collision_objects = msg.world.collision_objects
-        attached_objects = []
-        for obj in msg.robot_state.attached_collision_objects:
-            attached_objects.append(obj.object)
-            
-        with self.objects_lock:
-            if not self.objects:
-                if collision_objects and attached_objects:
-                    self.objects = collision_objects + attached_objects
-                elif collision_objects:
-                    self.objects = collision_objects
-                elif attached_objects:
-                    self.objects = attached_objects
-                
-            else:                
-                # Update state of objects
-                for idx,obj in enumerate(self.objects):
-                    if obj in collision_objects:
-                        i = self._search_for_object(obj.id, collision_objects)
-                        self.objects[idx] = collision_objects[i]
-                    
-                    if obj in attached_objects:
-                        i = self._search_for_object(obj.id, attached_objects)
-                        self.objects[idx] = attached_objects[i]
-                        
-            #print '\n', self.objects, '\n'
         
     def _search_for_object(self, obj_name, obj_list):
         for i in range(len(obj_list)):

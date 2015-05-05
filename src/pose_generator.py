@@ -54,7 +54,7 @@ class PoseGenerator:
         elif action == 'PUTDOWN':
             self.putdown_counter = 0
     
-    def resetAll():
+    def resetAll(self):
         self.putdown_counter = 0
         self.pickup_counter = 0
 
