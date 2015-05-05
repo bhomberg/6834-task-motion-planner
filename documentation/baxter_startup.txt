@@ -16,4 +16,8 @@ roslaunch baxter_moveit_config demo_baxter.launch
 
 rosrun task_motion_planner src/motion_planner_server.py
 
+## Test pose generator
 rosrun task_motion_planner tests/pose_generator_motion_planner_test.py
+
+## Test the world generator
+rosrun task_motion_planner tests/baxter_small_tests.py
