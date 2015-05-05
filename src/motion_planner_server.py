@@ -2,6 +2,7 @@
 
 import sys
 import rospy
+import math
 import re
 import moveit_commander
 import threading
@@ -11,6 +12,9 @@ from moveit_msgs.msg import *
 from geometry_msgs.msg import *
 from std_msgs.msg import String
 
+z_off = 0.06
+snp = 0.49999
+ssp = -0.49999
 
 class MotionPlannerServer(object):
     def __init__(self, max_planning_time):
@@ -58,6 +62,9 @@ class MotionPlannerServer(object):
         # Set up robot in start configuration
         curr_state = robot_start_state.state
         group.go(curr_state.joint_state)
+        
+        # Wait for execution to complete
+        rospy.sleep(10.0)
         
         # Set up world
         planning_scene_world = PlanningSceneWorld()
@@ -113,8 +120,6 @@ class MotionPlannerServer(object):
                 curr_state.joint_state.velocity = plan.joint_trajectory.points[-1].velocities
                 curr_state.joint_state.effort = plan.joint_trajectory.points[-1].effort
                 
-                rospy.sleep(2.0)
-                
                 group.execute(plan)
                 
                 if action[0] == 'PICKUP' and i == attach_detach_idx:
@@ -123,6 +128,7 @@ class MotionPlannerServer(object):
                 elif action[0] == 'PUTDOWN' and i == attach_detach_idx:
                     group.detach_object(action[1])
                 
+                rospy.sleep(2.0)
                 #return
                 
             else:
@@ -144,7 +150,31 @@ class MotionPlannerServer(object):
         
         end_state.world = world_start_state
         if mov_obj_idx != -1 and obj_idx != -1:
-            end_state.world.movable_objects[mov_obj_idx] = self.objects[obj_idx]
+            end_pose = Pose()
+            if action[0] == 'PICKUP':
+                end_pose.position.x = 0
+                end_pose.position.y = 0
+                end_pose.position.z = z_off
+                end_pose.orientation.x = 0
+                end_pose.orientation.y = -0.7071067811865475
+                end_pose.orientation.z = 0
+                end_pose.orientation.w = 0.7071067811865476
+                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/left_gripper'
+            elif action[0] == 'PUTDOWN':
+                x = pose_goals[1].pose.orientation.x
+                y = pose_goals[1].pose.orientation.y
+                z = pose_goals[1].pose.orientation.z
+                w = pose_goals[1].pose.orientation.w
+                (roll, pitch, yaw) = self._orientation_to_rpy(x, y, z, w)
+                print roll, pitch, yaw
+                end_pose.position.x = pose_goals[1].pose.position.x + z_off*math.cos(yaw)
+                end_pose.position.y = pose_goals[1].pose.position.y - z_off*math.sin(yaw)
+                end_pose.position.z = pose_goals[1].pose.position.z
+                end_pose.orientation.w = 1
+                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/base'
+            
+            end_state.world.movable_objects[mov_obj_idx].primitive_poses[0] = end_pose
+            
             #if action[0] == 'PICKUP':
             #    end_state.world.collision_objects[obj_idx].primitive_poses[0] = pose_goals[-1].pose
             #elif action[0] == 'putDown':
@@ -154,6 +184,30 @@ class MotionPlannerServer(object):
         res.success = True        
         print "============ Done"
         return res
+    
+    def _orientation_to_rpy(self, x, y, z, w):
+        test = x*y + z*w
+        
+        if test > snp or test < ssp:
+            roll = 0
+        else:
+            roll = math.atan2(2*y*w - 2*x*z, 1 - 2*y*y - 2*z*z)
+            
+        if test > snp:
+            pitch = math.pi/2
+        elif test < ssp:
+            pitch = -math.pi/2
+        else:
+            pitch = math.asin(2*(x*y - z*w))
+            
+        if test > snp:
+            yaw = 2*math.atan2(y, w)
+        elif test < ssp:
+            yaw = -2*math.atan2(y, w)
+        else:
+            yaw = math.atan2(2*x*w - 2*y*z, 1 - 2*x*x - 2*z*z)
+            
+        return (roll, pitch, yaw)
     
     def _update_world_state(self, msg):
         collision_objects = msg.world.collision_objects
@@ -180,6 +234,8 @@ class MotionPlannerServer(object):
                     if obj in attached_objects:
                         i = self._search_for_object(obj.id, attached_objects)
                         self.objects[idx] = attached_objects[i]
+                        
+            #print '\n', self.objects, '\n'
         
     def _search_for_object(self, obj_name, obj_list):
         for i in range(len(obj_list)):
@@ -194,6 +250,6 @@ class MotionPlannerServer(object):
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer(5.0)
+    motion_planner_server = MotionPlannerServer(10.0)
     motion_planner_server.run()
     
