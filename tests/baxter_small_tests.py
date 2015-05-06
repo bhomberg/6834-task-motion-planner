@@ -3,6 +3,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/../src/'))
+from pose_generator import *
 import rospy
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
@@ -11,7 +12,6 @@ from moveit_msgs.msg import *
 from shape_msgs.msg import *
 from geometry_msgs.msg import *
 from sensor_msgs.msg import *
-from pose_generator import *
 from motion_plan_playback import *
 
 #TODO: method to get the table center
@@ -156,7 +156,7 @@ def getCylinderHeight(surf):
     z = surf.primitive_poses[0].position.z + surf.primitives[0].dimensions[2]/2.0 + CYLINDER_HEIGHT/2.0
     return [x,y,z]
 
-# test the wolr in the visualizer
+# test the world in the visualizer
 def test(world_shape, action, motion_server, poseGen):
     state = makeState(world_shape)
 
@@ -173,12 +173,15 @@ if __name__ == "__main__":
     rospy.wait_for_service('motion_server_service')
     motion_server = rospy.ServiceProxy('motion_server_service', motion_service)
     
-    poseGen = PoseGenerator()
+    #number of discretizations
+    slices = 4
+
+    poseGen = PoseGenerator(slices)
     
     # (pickup,obj1,left_arm,pose1,pose2)
-    for i in range(1):
+    for i in range(slices):
        test('X','(PICKUP,obj0,left_arm,pose1,pose2)', motion_server, poseGen)
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
-    # for i in range(5):
+    # for i in range(slices):
     #   test('VLINE','(PUTDOWN,obj0,left_arm,pose1,pose2,surf1)', motion_server, poseGen)

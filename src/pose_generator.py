@@ -9,20 +9,21 @@ import random
 import copy
 import re
 
-
-MAX_ACTIONS = 7
-#TODO: right/left arm ---> standard pose is different
-
 # Generates a set of gripper poses given an action and a world description
 # The motion planner verifies that the set of candidate poses is valid 
 # (not obstructed by objects & objects are reachable) 
 class PoseGenerator:
-    def __init__(self, GRIPPER_OFFSET = .015):
+
+    def __init__(self, SLICES=1, GRIPPER_OFFSET = .015):
         self.pickup_counter = 0
         self.putdown_counter = 0
         # the height of the table in world coordinates
         self.DIST_FROM_CYLINDER = .1
         self.GRIPPER_OFFSET = GRIPPER_OFFSET
+        self.SLICES = SLICES
+        self.sliceSize = 2 * math.pi/self.SLICES
+        self.pickup_ub = -math.pi
+        self.putdown_ub = -math.pi
 
     # Generates a gripper pose given an action and a world description
     # action = a string containing (action, arm, object_name)
@@ -37,12 +38,12 @@ class PoseGenerator:
         radius = obj.primitives[0].dimensions[1]
         
         if action[0] == 'PICKUP':
-            if self.pickup_counter <= MAX_ACTIONS:
+            if self.pickup_counter < self.SLICES:
                 self.pickup_counter += 1
                 pose = obj.primitive_poses[0]
                 return self.pickup(pose,height,radius)
         elif action[0] == 'PUTDOWN':
-            if self.putdown_counter <= MAX_ACTIONS:
+            if self.putdown_counter < self.SLICES:
                 self.putdown_counter += 1
                 table = self._search_for_object(action[-1], surfaces)
                 return self.putdown(table,height,radius)
@@ -68,6 +69,11 @@ class PoseGenerator:
     def pickup(self, obj_pose, height, radius):
         CLEARANCE_HEIGHT = obj_pose.position.z + height
         
+        # lower bound is equal to the previous upper bound
+        self.pickup_lb = self.pickup_ub
+        self.pickup_ub += self.sliceSize
+        print self.pickup_lb, self.pickup_ub
+        
         # radius of circle around the cylinder where the gripper origin will lie
         r = radius + self.DIST_FROM_CYLINDER
         # height of gripper when grasping cylinder
@@ -78,7 +84,7 @@ class PoseGenerator:
         poseGen1 = pose()
         pose1 = poseGen1.pose
         # random yaw position
-        yaw = random.uniform(-math.pi, math.pi)
+        yaw = random.uniform(self.pickup_lb, self.pickup_ub)
         # x,y position along a circle around the cylinder
         pose1.position.x = obj_pose.position.x + r * math.cos(yaw - math.pi)
         pose1.position.y = obj_pose.position.y - r * math.sin(yaw - math.pi)
@@ -122,13 +128,17 @@ class PoseGenerator:
     #           boolean - true if the gripper is open, false if closed
     #           waypoints = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,table,height,radius):
+        # lower bound is equal to the previous upper bound
+        self.putdown_lb = self.putdown_ub
+        self.putdown_ub += self.sliceSize
+        print self.putdown_lb, self.putdown_ub
+
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
         x1 = table_center.x - table.primitives[0].dimensions[0]/2.0
         y1 = table_center.y - table.primitives[0].dimensions[1]/2.0
         x2 = (table_center.x + table.primitives[0].dimensions[0]/2.0)/2
         y2 = table_center.y + table.primitives[0].dimensions[1]/2.0
-
         CLEARANCE_HEIGHT = table_height + height #note: this is less clearance than before, but means that our sequence of poses are more likely to be feasible
         r = radius + self.DIST_FROM_CYLINDER
 
@@ -136,10 +146,9 @@ class PoseGenerator:
         poseGen1 = pose()
         poseGen1.pose.position.x = random.uniform(x1,x2)
         poseGen1.pose.position.y = random.uniform(y1,y2)
-        print "(x,y): ", (poseGen1.pose.position.x, poseGen1.pose.position.y)
+        # print "(x,y): ", (poseGen1.pose.position.x, poseGen1.pose.position.y)
         poseGen1.pose.position.z = CLEARANCE_HEIGHT
-        yaw = random.uniform(-math.pi/4.0,math.pi/4.0)
-        #yaw = -math.pi/6
+        yaw = random.uniform(self.putdown_lb,self.putdown_ub)
         poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,yaw)
         poseGen1.gripperOpen = False
 
@@ -206,4 +215,3 @@ if __name__ == "__main__":
     # test case
     # yaw, roll, pitch
     # print poseGen.next('PUTDOWN')
-    
