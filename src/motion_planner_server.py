@@ -15,9 +15,13 @@ z_off = 0.06
 snp = 0.49999
 ssp = -0.49999
 
+b_dist = 0.3
+b_width = 0.03
+
 class MotionPlannerServer(object):
-    def __init__(self, max_planning_time):
+    def __init__(self, max_planning_time, find_blocking_objects=False):
         self.max_planning_time = max_planning_time
+        self.find_blocking_objects = find_blocking_objects
         self.planning_scene_pub = rospy.Publisher('/planning_scene', PlanningScene)
         self.collision_object_pub = rospy.Publisher('/collision_object', CollisionObject)
         
@@ -128,6 +132,60 @@ class MotionPlannerServer(object):
                 res.state = req.parameters.state
                 res.motion = [motion_seq()]
                 res.success = False
+                
+                if self.find_blocking_objects:
+                    x = pose_goals[1].pose.orientation.x
+                    y = pose_goals[1].pose.orientation.y
+                    z = pose_goals[1].pose.orientation.z
+                    w = pose_goals[1].pose.orientation.w
+                    (roll, pitch, yaw) = self._orientation_to_rpy(x, y, z, w)
+                    
+                    x = pose_goals[1].pose.position.x
+                    y = pose_goals[1].pose.position.y
+                    
+                    n1_x = math.cos(yaw)
+                    n1_y = math.sin(yaw)
+                    
+                    n2_x = -math.sin(yaw)
+                    n2_y = math.cos(yaw)
+                    
+                    x1 = x + z_off*math.cos(yaw)
+                    y1 = y - z_off*math.sin(yaw)
+                    
+                    x2 = x1 - b_dist*math.cos(yaw)
+                    y2 = y1 + b_dist*math.sin(yaw)
+                    
+                    x3 = x + b_width*math.cos(yaw - (math.pi/2))
+                    y3 = y + b_width*math.sin(yaw - (math.pi/2))
+                    
+                    x4 = x + b_width*math.cos(yaw + (math.pi/2))
+                    y4 = y + b_width*math.sin(yaw + (math.pi/2))
+                    
+                    print "x1:", x1
+                    print "y1:", y1
+                    print "x2:", x2
+                    print "y2:", y2
+                    print "x3:", x3
+                    print "y3:", y3
+                    print "x4:", x4
+                    print "y4:", y4
+                    
+                    blocking_objects = []
+                    for obj in world_start_state.movable_objects:
+                        x = obj.primitive_poses[0].position.x
+                        y = obj.primitive_poses[0].position.y
+                        
+                        print obj.id
+                        print "c1:", y > (n1_y/n1_x)*(x - x1) + y1
+                        print "c2:", y < (n1_y/n1_x)*(x - x2) + y2
+                        print "c3:", y > (n2_y/n2_x)*(x - x3) + y3
+                        print "c4:", y > (n2_y/n2_x)*(x - x4) + y4
+                        
+                        #if y > (n1_y/n1_x)*(x - x1) + y1 and y > (n2_y/n2_x)*(x - x2) + y2 and y > (n3_y/n3_x)*(x - x3) + y3 and y > (n4_y/n4_x)*(x - x4) + y4:
+                        #    blocking_objects.append(obj)
+                            
+                    #print blocking_objects
+                
                 print "============ Done"
                 return res   
     

@@ -50,6 +50,70 @@ def pickupTest(action, motion_server, poseGen):
     pose.orientation.w = 1
     obj1.primitive_poses.append(pose)
     state.world.movable_objects.append(obj1)
+    
+    obj2 = CollisionObject()
+    obj2.header = Header()
+    obj2.header.frame_id = '/base'
+    obj2.id = 'obj2'
+    primitive = SolidPrimitive()
+    primitive.type = 3
+    primitive.dimensions = [.25, .02]
+    obj2.primitives.append(primitive)
+    pose = Pose()
+    pose.position.x = 0.75
+    pose.position.y = 0.15
+    pose.position.z = 0.16
+    pose.orientation.w = 1
+    obj2.primitive_poses.append(pose)
+    state.world.movable_objects.append(obj2)
+    
+    obj3 = CollisionObject()
+    obj3.header = Header()
+    obj3.header.frame_id = '/base'
+    obj3.id = 'obj3'
+    primitive = SolidPrimitive()
+    primitive.type = 3
+    primitive.dimensions = [.25, .02]
+    obj3.primitives.append(primitive)
+    pose = Pose()
+    pose.position.x = 0.8
+    pose.position.y = 0.1
+    pose.position.z = 0.16
+    pose.orientation.w = 1
+    obj3.primitive_poses.append(pose)
+    state.world.movable_objects.append(obj3)
+    
+    obj4 = CollisionObject()
+    obj4.header = Header()
+    obj4.header.frame_id = '/base'
+    obj4.id = 'obj4'
+    primitive = SolidPrimitive()
+    primitive.type = 3
+    primitive.dimensions = [.25, .02]
+    obj4.primitives.append(primitive)
+    pose = Pose()
+    pose.position.x = 0.8
+    pose.position.y = 0.2
+    pose.position.z = 0.16
+    pose.orientation.w = 1
+    obj4.primitive_poses.append(pose)
+    state.world.movable_objects.append(obj4)
+    
+    obj5 = CollisionObject()
+    obj5.header = Header()
+    obj5.header.frame_id = '/base'
+    obj5.id = 'obj5'
+    primitive = SolidPrimitive()
+    primitive.type = 3
+    primitive.dimensions = [.25, .02]
+    obj5.primitives.append(primitive)
+    pose = Pose()
+    pose.position.x = 0.85
+    pose.position.y = 0.15
+    pose.position.z = 0.16
+    pose.orientation.w = 1
+    obj5.primitive_poses.append(pose)
+    state.world.movable_objects.append(obj5)
 
     state.robot = robot()
     state.robot.id = 'left_arm'
@@ -78,8 +142,8 @@ def pickupTest(action, motion_server, poseGen):
     #print msg.goals
     
     resp = motion_server(msg)
-    print resp.plan.success
-    print '\n', resp.plan.state.world.movable_objects, '\n'
+    #print resp.plan.success
+    #print '\n', resp.plan.state.world.movable_objects, '\n'
     #record('/home/ragtz/test.bag', [resp.plan])
 
 def putdownTest(action, motion_server, poseGen):
@@ -137,8 +201,8 @@ def putdownTest(action, motion_server, poseGen):
     #print msg.goals
     
     resp = motion_server(msg)
-    print resp.plan.success
-    print resp.plan.state.world.movable_objects
+    #print resp.plan.success
+    #print resp.plan.state.world.movable_objects
     
 if __name__ == "__main__":
     rospy.wait_for_service('motion_server_service')
@@ -147,10 +211,10 @@ if __name__ == "__main__":
     poseGen = PoseGenerator()
     
     # (pickup,obj1,left_arm,pose1,pose2)
-    #for i in range(8):
-    #    pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
+    for i in range(8):
+        pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
-    for i in range(8):
-      putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+    #for i in range(8):
+    #  putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
       
