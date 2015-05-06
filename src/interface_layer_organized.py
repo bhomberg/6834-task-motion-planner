@@ -319,11 +319,11 @@ class TryRefine(object):
             # start by figuring out our actions and poses, use the pose generators to do that
             self.axn = hlplan[self.index]
             self.nextaxn = hlplan[self.index+1]
-            self.pose2 = self.interface.poseGenerator.next(self.nextaxn)
+            self.pose2 = self.interface.poseGenerator.next(self.nextaxn, self.world)
             
             if self.pose2 == None: # pose 2 is already defined, so we should backtrack if in Error free mode, otherwise return that we've failed
                 self.interface.poseGenerator.reset(self.nextaxn)
-                self.pose1 = self.interface.poseGenerator.next(self.axn)
+                self.pose1 = self.interface.poseGenerator.next(self.axn, self.world)
                 if self.pose1 == None:
                     #self.worlds.append(copy.deepcopy(self.world))
                     self.interface.poseGenerator.resetAll()

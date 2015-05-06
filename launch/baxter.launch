@@ -5,4 +5,5 @@
   <node name="Motor_Controller_Node" pkg="task_motion_planner" type="motor_controller_node6834"  output="log"/>
   <node name="Main_Grasp_Node" pkg="task_motion_planner" type="grasp_control_new6834" output="log"/>
   <node name="playback" pkg="task_motion_planner" type="motion_plan_baxter_playback.py" output="screen"/>
+  <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" output="log"/>
 </launch>
