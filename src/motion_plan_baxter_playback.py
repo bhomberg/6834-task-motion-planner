@@ -29,24 +29,30 @@ class BaxterPlayback(object):
     def __init__(self, filename):
         self.filename = filename
         
-        rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
-        rospy.Subscriber('/robot/limb/left/endpoint_state', EndpointState, self._update_left_gripper_state)
+        #rospy.Subscriber('/move_group/monitored_planning_scene', PlanningScene, self._update_world_state)
+        #rospy.Subscriber('/robot/limb/left/endpoint_state', EndpointState, self._update_left_gripper_state)
         
 
             
     def _playback(self, msg):
+        print "STARTED PLAYBACK"
         moveit_commander.roscpp_initialize(sys.argv)
+        print "INITIALIZING GRIPPER"
         left = baxter_interface.Gripper('left')
         left.calibrate()
+        print "ABOUT TO GET SCENE"
         scene = moveit_commander.PlanningSceneInterface()
         
+        print "START STATE"
         # Get start state of world and robot
         world_start_state = msg.plan[0].state.world
         robot_start_state = msg.plan[0].state.robot
     
         # Set up moved group
+        print "SET UP GROUP"
         group = moveit_commander.MoveGroupCommander(robot_start_state.id)
-    
+        print "DONE"
+
         # Set up robot in start configuration
         curr_state = robot_start_state.state
         group.go(curr_state.joint_state)
@@ -79,11 +85,12 @@ class BaxterPlayback(object):
     def run(self):
         rospy.init_node('playback')
         bag = rosbag.Bag(self.filename)
+        print "GOT BAG"
         for topic, msg, t in bag.read_messages(topics=['plan']):
             self._playback(msg)
         bag.close()
         
 if __name__ == "__main__":
-    baxter = BaxterPlayback('/home/ragtz/test.bag')
+    baxter = BaxterPlayback('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/playback/pickup_putdown_test.bag')
     baxter.run()
                         

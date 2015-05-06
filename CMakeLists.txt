@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_msgs
   cmake_modules
   message_generation
+  serial
 )
 
 find_package(Boost REQUIRED system filesystem date_time thread)
@@ -65,6 +66,7 @@ find_package(Eigen REQUIRED)
    world_obj.msg
    world_state.msg
    recorded_motion_plan.msg
+   finger_target.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -182,3 +184,12 @@ link_directories(${catkin_LIBRARY_DIRS})
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+add_executable(grasp_control_new6834 src/grasp_control_new.cpp)
+target_link_libraries(grasp_control_new6834 ${catkin_LIBRARIES})
+add_dependencies(grasp_control_new6834 task_motion_plan_generate_messages_cpp)
+
+add_executable(motor_controller_node6834 src/motor_controller_node.cpp)
+target_link_libraries(motor_controller_node6834 ${catkin_LIBRARIES})
+add_dependencies(motor_controller_node6834 task_motion_plan_generate_messages_cpp)
