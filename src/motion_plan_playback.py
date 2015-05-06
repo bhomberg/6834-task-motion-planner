@@ -13,11 +13,12 @@ from geometry_msgs.msg import *
 from std_msgs.msg import String
 
 
-def record(filename, plan):
+def record(filename, start_state, plan):
     bag = rosbag.Bag(filename, 'w')
     
     try:
         record = recorded_motion_plan()
+        record.start_state = start_state
         record.plan = plan
         
         bag.write('plan', record)
@@ -92,8 +93,8 @@ class BaxterPlayback(object):
         scene = moveit_commander.PlanningSceneInterface()
         
         # Get start state of world and robot
-        world_start_state = msg.plan[0].state.world
-        robot_start_state = msg.plan[0].state.robot
+        world_start_state = msg.start_state.world
+        robot_start_state = msg.start_state.robot
     
         # Set up moved group
         group = moveit_commander.MoveGroupCommander(robot_start_state.id)

@@ -55,7 +55,7 @@ class PoseGenerator:
         elif action == 'PUTDOWN':
             self.putdown_counter = 0
     
-    def resetAll():
+    def resetAll(self):
         self.putdown_counter = 0
         self.pickup_counter = 0
 
@@ -139,8 +139,7 @@ class PoseGenerator:
         y1 = table_center.y - table.primitives[0].dimensions[1]/2.0
         x2 = (table_center.x + table.primitives[0].dimensions[0]/2.0)/2
         y2 = table_center.y + table.primitives[0].dimensions[1]/2.0
-        
-        CLEARANCE_HEIGHT = table_height + 2*height
+        CLEARANCE_HEIGHT = table_height + height #note: this is less clearance than before, but means that our sequence of poses are more likely to be feasible
         r = radius + self.DIST_FROM_CYLINDER
 
         # Generate a pose hovering over a sampled (x,y) point
@@ -168,8 +167,8 @@ class PoseGenerator:
 
         # Move back
         poseGen4 = pose()
-        poseGen4.pose.position.x = poseGen3.pose.position.x - r * math.cos(yaw)
-        poseGen4.pose.position.y = poseGen3.pose.position.y - r * math.sin(yaw)
+        poseGen4.pose.position.x = poseGen3.pose.position.x + .1* math.cos(yaw - math.pi)
+        poseGen4.pose.position.y = poseGen3.pose.position.y - .1* math.sin(yaw - math.pi)
         poseGen4.pose.position.z = poseGen3.pose.position.z
         poseGen4.pose.orientation = poseGen3.pose.orientation
         poseGen4.gripperOpen = True

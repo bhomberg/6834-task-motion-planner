@@ -16,6 +16,7 @@ from generateWorldMsg import *
 
 MAX_TRAJ_COUNT = 50
 MAX_ITERS = 1000
+MOTION_PLANNER_REPEATS = 5
 DIR = os.path.abspath(os.path.dirname(__file__) + '/../') + '/'
 #DIR = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/'
 
@@ -90,20 +91,24 @@ class InterfaceLayer(object):
     def _callMotionPlanner(self, world, action, goals):
         # return: (world, motion plan, success)
         try:
-            msg = motion_plan_parameters()
-            msg.state = world
-
-            str_action = '('
-            for elem in action:
-                str_action += elem + ','
-            msg.action = str_action[:-1] + ')'
-
-            msg.goals = goals
-        
-            res = self.motionServer(msg)
-        
-            self.numMotionPlannerCalls += 1
-        
+            res = None
+            for i in range(MOTION_PLANNER_REPEATS):
+                msg = motion_plan_parameters()
+                msg.state = world
+                
+                str_action = '('
+                for elem in action:
+                    str_action += elem + ','
+                msg.action = str_action[:-1] + ')'
+                    
+                msg.goals = goals
+                
+                res = self.motionServer(msg)
+                
+                self.numMotionPlannerCalls += 1
+                
+                if res.plan.success:
+                    return (res.plan.state, res.plan.motion, res.plan.success)
             return (res.plan.state, res.plan.motion, res.plan.success)
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e

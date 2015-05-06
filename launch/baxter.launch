@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find baxter_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
+  <node name="Motor_Controller_Node" pkg="task_motion_planner" type="motor_controller_node6834"  output="log"/>
+  <node name="Main_Grasp_Node" pkg="task_motion_planner" type="grasp_control_new6834" output="log"/>
+  <node name="playback" pkg="task_motion_planner" type="motion_plan_baxter_playback.py" output="screen"/>
+</launch>
