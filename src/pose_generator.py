@@ -79,6 +79,8 @@ class PoseGenerator:
         CLEARANCE_HEIGHT = obj_pose.position.z + height
         
         # lower bound is equal to the previous upper bound
+        if self.pickup_ub == math.pi:
+            self.pickup_ub = -math.pi #reset
         self.pickup_lb = self.pickup_ub
         self.pickup_ub += self.sliceSize
         print self.pickup_lb, self.pickup_ub
@@ -138,6 +140,8 @@ class PoseGenerator:
     #           waypoints = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,table,height,radius):
         # lower bound is equal to the previous upper bound
+        if self.putdown_ub == math.pi:
+            self.putdown_ub = -math.pi #reset
         self.putdown_lb = self.putdown_ub
         self.putdown_ub += self.sliceSize
         print self.putdown_lb, self.putdown_ub
