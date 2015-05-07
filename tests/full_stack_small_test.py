@@ -24,18 +24,18 @@ if __name__ == '__main__':
     poseGen = PoseGenerator()
     
     filepath = DIR_6834+"states/SQUARE_3"	
-	f = open(filepath,'r')
-	init_state_string = f.read()
-	state = [[]]*3
-	l = init_state_string.split('\n')
-	state[0] = l[0].split(',')
-	k = l[1].split(',')
-	state[1] = [tuple(i.split(' ')) for i in k]
-	k = l[2].split(',')
-	state[2] = [tuple(i.split(' ')) for i in k]
-	pose = l[3]
+    f = open(filepath,'r')
+    init_state_string = f.read()
+    state = [[]]*3
+    l = init_state_string.split('\n')
+    state[0] = l[0].split(',')
+    k = l[1].split(',')
+    state[1] = [tuple(i.split(' ')) for i in k]
+    k = l[2].split(',')
+    state[2] = [tuple(i.split(' ')) for i in k]
+    pose = l[3]
 	
-	world = makeState('SQUARE')
+    world = makeState('SQUARE')
     
     interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, DIR_6834)
     (plan, traj) = interfaceLayer.run(state, world, pose)

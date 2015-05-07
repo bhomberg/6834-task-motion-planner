@@ -43,7 +43,8 @@ class MotionPlannerServer(object):
         pose_goals = req.parameters.goals
         
         # Set up moved group
-        group = moveit_commander.MoveGroupCommander(action[2])
+        #group = moveit_commander.MoveGroupCommander(action[2])
+        group = moveit_commander.MoveGroupCommander('left_arm')
         
         # Set attach/detach point
         attach_detach_idx = 2

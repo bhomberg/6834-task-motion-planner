@@ -24,26 +24,35 @@ class PoseGenerator:
         self.sliceSize = 2 * math.pi/self.SLICES
         self.pickup_ub = -math.pi
         self.putdown_ub = -math.pi
+        self.MAX_COUNT = 10
 
     # Generates a gripper pose given an action and a world description
     # action = a string containing (action, arm, object_name)
     # world = a WorldState msg
     # return = a gripper pose, which is a set of waypoints
     def next(self, action, world):
+        print action
+        a = '('
+        for elm in action:
+            a += elm + ','
+        action = a[:-1] + ')'
+        print action
+        
         action = re.split(',', action[1:-1])
         objects = world.world.movable_objects
         surfaces = world.world.surfaces
+        print "action[1]:", action[1]
         obj = self._search_for_object(action[1], objects)
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
         
         if action[0] == 'PICKUP':
-            if self.pickup_counter < self.SLICES:
+            if self.pickup_counter < self.MAX_COUNT:
                 self.pickup_counter += 1
                 pose = obj.primitive_poses[0]
                 return self.pickup(pose,height,radius)
         elif action[0] == 'PUTDOWN':
-            if self.putdown_counter < self.SLICES:
+            if self.putdown_counter < self.MAX_COUNT:
                 self.putdown_counter += 1
                 table = self._search_for_object(action[-1], surfaces)
                 return self.putdown(table,height,radius)
@@ -189,6 +198,8 @@ class PoseGenerator:
     # obj_list = list of objects to search
     def _search_for_object(self, obj_name, obj_list):
         for i in range(len(obj_list)):
+            #print "obj_name:", obj_name
+            #print "obj_list[i].id:", obj_list[i].id + '\n'
             if obj_name == obj_list[i].id:
                 return obj_list[i]              
         return None

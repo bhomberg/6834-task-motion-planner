@@ -16,7 +16,7 @@ from generateWorldMsg import *
 
 MAX_TRAJ_COUNT = 50
 MAX_ITERS = 1000
-MOTION_PLANNER_REPEATS = 5
+MOTION_PLANNER_REPEATS = 2
 DIR = os.path.abspath(os.path.dirname(__file__) + '/../') + '/'
 #DIR = '/home/vmlane/catkin_ws/src/6834-task-motion-planner/'
 

@@ -17,7 +17,7 @@ from motion_plan_playback import *
 #TODO: method to get the table center
 
 CYLINDER_HEIGHT = 0.2
-CYLINDER_RADIUS = 0.035
+CYLINDER_RADIUS = 0.02
 
 # make the state object for a world of with a given shape of cylinders (lines,cross,square,x)
 def makeState(shape):
@@ -111,8 +111,8 @@ def addSurf(surfaces,i,dim,position):
     # table surface 2
     surf = CollisionObject()
     surf.header = Header()
-    surf.header.frame_id = '1'
-    surf.id = 'surf' + str(i)
+    surf.header.frame_id = '/base'
+    surf.id = 'SURF' + str(i)
     primitive = SolidPrimitive()
     primitive.type = 1
     primitive.dimensions = dim
@@ -130,8 +130,8 @@ def addSurf(surfaces,i,dim,position):
 def addCylinder(movable_objects,i,loc):
     obj = CollisionObject()
     obj.header = Header()
-    obj.header.frame_id = '1'
-    obj.id = 'obj' + str(i)
+    obj.header.frame_id = '/base'
+    obj.id = 'BLOCK' + str(i)
     primitive = SolidPrimitive()
     primitive.type = 3
     primitive.dimensions = [CYLINDER_HEIGHT, CYLINDER_RADIUS]
