@@ -42,6 +42,8 @@ class PoseGenerator:
         objects = world.world.movable_objects
         surfaces = world.world.surfaces
         print "action[1]:", action[1]
+        if action[1] == ' ':
+            return None
         obj = self._search_for_object(action[1], objects)
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
