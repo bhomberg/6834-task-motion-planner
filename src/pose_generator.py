@@ -31,17 +31,18 @@ class PoseGenerator:
     # world = a WorldState msg
     # return = a gripper pose, which is a set of waypoints
     def next(self, action, world):
-        print action
-        a = '('
-        for elm in action:
-            a += elm + ','
-        action = a[:-1] + ')'
-        print action
+        if isinstance(action, tuple):
+            a = '('
+            for elm in action:
+                a += elm + ','
+            action = a[:-1] + ')'
         
         action = re.split(',', action[1:-1])
         objects = world.world.movable_objects
         surfaces = world.world.surfaces
         print "action[1]:", action[1]
+        if action[1] == ' ':
+            return None
         obj = self._search_for_object(action[1], objects)
         height = obj.primitives[0].dimensions[0]
         radius = obj.primitives[0].dimensions[1]
@@ -140,7 +141,7 @@ class PoseGenerator:
     #           waypoints = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,table,height,radius):
         # lower bound is equal to the previous upper bound
-        if self.putdown_ub == math.pi:
+        if self.putdown_ub >= math.pi:
             self.putdown_ub = -math.pi #reset
         self.putdown_lb = self.putdown_ub
         self.putdown_ub += self.sliceSize

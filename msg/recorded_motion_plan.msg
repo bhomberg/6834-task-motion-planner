@@ -1,2 +1,3 @@
 world_state start_state
-motion_plan[] plan
+std_msgs/String[] plan
+motion_seq[] motion
