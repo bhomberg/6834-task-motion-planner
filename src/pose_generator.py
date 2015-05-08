@@ -9,6 +9,8 @@ import random
 import copy
 import re
 
+BOUND = math.pi/2.0
+
 # Generates a set of gripper poses given an action and a world description
 # The motion planner verifies that the set of candidate poses is valid 
 # (not obstructed by objects & objects are reachable) 
@@ -22,8 +24,8 @@ class PoseGenerator:
         self.GRIPPER_OFFSET = GRIPPER_OFFSET
         self.SLICES = SLICES
         self.sliceSize = 2 * math.pi/self.SLICES
-        self.pickup_ub = -math.pi
-        self.putdown_ub = -math.pi
+        self.pickup_ub = -BOUND
+        self.putdown_ub = -BOUND
         self.MAX_COUNT = 10
 
     # Generates a gripper pose given an action and a world description
@@ -80,8 +82,8 @@ class PoseGenerator:
         CLEARANCE_HEIGHT = obj_pose.position.z + height
         
         # lower bound is equal to the previous upper bound
-        if self.pickup_ub == math.pi:
-            self.pickup_ub = -math.pi #reset
+        if self.pickup_ub == BOUND:
+            self.pickup_ub = -BOUND #reset
         self.pickup_lb = self.pickup_ub
         self.pickup_ub += self.sliceSize
         print self.pickup_lb, self.pickup_ub
@@ -141,8 +143,8 @@ class PoseGenerator:
     #           waypoints = stage, set-down, let-go, back away, lift arm, standard pose
     def putdown(self,table,height,radius):
         # lower bound is equal to the previous upper bound
-        if self.putdown_ub >= math.pi:
-            self.putdown_ub = -math.pi #reset
+        if self.putdown_ub >= BOUND:
+            self.putdown_ub = -BOUND #reset
         self.putdown_lb = self.putdown_ub
         self.putdown_ub += self.sliceSize
         print self.putdown_lb, self.putdown_ub
