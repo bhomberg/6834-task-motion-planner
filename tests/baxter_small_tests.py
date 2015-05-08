@@ -33,10 +33,11 @@ def makeState(shape):
     state.robot.state.joint_state.effort = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     # add surfaces
-    state.world.surfaces.append(addSurf(state.world.surfaces,1,[1, 1, 0.05],[1,0,0]))
+    state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.5, 0.05],[0.8,0,0]))
+    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.8,0.5,0]))
     # addSurf(state.world.surfaces,2,[1,.5,0.05],[0,.5,0])
     # add center cylinder
-    addCylinder(state.world.movable_objects,0,getCenterCylinderPose(state.world.surfaces[0]))
+    addCylinder(state.world.movable_objects,0,[0.8,0,0.16])#getCenterCylinderPose(state.world.surfaces[0]))
     # center cylinder pose
     cylinder_pose = state.world.movable_objects[0].primitive_poses[0].position
     if(shape == 'VLINE'):
@@ -112,7 +113,7 @@ def addSurf(surfaces,i,dim,position):
     surf = CollisionObject()
     surf.header = Header()
     surf.header.frame_id = '/base'
-    surf.id = 'SURF' + str(i)
+    surf.id = i
     primitive = SolidPrimitive()
     primitive.type = 1
     primitive.dimensions = dim

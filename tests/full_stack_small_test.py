@@ -40,5 +40,5 @@ if __name__ == '__main__':
     interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, DIR_6834)
     (plan, traj) = interfaceLayer.run(state, world, pose)
     
-    record(DIR_6834+'/playback/square_test.py', world, traj)
+    record(DIR_6834+'playback/square_test.bag', world, plan, traj)
     
