@@ -150,7 +150,7 @@ class PoseGenerator:
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
         x1 = table_center.x - table.primitives[0].dimensions[0]/2.0
         y1 = table_center.y - table.primitives[0].dimensions[1]/2.0
-        x2 = (table_center.x + table.primitives[0].dimensions[0]/2.0)/2
+        x2 = table_center.x + table.primitives[0].dimensions[0]/2.0
         y2 = table_center.y + table.primitives[0].dimensions[1]/2.0
         CLEARANCE_HEIGHT = table_height + height #note: this is less clearance than before, but means that our sequence of poses are more likely to be feasible
         r = radius + self.DIST_FROM_CYLINDER
