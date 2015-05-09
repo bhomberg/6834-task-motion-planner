@@ -5,6 +5,7 @@ import rospy
 import math
 import re
 import moveit_commander
+import numpy as np
 from task_motion_planner.srv import *
 from task_motion_planner.msg import *
 from moveit_msgs.msg import *
@@ -15,8 +16,8 @@ z_off = 0.06
 snp = 0.49999
 ssp = -0.49999
 
-b_dist = 0.3
-b_width = 0.03
+b_dist = 0.45
+b_width = 0.13
 
 class MotionPlannerServer(object):
     def __init__(self, max_planning_time, find_blocking_objects=False):
@@ -28,19 +29,86 @@ class MotionPlannerServer(object):
         self.attach_obj = None
         
     def get_motion_plan(self, req):
-        print "============ Starting Moveit Commander"
-        moveit_commander.roscpp_initialize(sys.argv)
-        
-        print "============ Setting current state"
-        # robot = moveit_commander.RobotCommander
-        scene = moveit_commander.PlanningSceneInterface()
-        
         world_start_state = req.parameters.state.world
         robot_start_state = req.parameters.state.robot
         print "PREACTION:", req.parameters.action
         action = re.split(',', req.parameters.action[1:-1])
         print "ACTION: ", action
         pose_goals = req.parameters.goals
+        
+        failed_res = motion_plan()
+        failed_res.state = req.parameters.state
+        failed_res.motion = [motion_seq()]
+        failed_res.success = False
+        
+        if self.find_blocking_objects:
+            print "============ Quick Collision Check"  
+            blocking_objects = self._get_blocking_objects(pose_goals[1], world_start_state.movable_objects)
+                
+            if blocking_objects:
+                print "============ Blocking Objects"
+                print blocking_objects
+                print "============ Done"
+                return failed_res 
+        
+        (res, curr_state) = self._find_motion_plan(req)
+        
+        if not res.success:
+            return failed_res
+    
+        # Set state of world after action completion
+        end_state = world_state()
+        end_state.robot = robot()
+        end_state.robot.id = robot_start_state.id
+        end_state.robot.state = curr_state
+        
+        mov_obj_idx = self._search_for_object(action[1], world_start_state.movable_objects)
+        
+        end_state.world = world_start_state
+        if mov_obj_idx != -1:
+            end_pose = Pose()
+            
+            if action[0] == 'PICKUP':
+                end_pose.position.x = 0
+                end_pose.position.y = 0
+                end_pose.position.z = z_off
+                end_pose.orientation.x = 0
+                end_pose.orientation.y = -0.7071067811865475
+                end_pose.orientation.z = 0
+                end_pose.orientation.w = 0.7071067811865476
+                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/left_gripper'
+            elif action[0] == 'PUTDOWN':
+                x = pose_goals[1].pose.orientation.x
+                y = pose_goals[1].pose.orientation.y
+                z = pose_goals[1].pose.orientation.z
+                w = pose_goals[1].pose.orientation.w
+                (roll, pitch, yaw) = self._orientation_to_rpy(x, y, z, w)
+                print roll, pitch, yaw
+                end_pose.position.x = pose_goals[1].pose.position.x + z_off*math.cos(yaw)
+                end_pose.position.y = pose_goals[1].pose.position.y - z_off*math.sin(yaw)
+                end_pose.position.z = pose_goals[1].pose.position.z
+                end_pose.orientation.w = 1
+                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/base'
+            
+            end_state.world.movable_objects[mov_obj_idx].primitive_poses[0] = end_pose
+            
+        res.state = end_state        
+        print "============ Done"
+        return res
+    
+    def _find_motion_plan(self, req):
+        world_start_state = req.parameters.state.world
+        robot_start_state = req.parameters.state.robot
+        action = re.split(',', req.parameters.action[1:-1])
+        pose_goals = req.parameters.goals
+    
+        res = motion_plan()
+        
+        print "============ Starting Moveit Commander"
+        moveit_commander.roscpp_initialize(sys.argv)
+        
+        print "============ Setting current state"
+        scene = moveit_commander.PlanningSceneInterface()
         
         # Set up moved group
         #group = moveit_commander.MoveGroupCommander(action[2])
@@ -80,19 +148,18 @@ class MotionPlannerServer(object):
         # Attach grasped objects
         if action[0] == 'PUTDOWN':
             group.attach_object(action[1])            
-        
-        res = motion_plan()
     
         print "============ Planning action ", action[0]
         for i in range(len(pose_goals)):
             print "============ Move group ", action[2]
-        
+            #print "Setup planner\n"
             group.set_planning_time(self.max_planning_time)
             group.set_start_state(curr_state)
             group.set_pose_target(pose_goals[i].pose)
-        
+            rospy.sleep(5.0)
+            #print "Plan\n"
             plan = group.plan()
-    
+            #print "Plan Done\n"
             if len(plan.joint_trajectory.points) > 0:
                 print "============ Component ", i, " of motion plan succeeded"
             
@@ -127,109 +194,17 @@ class MotionPlannerServer(object):
                 
                 #rospy.sleep(2.0)
                 #return
-                
             else:
                 print "============ Component ", i, " of motion plan failed"
                 res.state = req.parameters.state
                 res.motion = [motion_seq()]
                 res.success = False
                 
-                if self.find_blocking_objects:
-                    x = pose_goals[1].pose.orientation.x
-                    y = pose_goals[1].pose.orientation.y
-                    z = pose_goals[1].pose.orientation.z
-                    w = pose_goals[1].pose.orientation.w
-                    (roll, pitch, yaw) = self._orientation_to_rpy(x, y, z, w)
-                    
-                    x = pose_goals[1].pose.position.x
-                    y = pose_goals[1].pose.position.y
-                    
-                    n1_x = math.cos(yaw)
-                    n1_y = math.sin(yaw)
-                    
-                    n2_x = -math.sin(yaw)
-                    n2_y = math.cos(yaw)
-                    
-                    x1 = x + z_off*math.cos(yaw)
-                    y1 = y - z_off*math.sin(yaw)
-                    
-                    x2 = x1 - b_dist*math.cos(yaw)
-                    y2 = y1 + b_dist*math.sin(yaw)
-                    
-                    x3 = x + b_width*math.cos(yaw - (math.pi/2))
-                    y3 = y + b_width*math.sin(yaw - (math.pi/2))
-                    
-                    x4 = x + b_width*math.cos(yaw + (math.pi/2))
-                    y4 = y + b_width*math.sin(yaw + (math.pi/2))
-                    
-                    print "x1:", x1
-                    print "y1:", y1
-                    print "x2:", x2
-                    print "y2:", y2
-                    print "x3:", x3
-                    print "y3:", y3
-                    print "x4:", x4
-                    print "y4:", y4
-                    
-                    blocking_objects = []
-                    for obj in world_start_state.movable_objects:
-                        x = obj.primitive_poses[0].position.x
-                        y = obj.primitive_poses[0].position.y
-                        
-                        print obj.id
-                        print "c1:", y > (n1_y/n1_x)*(x - x1) + y1
-                        print "c2:", y < (n1_y/n1_x)*(x - x2) + y2
-                        print "c3:", y > (n2_y/n2_x)*(x - x3) + y3
-                        print "c4:", y > (n2_y/n2_x)*(x - x4) + y4
-                        
-                        #if y > (n1_y/n1_x)*(x - x1) + y1 and y > (n2_y/n2_x)*(x - x2) + y2 and y > (n3_y/n3_x)*(x - x3) + y3 and y > (n4_y/n4_x)*(x - x4) + y4:
-                        #    blocking_objects.append(obj)
-                            
-                    #print blocking_objects
+                print "============ Done" 
+                return (res, curr_state)        
                 
-                print "============ Done"
-                return res   
-    
-        # Set state of world after action completion
-        end_state = world_state()
-        end_state.robot = robot()
-        end_state.robot.id = robot_start_state.id
-        end_state.robot.state = curr_state
-        
-        mov_obj_idx = self._search_for_object(action[1], world_start_state.movable_objects)
-        
-        end_state.world = world_start_state
-        if mov_obj_idx != -1:
-            end_pose = Pose()
-            
-            if action[0] == 'PICKUP':
-                end_pose.position.x = 0
-                end_pose.position.y = 0
-                end_pose.position.z = z_off
-                end_pose.orientation.x = 0
-                end_pose.orientation.y = -0.7071067811865475
-                end_pose.orientation.z = 0
-                end_pose.orientation.w = 0.7071067811865476
-                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/left_gripper'
-            elif action[0] == 'PUTDOWN':
-                x = pose_goals[1].pose.orientation.x
-                y = pose_goals[1].pose.orientation.y
-                z = pose_goals[1].pose.orientation.z
-                w = pose_goals[1].pose.orientation.w
-                (roll, pitch, yaw) = self._orientation_to_rpy(x, y, z, w)
-                print roll, pitch, yaw
-                end_pose.position.x = pose_goals[1].pose.position.x + z_off*math.cos(yaw)
-                end_pose.position.y = pose_goals[1].pose.position.y - z_off*math.sin(yaw)
-                end_pose.position.z = pose_goals[1].pose.position.z
-                end_pose.orientation.w = 1
-                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/base'
-            
-            end_state.world.movable_objects[mov_obj_idx].primitive_poses[0] = end_pose
-            
-        res.state = end_state
-        res.success = True        
-        print "============ Done"
-        return res
+        res.success = True
+        return (res, curr_state)
     
     def _orientation_to_rpy(self, x, y, z, w):
         test = x*y + z*w
@@ -260,6 +235,34 @@ class MotionPlannerServer(object):
             if obj_name == obj_list[i].id:
                 return i                
         return -1
+        
+    def _get_blocking_objects(self, pose_goal, objects):
+        x = pose_goal.pose.orientation.x
+        y = pose_goal.pose.orientation.y
+        z = pose_goal.pose.orientation.z
+        w = pose_goal.pose.orientation.w
+        (roll, pitch, yaw) = self._orientation_to_rpy(x, y, z, w)
+                    
+        goal = np.matrix([pose_goal.pose.position.x, pose_goal.pose.position.y])
+
+        R = np.matrix([[math.cos(yaw), -math.sin(yaw)],
+                       [math.sin(yaw),  math.cos(yaw)]])
+
+        goal_p = R*goal.T + np.matrix([z_off,0]).T
+                    
+        p1 = goal_p + np.matrix([0,b_width/2.0]).T
+        p2 = goal_p + np.matrix([-b_dist,-b_width/2.0]).T
+                    
+        blocking_objects = []
+        for obj in objects:
+            obj_pose = np.matrix([obj.primitive_poses[0].position.x, obj.primitive_poses[0].position.y])
+                        
+            obj_pose_p = R*obj_pose.T
+                        
+            if obj_pose_p[0,0] < p1[0,0] and obj_pose_p[0,0] > p2[0,0] and obj_pose_p[1,0] > p2[1,0] and obj_pose_p[1,0] < p1[1,0]:
+                blocking_objects.append(obj.id)
+                
+        return blocking_objects
     
     def run(self):
         rospy.init_node('motion_planner_server')
@@ -268,6 +271,6 @@ class MotionPlannerServer(object):
         rospy.spin()
     
 if __name__ == "__main__":
-    motion_planner_server = MotionPlannerServer(10.0)
+    motion_planner_server = MotionPlannerServer(10.0, True)
     motion_planner_server.run()
     

@@ -33,11 +33,11 @@ def makeState(shape):
     state.robot.state.joint_state.effort = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     # add surfaces
-    state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.5, 0.05],[0.8,0,0]))
-    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.8,0.5,0]))
+    state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.5, 0.05],[0.6,0,-0.28]))
+    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.6,0.5,-0.28]))
     # addSurf(state.world.surfaces,2,[1,.5,0.05],[0,.5,0])
     # add center cylinder
-    addCylinder(state.world.movable_objects,0,[0.8,0,0.16])#getCenterCylinderPose(state.world.surfaces[0]))
+    addCylinder(state.world.movable_objects,0,[0.6,0,0.16-0.28])#getCenterCylinderPose(state.world.surfaces[0]))
     # center cylinder pose
     cylinder_pose = state.world.movable_objects[0].primitive_poses[0].position
     if(shape == 'VLINE'):
@@ -49,10 +49,10 @@ def makeState(shape):
         addCylinder(state.world.movable_objects,2,loc)
     elif(shape == 'HLINE'):
         # add left
-        loc = [cylinder_pose.x,cylinder_pose.y - CYLINDER_RADIUS*3,cylinder_pose.z]
+        loc = [cylinder_pose.x,cylinder_pose.y - CYLINDER_RADIUS*5,cylinder_pose.z]
         addCylinder(state.world.movable_objects,1,loc)
         # add right
-        loc = [cylinder_pose.x,cylinder_pose.y + CYLINDER_RADIUS*3,cylinder_pose.z]
+        loc = [cylinder_pose.x,cylinder_pose.y + CYLINDER_RADIUS*5,cylinder_pose.z]
         addCylinder(state.world.movable_objects,2,loc)
     elif(shape == 'CROSS'):
         # add above
@@ -69,28 +69,28 @@ def makeState(shape):
         addCylinder(state.world.movable_objects,4,loc)
     elif(shape == 'SQUARE'):
         # add above
-        loc = [cylinder_pose.x + CYLINDER_RADIUS*3,cylinder_pose.y,cylinder_pose.z]
+        loc = [cylinder_pose.x + CYLINDER_RADIUS*5,cylinder_pose.y,cylinder_pose.z]
         addCylinder(state.world.movable_objects,1,loc)
         # add below
-        loc = [cylinder_pose.x - CYLINDER_RADIUS*3,cylinder_pose.y,cylinder_pose.z]
+        loc = [cylinder_pose.x - CYLINDER_RADIUS*5,cylinder_pose.y,cylinder_pose.z]
         addCylinder(state.world.movable_objects,2,loc)
         # add left
-        loc = [cylinder_pose.x,cylinder_pose.y - CYLINDER_RADIUS*3,cylinder_pose.z]
+        loc = [cylinder_pose.x,cylinder_pose.y - CYLINDER_RADIUS*5,cylinder_pose.z]
         addCylinder(state.world.movable_objects,3,loc)
         # add right
-        loc = [cylinder_pose.x,cylinder_pose.y + CYLINDER_RADIUS*3,cylinder_pose.z]
+        loc = [cylinder_pose.x,cylinder_pose.y + CYLINDER_RADIUS*5,cylinder_pose.z]
         addCylinder(state.world.movable_objects,4,loc)
+        loc = [cylinder_pose.x + CYLINDER_RADIUS*5,cylinder_pose.y - CYLINDER_RADIUS*5,cylinder_pose.z]
         # add top left
-        loc = [cylinder_pose.x + CYLINDER_RADIUS*3,cylinder_pose.y - CYLINDER_RADIUS*3,cylinder_pose.z]
         addCylinder(state.world.movable_objects,5,loc)
         # add top right
-        loc = [cylinder_pose.x + CYLINDER_RADIUS*3,cylinder_pose.y + CYLINDER_RADIUS*3,cylinder_pose.z]
+        loc = [cylinder_pose.x + CYLINDER_RADIUS*5,cylinder_pose.y + CYLINDER_RADIUS*5,cylinder_pose.z]
         addCylinder(state.world.movable_objects,6,loc)
         # add bottom left
-        loc = [cylinder_pose.x - CYLINDER_RADIUS*3,cylinder_pose.y - CYLINDER_RADIUS*3,cylinder_pose.z]
+        loc = [cylinder_pose.x - CYLINDER_RADIUS*5,cylinder_pose.y - CYLINDER_RADIUS*5,cylinder_pose.z]
         addCylinder(state.world.movable_objects,7,loc)
         # add right
-        loc = [cylinder_pose.x - CYLINDER_RADIUS*3,cylinder_pose.y + CYLINDER_RADIUS*3,cylinder_pose.z]
+        loc = [cylinder_pose.x - CYLINDER_RADIUS*5,cylinder_pose.y + CYLINDER_RADIUS*5,cylinder_pose.z]
         addCylinder(state.world.movable_objects,8,loc)
     elif(shape == 'X'):
         # add top left

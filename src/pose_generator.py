@@ -4,6 +4,7 @@ import roslib
 import rospy
 from geometry_msgs.msg import *
 from task_motion_planner.msg import *
+from copy import deepcopy
 import math
 import random
 import copy
@@ -16,7 +17,7 @@ BOUND = math.pi/2.0
 # (not obstructed by objects & objects are reachable) 
 class PoseGenerator:
 
-    def __init__(self, SLICES=10, GRIPPER_OFFSET = .015):
+    def __init__(self, SLICES=10, MAX_COUNT=10, GRIPPER_OFFSET = .015):
         self.counter = dict()
         self.putdown_pt = dict()
         self.putdown_pt_num = dict()
@@ -29,7 +30,7 @@ class PoseGenerator:
         self.putdown_ub = dict()
         self.pickup_lb = dict()
         self.putdown_lb = dict()
-        self.MAX_COUNT = SLICES
+        self.MAX_COUNT = MAX_COUNT
         self.MAX_PUTDOWN_POINTS = 3
         self.MAX_POINT_ATTEMPTS = 100
         self.OBJ_DIST_CUTOFF = .2
@@ -74,17 +75,25 @@ class PoseGenerator:
                 pose = obj.primitive_poses[0]
                 return self.pickup(pose,height,radius,action)
         elif action[0] == 'PUTDOWN':
+            world_copy = deepcopy(world)
+            for i, obj in enumerate(objects):
+                if obj.id == action[1]:
+                    world_copy.world.movable_objects = objects[0:i] + objects[i+1:len(objects)]
+                    break
+            
             if self.counter[action] < self.MAX_COUNT:
                 self.counter[action] += 1
                 table = self._search_for_object(action[-1], surfaces)
                 if self.putdown_pt[action] == None:
-                    self.putdown_pt[action] = self.get_putdown_pt(table, world)
+                    self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
                 return self.putdown(table, height, radius, self.putdown_pt[action],action)
             elif self.putdown_pt_num[action] < self.MAX_PUTDOWN_POINTS:
+                print "\nAdding new point"
                 self.putdown_pt_num[action] += 1
+                self.counter[action] = 0
                 self.putdown_ub[action] = -BOUND
                 table = self._search_for_object(action[-1], surfaces)
-                self.putdown_pt[action] = self.get_putdown_pt(table, world)
+                self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
                 return self.putdown(table, height, radius, self.putdown_pt[action],action)
         print "returning none :("
         return None
@@ -186,14 +195,14 @@ class PoseGenerator:
 
     def max_obs_dist(self, x, y, world):
         objects = world.world.movable_objects
-        d = None
+        d = float('inf')
         for o in objects:
             o_x = o.primitive_poses[0].position.x
             o_y = o.primitive_poses[0].position.y
             t = math.sqrt(pow(x - o_x,2) + pow(y - o_y,2))
-            if d == None or t < d:
+            if t < d:
                 d = t
-        return t
+        return d
 
     # Generates a set of gripper poses for a putting down a cylinder,
     # given an area in which to place the object
