@@ -26,7 +26,7 @@ class PoseGenerator:
         self.sliceSize = 2 * math.pi/self.SLICES
         self.pickup_ub = -BOUND
         self.putdown_ub = -BOUND
-        self.MAX_COUNT = 10
+        self.MAX_COUNT = SLICES
 
     # Generates a gripper pose given an action and a world description
     # action = a string containing (action, arm, object_name)
