@@ -206,8 +206,9 @@ class PoseGenerator:
 
     # Generates a set of gripper poses for a putting down a cylinder,
     # given an area in which to place the object
-    # x1, y1 = bottom left corner of area (from top view)
-    # x2, y2 = top right corner of area (from top view)
+    # table = CollisionObject representing the table
+    # height = the height of the cylinder
+    # radius = the radius of the cylinder
     # return =  a list of 6 pose messages containing a waypoint and a
     #           boolean - true if the gripper is open, false if closed
     #           waypoints = stage, set-down, let-go, back away, lift arm, standard pose
@@ -222,11 +223,14 @@ class PoseGenerator:
 
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
-        x1 = table_center.x - table.primitives[0].dimensions[0]/2.0
-        y1 = table_center.y - table.primitives[0].dimensions[1]/2.0
-        x2 = table_center.x + table.primitives[0].dimensions[0]/2.0
-        y2 = table_center.y + table.primitives[0].dimensions[1]/2.0
-        CLEARANCE_HEIGHT = table_height + height #note: this is less clearance than before, but means that our sequence of poses are more likely to be feasible
+        # x1, y1 = bottom left corner of putdown area (from top view)
+        x1 = table_center.x - (table.primitives[0].dimensions[0]/2.0 - self.GRIPPER_OFFSET - radius)
+        y1 = table_center.y - (table.primitives[0].dimensions[1]/2.0 - self.GRIPPER_OFFSET - radius)
+        # x2, y2 = top right corner of putdown area (from top view)
+        x2 = table_center.x + table.primitives[0].dimensions[0]/2.0 - self.GRIPPER_OFFSET - radius
+        y2 = table_center.y + table.primitives[0].dimensions[1]/2.0 - self.GRIPPER_OFFSET - radius
+        
+        CLEARANCE_HEIGHT = table_height + height
         r = radius + self.DIST_FROM_CYLINDER
 
         # Generate a pose hovering over a sampled (x,y) point
