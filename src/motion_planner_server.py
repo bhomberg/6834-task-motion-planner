@@ -11,13 +11,16 @@ from task_motion_planner.msg import *
 from moveit_msgs.msg import *
 from geometry_msgs.msg import *
 from std_msgs.msg import String
+from copy import deepcopy
 
 z_off = 0.06
 snp = 0.49999
 ssp = -0.49999
 
-b_dist = 0.45
+b_dist = 0.7
 b_width = 0.13
+
+max_planner_repeats = 1
 
 class MotionPlannerServer(object):
     def __init__(self, max_planning_time, find_blocking_objects=False):
@@ -42,8 +45,15 @@ class MotionPlannerServer(object):
         failed_res.success = False
         
         if self.find_blocking_objects:
-            print "============ Quick Collision Check"  
-            blocking_objects = self._get_blocking_objects(pose_goals[1], world_start_state.movable_objects)
+            print "============ Quick Collision Check"
+            objects = world_start_state.movable_objects
+            objects_copy = deepcopy(objects)
+            for i, obj in enumerate(objects):
+                if obj.id == action[1]:
+                    objects_copy = objects[0:i] + objects[i+1:len(objects)]
+                    break
+              
+            blocking_objects = self._get_blocking_objects(pose_goals[1], objects_copy)
                 
             if blocking_objects:
                 print "============ Blocking Objects"
@@ -51,7 +61,10 @@ class MotionPlannerServer(object):
                 print "============ Done"
                 return failed_res 
         
-        (res, curr_state) = self._find_motion_plan(req)
+        for i in range(max_planner_repeats):
+            (res, curr_state) = self._find_motion_plan(req)
+            if res.success:
+                break
         
         if not res.success:
             return failed_res
@@ -76,7 +89,8 @@ class MotionPlannerServer(object):
                 end_pose.orientation.y = -0.7071067811865475
                 end_pose.orientation.z = 0
                 end_pose.orientation.w = 0.7071067811865476
-                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/left_gripper'
+                end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/right_gripper'
+                #end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/left_gripper'
             elif action[0] == 'PUTDOWN':
                 x = pose_goals[1].pose.orientation.x
                 y = pose_goals[1].pose.orientation.y
@@ -112,7 +126,8 @@ class MotionPlannerServer(object):
         
         # Set up moved group
         #group = moveit_commander.MoveGroupCommander(action[2])
-        group = moveit_commander.MoveGroupCommander('left_arm')
+        group = moveit_commander.MoveGroupCommander('right_arm')
+        #group = moveit_commander.MoveGroupCommander('left_arm')
         
         # Set attach/detach point
         attach_detach_idx = 2
@@ -156,7 +171,7 @@ class MotionPlannerServer(object):
             group.set_planning_time(self.max_planning_time)
             group.set_start_state(curr_state)
             group.set_pose_target(pose_goals[i].pose)
-            rospy.sleep(5.0)
+            #rospy.sleep(5.0)
             #print "Plan\n"
             plan = group.plan()
             #print "Plan Done\n"
