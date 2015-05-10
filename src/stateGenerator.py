@@ -34,21 +34,25 @@ class StateGenerator:
 		s += self.concatMult(["BLOCK"," - physob"],",")
 		s += "LEFTARM - gripper,"
 		s += self.concatMult(["GP_BLOCK"," - pose"],",")
-		s += self.concatMult(["PDP_BLOCK","_S - pose"],",")
+		s += self.concatMult(["PDP_BLOCK","_A - pose"],",")
+                s += self.concatMult(["PDP_BLOCK","_B - pose"],",")
 		s += self.concatMult(["PDP_BLOCK","_I - pose"],",")
 		s += "INITPOSE - pose,"
-		s += "S - location,"
+		s += "A - location,"
+                s += "B - location,"
 		s += "I - location\n"
 		# initial conditions
 		s += "ROBOTAT INITPOSE,EMPTY LEFTARM,"
 		s += self.concatMult(["ISGPFG GP_BLOCK", " BLOCK"],",",True)
-		s += self.concatMult(["ISGPFPD PDP_BLOCK","_S BLOCK", " S"],",")
+		s += self.concatMult(["ISGPFPD PDP_BLOCK","_A BLOCK", " A"],",")
+                s += self.concatMult(["ISGPFPD PDP_BLOCK","_B BLOCK", " B"],",")
 		s += self.concatMult(["ISGPFPD PDP_BLOCK","_I BLOCK", " I"],",")
-		s += self.concatMult(["ISLFPD S BLOCK"],",",True)
+		s += self.concatMult(["ISLFPD A BLOCK"],",",True)
+                s += self.concatMult(["ISLFPD B BLOCK"],",",True)
 		s += self.concatMult(["ISLFPD I BLOCK"],",",True)
 		s += self.concatMult(["AT BLOCK", " I"],"\n")
 		# goal
-		s += "AT BLOCK0 S\n"
+		s += "AT BLOCK0 I,AT BLOCK1 I,AT BLOCK2 I,AT BLOCK3 A,AT BLOCK4 A,AT BLOCK5 A,AT BLOCK6 B,AT BLOCK7 B,AT BLOCK8 B\n"
 		# initial pose
 		s += "INITPOSE"
 
@@ -78,5 +82,5 @@ if __name__ == "__main__":
 		NUMBLOCKS = int(sys.argv[2])
 
 	stateGen = StateGenerator()
-	stateGen.NUMBLOCKS = 17
+	stateGen.NUMBLOCKS = 9
 	stateGen.generateFile(filename)
