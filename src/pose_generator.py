@@ -33,7 +33,7 @@ class PoseGenerator:
         self.MAX_COUNT = MAX_COUNT
         self.MAX_PUTDOWN_POINTS = 3
         self.MAX_POINT_ATTEMPTS = 100
-        self.OBJ_DIST_CUTOFF = .2
+        self.OBJ_DIST_CUTOFF = .1
 
     # Generates a gripper pose given an action and a world description
     # action = a string containing (action, arm, object_name)
@@ -170,7 +170,7 @@ class PoseGenerator:
         # objects in a standard position
         poseGen4 = pose()
         poseGen4.pose.position.x = .8
-        poseGen4.pose.position.y = .8
+        poseGen4.pose.position.y = -.8
         poseGen4.pose.position.z = CLEARANCE_HEIGHT
         poseGen4.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen4.gripperOpen = False
@@ -224,11 +224,11 @@ class PoseGenerator:
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
         # x1, y1 = bottom left corner of putdown area (from top view)
-        x1 = table_center.x - (table.primitives[0].dimensions[0]/2.0 - self.GRIPPER_OFFSET - radius)
-        y1 = table_center.y - (table.primitives[0].dimensions[1]/2.0 - self.GRIPPER_OFFSET - radius)
+        x1 = table_center.x - ((table.primitives[0].dimensions[0]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius)
+        y1 = table_center.y - ((table.primitives[0].dimensions[1]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius)
         # x2, y2 = top right corner of putdown area (from top view)
-        x2 = table_center.x + table.primitives[0].dimensions[0]/2.0 - self.GRIPPER_OFFSET - radius
-        y2 = table_center.y + table.primitives[0].dimensions[1]/2.0 - self.GRIPPER_OFFSET - radius
+        x2 = table_center.x + (table.primitives[0].dimensions[0]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius
+        y2 = table_center.y + (table.primitives[0].dimensions[1]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius
         
         CLEARANCE_HEIGHT = table_height + height
         r = radius + self.DIST_FROM_CYLINDER

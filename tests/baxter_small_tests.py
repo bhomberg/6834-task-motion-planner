@@ -34,10 +34,10 @@ def makeState(shape):
 
     # add surfaces
     state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.5, 0.05],[0.6,0,-0.28]))
-    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.6,0.5,-0.28]))
+    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.6,-0.5,-0.28]))
     # addSurf(state.world.surfaces,2,[1,.5,0.05],[0,.5,0])
     # add center cylinder
-    addCylinder(state.world.movable_objects,0,[0.6,0,0.16-0.28])#getCenterCylinderPose(state.world.surfaces[0]))
+    addCylinder(state.world.movable_objects,0,[0.6,0,0.13-0.28])#getCenterCylinderPose(state.world.surfaces[0]))
     # center cylinder pose
     cylinder_pose = state.world.movable_objects[0].primitive_poses[0].position
     if(shape == 'VLINE'):
