@@ -18,6 +18,7 @@ from motion_plan_playback import *
 
 CYLINDER_HEIGHT = 0.2
 CYLINDER_RADIUS = 0.02
+sort = True
 
 # make the state object for a world of with a given shape of cylinders (lines,cross,square,x)
 def makeState(shape):
@@ -33,8 +34,14 @@ def makeState(shape):
     state.robot.state.joint_state.effort = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     # add surfaces
-    state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.7, 0.05],[0.6,-0.2,-0.28]))
-    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.6,-0.7,-0.28]))
+    if not sort:
+        state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.7, 0.05],[0.6,-0.2,-0.28]))
+        state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.6,-0.7,-0.28]))
+    else:
+        state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.5, 0.05],[0.6,0,-0.28]))
+        state.world.surfaces.append(addSurf(state.world.surfaces,'A',[0.15, 0.15, 0.05],[0.4,-0.35,-0.28]))
+        state.world.surfaces.append(addSurf(state.world.surfaces,'B',[0.15, 0.15, 0.05],[0.6,-0.35,-0.28]))
+        state.world.surfaces.append(addSurf(state.world.surfaces,'C',[0.15, 0.15, 0.05],[0.8,-0.35,-0.28]))
     # addSurf(state.world.surfaces,2,[1,.5,0.05],[0,.5,0])
     # add center cylinder
     addCylinder(state.world.movable_objects,0,[0.6,0,0.13-0.28])#getCenterCylinderPose(state.world.surfaces[0]))

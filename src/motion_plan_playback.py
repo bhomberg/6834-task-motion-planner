@@ -80,7 +80,7 @@ class BaxterPlayback(object):
         for seq in msg.motion:
             for traj in seq.trajectory.trajectory:    
                 group.execute(traj)
-                rospy.sleep(2.0)
+                rospy.sleep(5.0)
         
             if prev_gripper_state != seq.gripperOpen:
                 action_idx += 1
@@ -103,6 +103,6 @@ class BaxterPlayback(object):
         bag.close()
         
 if __name__ == "__main__":
-    baxter = BaxterPlayback(DIR_6834+'playback/square_test.bag')
+    baxter = BaxterPlayback(DIR_6834+'playback/sort_test.bag')
     baxter.run()
                         

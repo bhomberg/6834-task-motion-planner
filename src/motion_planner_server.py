@@ -22,6 +22,8 @@ b_width = 0.13
 
 max_planner_repeats = 1
 
+sort = True
+
 class MotionPlannerServer(object):
     def __init__(self, max_planning_time, find_blocking_objects=False):
         self.max_planning_time = max_planning_time
@@ -52,8 +54,13 @@ class MotionPlannerServer(object):
                 if obj.id == action[1]:
                     objects_copy = objects[0:i] + objects[i+1:len(objects)]
                     break
-              
-            blocking_objects = self._get_blocking_objects(pose_goals[1], objects_copy)
+            if sort:
+                if action[0] == 'PICKUP':
+                    blocking_objects = self._get_blocking_objects(pose_goals[1], objects_copy)
+                else:
+                    blocking_objects = self._get_blocking_objects(pose_goals[0], objects_copy)
+            else:  
+                blocking_objects = self._get_blocking_objects(pose_goals[1], objects_copy)
                 
             if blocking_objects:
                 print "============ Blocking Objects"
@@ -91,7 +98,7 @@ class MotionPlannerServer(object):
                 end_pose.orientation.w = 0.7071067811865476
                 end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/right_gripper'
                 #end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/left_gripper'
-            elif action[0] == 'PUTDOWN':
+            elif not sort and action[0] == 'PUTDOWN':
                 x = pose_goals[1].pose.orientation.x
                 y = pose_goals[1].pose.orientation.y
                 z = pose_goals[1].pose.orientation.z
@@ -105,6 +112,13 @@ class MotionPlannerServer(object):
                 end_state.world.movable_objects[mov_obj_idx].header.frame_id = '/base'
             
             end_state.world.movable_objects[mov_obj_idx].primitive_poses[0] = end_pose
+            
+            if sort and action[0] == 'PUTDOWN':
+                idx = self._search_for_object(action[1], end_state.world.movable_objects)
+                
+                n = len(end_state.world.movable_objects)
+                
+                end_state.world.movable_objects = end_state.world.movable_objects[0:idx] + end_state.world.movable_objects[idx+1:n]
             
         res.state = end_state        
         print "============ Done"

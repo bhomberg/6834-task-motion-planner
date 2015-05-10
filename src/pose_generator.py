@@ -11,6 +11,7 @@ import copy
 import re
 
 BOUND = math.pi/2.0
+sort = True
 
 # Generates a set of gripper poses given an action and a world description
 # The motion planner verifies that the set of candidate poses is valid 
@@ -53,9 +54,11 @@ class PoseGenerator:
         print "posegen action:", action
         if action[0] == ' ':
             return None
-        obj = self._search_for_object(action[1], objects)
-        height = obj.primitives[0].dimensions[0]
-        radius = obj.primitives[0].dimensions[1]
+            
+        if not sort or action[0] == 'PICKUP':
+            obj = self._search_for_object(action[1], objects)
+            height = obj.primitives[0].dimensions[0]
+            radius = obj.primitives[0].dimensions[1]
 
         if not action in self.counter:
             self.counter[action] = 0
@@ -80,21 +83,28 @@ class PoseGenerator:
                 if obj.id == action[1]:
                     world_copy.world.movable_objects = objects[0:i] + objects[i+1:len(objects)]
                     break
-            
-            if self.counter[action] < self.MAX_COUNT:
-                self.counter[action] += 1
-                table = self._search_for_object(action[-1], surfaces)
-                if self.putdown_pt[action] == None:
+            if not sort:
+                if self.counter[action] < self.MAX_COUNT:
+                    self.counter[action] += 1
+                    table = self._search_for_object(action[-1], surfaces)
+                    if self.putdown_pt[action] == None:
+                        self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
+                    return self.putdown(table, height, radius, self.putdown_pt[action],action)
+                elif self.putdown_pt_num[action] < self.MAX_PUTDOWN_POINTS:
+                    print "\nAdding new point"
+                    self.putdown_pt_num[action] += 1
+                    self.counter[action] = 0
+                    self.putdown_ub[action] = -BOUND
+                    table = self._search_for_object(action[-1], surfaces)
                     self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
-                return self.putdown(table, height, radius, self.putdown_pt[action],action)
-            elif self.putdown_pt_num[action] < self.MAX_PUTDOWN_POINTS:
-                print "\nAdding new point"
-                self.putdown_pt_num[action] += 1
-                self.counter[action] = 0
-                self.putdown_ub[action] = -BOUND
-                table = self._search_for_object(action[-1], surfaces)
-                self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
-                return self.putdown(table, height, radius, self.putdown_pt[action],action)
+                    return self.putdown(table, height, radius, self.putdown_pt[action],action)
+            else:
+                if self.counter[action] < 1:
+                    self.counter[action] += 1
+                    table = self._search_for_object(action[-1], surfaces)
+                    
+                    return self.sort_putdown(table)
+             
         print "returning none :("
         return None
 
@@ -266,14 +276,29 @@ class PoseGenerator:
             
         # Move out of the way to the standard position
         poseGen5 = pose()
-        poseGen5.pose.position.x = .6
-        poseGen5.pose.position.y = .6
+        poseGen5.pose.position.x = .8
+        poseGen5.pose.position.y = -.8
         poseGen5.pose.position.z = CLEARANCE_HEIGHT
         poseGen5.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen5.gripperOpen = True
 
         # Return array of custom pose messages
         return [poseGen1,poseGen2,poseGen3,poseGen4]#,poseGen5]
+        
+    def sort_putdown(self, table):
+        table_center = table.primitive_poses[0].position
+        table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
+        
+        CLEARANCE_HEIGHT = table_height + 0.2
+        
+        sortPose = pose()
+        sortPose.pose.position = deepcopy(table_center)
+        sortPose.pose.position.x -= 0.05
+        sortPose.pose.position.z = CLEARANCE_HEIGHT
+        sortPose.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
+        sortPose.gripperOpen = True
+        
+        return [sortPose]
 
     # Gets an objects index from a list given the object's name
     # obj_name = object's name
