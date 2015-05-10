@@ -38,8 +38,8 @@ class BaxterPlayback(object):
         print "STARTED PLAYBACK"
         moveit_commander.roscpp_initialize(sys.argv)
         print "INITIALIZING GRIPPER"
-        left = baxter_interface.Gripper('left')
-        left.calibrate()
+        right = baxter_interface.Gripper('right')
+        right.calibrate()
         print "ABOUT TO GET SCENE"
         scene = moveit_commander.PlanningSceneInterface()
         
@@ -73,12 +73,11 @@ class BaxterPlayback(object):
         
         # Execute motion plan
         for step in msg.plan:
-            for sub_step in step.motion:
-                for traj in sub_step.trajectory.trajectory:
-                    if sub_step.gripperOpen:
-                        left.open()
+                for traj in step.trajectory.trajectory:
+                    if step.gripperOpen:
+                        right.open()
                     else:
-                        left.close()
+                        right.close()
                     group.execute(traj)
                     rospy.sleep(2.0)
 
