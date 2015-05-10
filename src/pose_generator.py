@@ -111,7 +111,6 @@ class PoseGenerator:
                 print "\nAdding new point"
                 self.putdown_pt_num[action] += 1
                 self.counter[action] = 0
-                self.putdown_ub[action] = -BOUND
                 table = self._search_for_object(action[-1], surfaces)
                 self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
                 return self.putdown(table, height, radius, self.putdown_pt[action],action)
@@ -124,9 +123,7 @@ class PoseGenerator:
         if action[0] == 'PUTDOWN':
             self.putdown_pt_num[action] = 0
             self.putdown_pt[action] = None
-            self.putdown_ub[action] = -BOUND
-        else:
-            self.pickup_ub[action] = -BOUND
+
     
     def resetAll(self):
         self.counter = dict()
