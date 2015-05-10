@@ -132,7 +132,7 @@ class PoseGenerator:
         self.counter = dict()
         self.putdown_pt_num = dict()
         self.putdown_pt = dict()
-        self.bounds = []
+        self.bounds = dict()
             
 
     # Generates a gripper pose for a pickup action of a cylinder
