@@ -9,6 +9,7 @@ import math
 import random
 import copy
 import re
+from random import shuffle
 
 BOUND = math.pi/2.0
 
@@ -25,15 +26,36 @@ class PoseGenerator:
         self.DIST_FROM_CYLINDER = .1
         self.GRIPPER_OFFSET = GRIPPER_OFFSET
         self.SLICES = SLICES
-        self.sliceSize = 2 * math.pi/self.SLICES
-        self.pickup_ub = dict()
-        self.putdown_ub = dict()
-        self.pickup_lb = dict()
-        self.putdown_lb = dict()
+        self.sliceSize = 2*BOUND/self.SLICES
+        self.bounds = dict()
         self.MAX_COUNT = MAX_COUNT
         self.MAX_PUTDOWN_POINTS = 3
         self.MAX_POINT_ATTEMPTS = 100
         self.OBJ_DIST_CUTOFF = .1
+
+
+    def getbounds(self):
+        print self.SLICES
+        print BOUND
+        b = []
+        ub = -BOUND
+        lb = -BOUND
+        while len(b) < self.SLICES:
+            if ub >= BOUND:
+                ub = -BOUND
+            lb = ub
+            ub += self.sliceSize
+            b.append( (lb, ub) )
+            
+        print b
+        shuffle(b)
+        print b
+        return b
+        #if self.putdown_ub[action] >= BOUND:
+        #    self.putdown_ub[action] = -BOUND #reset
+        #self.putdown_lb[action] = self.putdown_ub[action]
+        #self.putdown_ub[action] += self.sliceSize
+        #print self.putdown_lb[action], self.putdown_ub[action]
 
     # Generates a gripper pose given an action and a world description
     # action = a string containing (action, arm, object_name)
@@ -59,12 +81,10 @@ class PoseGenerator:
 
         if not action in self.counter:
             self.counter[action] = 0
+            self.bounds[action] = self.getbounds()
             if action[0] == 'PUTDOWN':
                 self.putdown_pt[action] = None
                 self.putdown_pt_num[action] = 0
-                self.putdown_ub[action] = 0
-            else:
-                self.pickup_ub[action] = -BOUND
         
         if action[0] == 'PICKUP':
             print 'pickup'
@@ -100,6 +120,7 @@ class PoseGenerator:
 
     def reset(self,action):
         self.counter[action] = 0
+        self.bounds[action] = 0
         if action[0] == 'PUTDOWN':
             self.putdown_pt_num[action] = 0
             self.putdown_pt[action] = None
@@ -111,8 +132,7 @@ class PoseGenerator:
         self.counter = dict()
         self.putdown_pt_num = dict()
         self.putdown_pt = dict()
-        self.pickup_ub = dict()
-        self.putdown_ub = dict()
+        self.bounds = []
             
 
     # Generates a gripper pose for a pickup action of a cylinder
@@ -125,13 +145,8 @@ class PoseGenerator:
     def pickup(self, obj_pose, height, radius, action):
         CLEARANCE_HEIGHT = obj_pose.position.z + height
         
-        # lower bound is equal to the previous upper bound
-        if self.pickup_ub[action] == BOUND:
-            self.pickup_ub[action] = -BOUND #reset
-        self.pickup_lb[action] = self.pickup_ub[action]
-        self.pickup_ub[action] += self.sliceSize
-        print self.pickup_lb[action], self.pickup_ub[action]
-        
+        [lb, ub] = self.bounds[action].pop()
+
         # radius of circle around the cylinder where the gripper origin will lie
         r = radius + self.DIST_FROM_CYLINDER
         # height of gripper when grasping cylinder
@@ -142,7 +157,7 @@ class PoseGenerator:
         poseGen1 = pose()
         pose1 = poseGen1.pose
         # random yaw position
-        yaw = random.uniform(self.pickup_lb[action], self.pickup_ub[action])
+        yaw = random.uniform(lb, ub)
         # x,y position along a circle around the cylinder
         pose1.position.x = obj_pose.position.x + r * math.cos(yaw - math.pi)
         pose1.position.y = obj_pose.position.y - r * math.sin(yaw - math.pi)
@@ -215,11 +230,8 @@ class PoseGenerator:
     def putdown(self,table,height,radius,point,action):
         print "point: ", point
         # lower bound is equal to the previous upper bound
-        if self.putdown_ub[action] >= BOUND:
-            self.putdown_ub[action] = -BOUND #reset
-        self.putdown_lb[action] = self.putdown_ub[action]
-        self.putdown_ub[action] += self.sliceSize
-        print self.putdown_lb[action], self.putdown_ub[action]
+
+        [lb, ub] = self.bounds[action].pop()
 
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
@@ -239,7 +251,7 @@ class PoseGenerator:
         poseGen1.pose.position.y = point[1]
         # print "(x,y): ", (poseGen1.pose.position.x, poseGen1.pose.position.y)
         poseGen1.pose.position.z = CLEARANCE_HEIGHT
-        yaw = random.uniform(self.putdown_lb[action],self.putdown_ub[action])
+        yaw = random.uniform(lb,ub)
         poseGen1.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,yaw)
         poseGen1.gripperOpen = False
 
