@@ -35,8 +35,6 @@ class PoseGenerator:
 
 
     def getbounds(self):
-        print self.SLICES
-        print BOUND
         b = []
         ub = -BOUND
         lb = -BOUND
@@ -47,9 +45,7 @@ class PoseGenerator:
             ub += self.sliceSize
             b.append( (lb, ub) )
             
-        print b
         shuffle(b)
-        print b
         return b
         #if self.putdown_ub[action] >= BOUND:
         #    self.putdown_ub[action] = -BOUND #reset
