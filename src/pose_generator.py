@@ -231,11 +231,11 @@ class PoseGenerator:
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
         # x1, y1 = bottom left corner of putdown area (from top view)
-        x1 = table_center.x - ((table.primitives[0].dimensions[0]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius)
-        y1 = table_center.y - ((table.primitives[0].dimensions[1]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius)
+        x1 = table_center.x - ((table.primitives[0].dimensions[0]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius)
+        y1 = table_center.y - ((table.primitives[0].dimensions[1]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius)
         # x2, y2 = top right corner of putdown area (from top view)
-        x2 = table_center.x + (table.primitives[0].dimensions[0]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius
-        y2 = table_center.y + (table.primitives[0].dimensions[1]/2.0) - (1.5*self.GRIPPER_OFFSET) - radius
+        x2 = table_center.x + (table.primitives[0].dimensions[0]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius
+        y2 = table_center.y + (table.primitives[0].dimensions[1]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius
         
         CLEARANCE_HEIGHT = table_height + height
         r = radius + self.DIST_FROM_CYLINDER
