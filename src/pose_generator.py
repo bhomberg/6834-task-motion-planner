@@ -117,7 +117,8 @@ class PoseGenerator:
 
     def reset(self,action):
         self.counter[action] = 0
-        self.bounds[action] = 0
+        if action in self.bounds.keys():
+            self.bounds.pop(action)
         if action[0] == 'PUTDOWN':
             self.putdown_pt_num[action] = 0
             self.putdown_pt[action] = None
