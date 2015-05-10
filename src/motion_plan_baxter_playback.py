@@ -50,7 +50,7 @@ class BaxterPlayback(object):
     
         # Set up moved group
         print "SET UP GROUP"
-        group = moveit_commander.MoveGroupCommander(robot_start_state.id)
+        group = moveit_commander.MoveGroupCommander('right_arm')#(robot_start_state.id)
         print "DONE"
 
         # Set up robot in start configuration

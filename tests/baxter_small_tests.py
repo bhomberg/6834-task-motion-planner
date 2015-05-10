@@ -25,7 +25,7 @@ def makeState(shape):
     state.world = world_obj()
 
     state.robot = robot()
-    state.robot.id = 'left_arm'
+    state.robot.id = 'right_arm'
     state.robot.state = RobotState()
     state.robot.state.joint_state.name = ['head_pan', 'left_e0', 'left_e1', 'left_s0', 'left_s1', 'left_w0', 'left_w1', 'left_w2', 'right_e0', 'right_e1', 'right_s0', 'right_s1', 'right_w0', 'right_w1', 'right_w2']
     state.robot.state.joint_state.position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -33,8 +33,8 @@ def makeState(shape):
     state.robot.state.joint_state.effort = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     # add surfaces
-    state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.5, 0.05],[0.6,0,-0.28]))
-    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.6,-0.5,-0.28]))
+    state.world.surfaces.append(addSurf(state.world.surfaces,'I',[0.5, 0.7, 0.05],[0.6,-0.2,-0.28]))
+    state.world.surfaces.append(addSurf(state.world.surfaces,'S',[0.2, 0.2, 0.05],[0.6,-0.7,-0.28]))
     # addSurf(state.world.surfaces,2,[1,.5,0.05],[0,.5,0])
     # add center cylinder
     addCylinder(state.world.movable_objects,0,[0.6,0,0.13-0.28])#getCenterCylinderPose(state.world.surfaces[0]))

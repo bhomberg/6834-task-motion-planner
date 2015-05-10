@@ -54,7 +54,7 @@ class BaxterPlayback(object):
         world_start_state = msg.start_state.world
         robot_start_state = msg.start_state.robot
     
-        group = moveit_commander.MoveGroupCommander(robot_start_state.id)
+        group = moveit_commander.MoveGroupCommander('right_arm')#(robot_start_state.id)
     
         # Set up robot in start configuration
         curr_state = robot_start_state.state
