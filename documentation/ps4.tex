@@ -142,14 +142,6 @@ In addition to returning the failed step, it returns the cause of the errors.
 The function MPErrs removes various objects from the environment until it find a plan which succeeds.  
 It then marks all of those objects which were removed as blocking objects.
 
-To find the blocking objects, we start by iterating through a randomized list of the objects.  
-We continue removing objects until we find a successful motion plan.  
-We will eventually find a successful motion plan since if there are no other objects in the world, the motion should succeed.  
-After we find this possible list of removed objects, we iterate through all of the objects we removed.  
-We attempt to add these objects in one by one, leaving added in all of those which do not obstruct our found motion plan.  
-This leaves us with a local minimum of removed objects: it may be possible to find another smaller set of objects that, if removed, allow a valid motion plan.  
-However, for this set of this set of objects, no object can be added back in without obstructing the motion plan.
-
 As described above in Algorithm 1, once the list of blocking objects is returned, the interface layer updates the state and attempts to replan from there.
 
 \subsubsection{State Update}
@@ -192,6 +184,29 @@ Once the pose generator has generated the maximum number of poses, it returns No
 The interface layer then backtracks and resets the pose generator. 
 The TryRefine method of the interface layer attempts to generate a feasible motion plan between each pose.  
 The motion planner is called to create this motion plan, including motion plans between waypoints.
+
+\section{Improvements}
+
+We implemented a number of improvements in order to increase the efficiency of the algorithm.
+
+\subsection{Error-free mode}
+
+\subsection{Motion Planner Heuristic}
+
+\subsection{O(n) Identification of Obstructions}
+
+To find the blocking objects, we start by iterating through a randomized list of the objects.  
+We continue removing objects until we find a successful motion plan.  
+We will eventually find a successful motion plan since if there are no other objects in the world, the motion should succeed.  
+After we find this possible list of removed objects, we iterate through all of the objects we removed.  
+We attempt to add these objects in one by one, leaving added in all of those which do not obstruct our found motion plan.  
+This leaves us with a local minimum of removed objects: it may be possible to find another smaller set of objects that, if removed, allow a valid motion plan.  
+However, for this set of this set of objects, no object can be added back in without obstructing the motion plan.
+This algorithm for determining obstructing objects is $O(n)$.
+
+The paper originally describes an $O(n^2)$ algorithm for determining obstructing objects, starting by removing each individual object, then pairs of objects, etc.  
+This ensures a minimum removal set but requires significantly more motion planner calls.
+
 
 \section{Results}
 
