@@ -245,6 +245,10 @@ Sorting & 9 & 56 & ? & ? & ?& ?\\
 
 \section{Limitations}
 
+The interface does not scale well to large object state spaces, as this increases the number of geometric constraints. 
+This increase in geometric constraints causes the number of motion planner calls to explode, slowing down the planning stage. 
+In addition, in its current implementation it only works within deterministic, fully-observable environments and is infeasible for online replanning.
+
 \section{Optimizations}
 
 \section{References}
