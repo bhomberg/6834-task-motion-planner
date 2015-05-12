@@ -193,24 +193,23 @@ The interface layer is designed to be independent of any specific task and motio
 The actual runtime depends on the motion planner and task planner chosen.
 
 \begin{figure}
-\begin{tabular}[t]{|l|l|l|l|l|l|}
+\begin{tabular}[t]{|l|l|l|l|l|l|l|}\extrarowheight
 \hline
-Shape & Blocks & obstructions & Motion Planner Calls & Task Planner Calls & runtime \\ \hline
-Horizontal Line & 3 & 12 & ? & ? & ?\\
+
+Shape & Blocks & \shortstack{Goal Number of\\Blocks to Move} & Obstructions & \shortstack{Motion Planner\\Calls} & \shortstack{Task Planner\\Calls} & Runtime \\ \hline
+Square & 9 & 56 &  & ? & ?&\\
 \hline
-Vertical Line & 3 & 12 & ? & ? & ?\\
-\hline
-X & 5 & 8 & ? & ? & ?\\
-\hline
-Cross & 5 & 20 & ? & ? & ?\\
-\hline
-Square & 9 & 56 & ? & ? & ?\\
+Sorting & 9 & 56 & ? & ? & ?&\\
 \hline
 
 \end {tabular}
 \caption{Test Scenarios Performance}
 \label{benchmark}
 \end{figure}
+
+\section{Limitations}
+
+\section{Optimizations}
 
 \section{References}
 
