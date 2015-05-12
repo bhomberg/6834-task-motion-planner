@@ -128,8 +128,7 @@ Since the TryRefine subroutine has randomization from pose generators, re-runnin
 We have several checks where, if we fail to find a solution, we clear all of our information and start over.  
 Due to the randomization of the pose generators, we may make better choices during subsequent iterations.  
 
-The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  
-For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
+Every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding.  
 
 \subsubsection{Algorithm 2}
 
@@ -192,6 +191,15 @@ We implemented a number of improvements in order to increase the efficiency of t
 
 \subsection{Error-free mode}
 
+The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  
+For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding. 
+
+This enables us to find plans a lot more quickly: whenever a plan is possible, we find it by backtracking search.  
+Often, the first pose that's tried won't be viable but another pose will.  
+Partial trajectory mode will only try the first pose before giving up and identifying blocking objects.
+If partial trajectory mode is continually used, then often the plans created are much longer than necessary just because an invalid first pose is chosen when other options would have worked fine.
+Using the full backtracking search on each new high level plan avoids this problem.
+
 \subsection{Motion Planner Heuristic}
 
 \subsection{O(n) Identification of Obstructions}
@@ -207,6 +215,13 @@ This algorithm for determining obstructing objects is $O(n)$.
 
 The paper originally describes an $O(n^2)$ algorithm for determining obstructing objects, starting by removing each individual object, then pairs of objects, etc.  
 This ensures a minimum removal set but requires significantly more motion planner calls.
+
+\subsection{Future improvements}
+
+The interface layer winds up making a lot of duplicate calls to the motion planner.
+If the interface layer kept track of more state, perhaps via some memoization process of poses and actions, it would be able to save a lot of motion call attempts.
+Furthermore, when the interface layer finds obstructing objects, it finds obstructing objects for a particular pose.  
+If that pose were stored, then the interface layer would never attempt to use a different pose which might have different blocking objects, and would instead directly use the pose that the plan was optimized for.
 
 
 \section{Results}
