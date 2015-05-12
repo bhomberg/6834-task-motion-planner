@@ -80,8 +80,9 @@ The interface layer is composed of the state update and pose generator modules [
 \subsection{Task Planner}
 We used the FF task planner. 
 Our software for the task planner is the same as the previous problem set. 
-The task planner takes in a PDDL file as input and receives a state from the interface layer. 
-It generates the planned actions. 
+The task planner is instantiated with a given PDDL domain file.  
+As a ROS service, it takes in a PDDL problem specification of current state and goal from the interface layer. 
+It returns a set of actions leading to the desired goal state. 
 
 \subsection{Motion Planner}
 We used the MoveIt! motion planner. 
@@ -155,12 +156,18 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 
 
 When an action is infeasible because an object is blocking another object, the interface layer updates the state and calls the task planner. 
-If the object is movable, the task planner will generate a plan to move the object out of the way before moving the target object. 
-If the object is not movable, such as the table, the interface will perform backtracking search to try to find a full plan from start to finish.
-The backtracking search is over possible pose instantiations: since some poses may be infeasible and since previous choices may affect future choices, the backtracking search iterates over all possible poses in order to find a full solution if a full solution exists. 
+The interface layer, as described above, determines a list of obstructing objects.
+The state update function goes through a section of a high level plan, performing all of the actions and updating the current state of the world.
+Once the state update function reaches the step where the tryRefine function failed, the state update function adds predicates to the state describing which blocks obstruct other blocks.
+The state function updates each action based on the preconditions and postconditions of each action: it confirms that all of the preconditions are satisfied and then adds true postconditions and removes falsified postconditions.  
 
-Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  
-In our manipulation example, the interface tries to pick up blocks from all angles before giving up and assuming they must be blocked by something.  
+For instance, for the PICKUP action, the state update functions confirms that the gripper is empty, adds the postcondition that the gripper is full and that the object is in the gripper and removes the postcondition that the object is on whichever surface it started on.
+%If the object is movable, the task planner will generate a plan to move the object out of the way before moving the target object. 
+%If the object is not movable, such as the table, the interface will perform backtracking search to try to find a full plan from start to finish.
+%The backtracking search is over possible pose instantiations: since some poses may be infeasible and since previous choices may affect future choices, the backtracking search iterates over all possible poses in order to find a full solution if a full solution exists. 
+
+%Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  
+%In our manipulation example, the interface tries to pick up blocks from all angles before giving up and assuming they must be blocked by something.  
 
 \subsubsection{Pose Generator}
 

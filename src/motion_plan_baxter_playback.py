@@ -45,8 +45,8 @@ class BaxterPlayback(object):
         
         print "START STATE"
         # Get start state of world and robot
-        world_start_state = msg.plan[0].state.world
-        robot_start_state = msg.plan[0].state.robot
+        world_start_state = msg.start_state.world
+        robot_start_state = msg.start_state.robot
     
         # Set up moved group
         print "SET UP GROUP"
@@ -72,14 +72,14 @@ class BaxterPlayback(object):
         #self.planning_scene_pub.publish(planning_scene)
         
         # Execute motion plan
-        for step in msg.plan:
-                for traj in step.trajectory.trajectory:
-                    if step.gripperOpen:
-                        right.open()
-                    else:
-                        right.close()
-                    group.execute(traj)
-                    rospy.sleep(2.0)
+        for step in msg.motion:
+            for traj in step.trajectory.trajectory:
+                if step.gripperOpen:
+                    right.open()
+                else:
+                    right.close()
+                group.execute(traj)
+                rospy.sleep(7.0)
 
     def run(self):
         rospy.init_node('playback')
@@ -90,6 +90,6 @@ class BaxterPlayback(object):
         bag.close()
         
 if __name__ == "__main__":
-    baxter = BaxterPlayback('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/playback/pickup_putdown_test.bag')
+    baxter = BaxterPlayback('/home/bhomberg/indigo_ws/src/6834-task-motion-planner/playback/sort_test_final.bag')
     baxter.run()
                         
