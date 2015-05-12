@@ -195,11 +195,24 @@ The TryRefine method of the interface layer attempts to generate a feasible moti
 The motion planner is called to create this motion plan, including motion plans between waypoints.
 
 \section{Results}
-
+\subsection{Metrics}
 We measured the performance of each test by the runtime and the number of calls to both the task planner and motion planner [Fig. \ref{benchmark}]. 
 The interface layer is designed to be independent of any specific task and motion planner libraries, therefore the number of calls to the motion and task planner measures the performance of the interface layer better than the total runtime. 
 The actual runtime depends on the motion planner and task planner chosen.
 
+\subsection{Square Grid}
+We ran the square grid scenario on a simulated Baxter robot.
+The planner took approximately an hour to find a feasible plan. 
+In simulation, Baxter successfully moves blocks to reach the target center block and places the center block on the target surface.
+A video of the successful test trial in simulation can be found at [TODO: link here].
+
+\subsection{Sorting}
+We ran the sorting task in simulation and on the physical Baxter robot.
+The planner took approximately an hour to find a feasible plan. 
+We ran many test trials to achieve a successful run because the system was open-loop with respect to the environment.
+It had feedback on the world position of the arms, but not on the position of the arms relative to the objects. This mean that drift accumulated over time.
+Baxter successfully sorts green, red, and blue blocks into different bins. 
+A video of the successful test trial can be found at http://youtu.be/445_t_lUBdU.
 \begin{figure}
 \begin{tabular}[t]{|l|l|l|l|l|l|l|}
 \hline
