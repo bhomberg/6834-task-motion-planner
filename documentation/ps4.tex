@@ -221,7 +221,7 @@ This algorithm for determining obstructing objects is $O(n)$.
 The paper originally describes an $O(n^2)$ algorithm for determining obstructing objects, starting by removing each individual object, then pairs of objects, etc.  
 This ensures a minimum removal set but requires significantly more motion planner calls.
 
-\subsection{Future improvements}
+\subsection{Future Improvements}
 
 The interface layer winds up making a lot of duplicate calls to the motion planner.
 If the interface layer kept track of more state, perhaps via some memoization process of poses and actions, it would be able to save a lot of motion call attempts.
@@ -269,8 +269,6 @@ Sorting & 9 & 56 & ? & ? & ?& ?\\
 The interface does not scale well to large object state spaces, as this increases the number of geometric constraints. 
 This increase in geometric constraints causes the number of motion planner calls to explode, slowing down the planning stage. 
 In addition, in its current implementation it only works within deterministic, fully-observable environments and is infeasible for online replanning.
-
-\section{Optimizations}
 
 \section{References}
 
