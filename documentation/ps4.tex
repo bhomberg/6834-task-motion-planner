@@ -18,7 +18,7 @@
 \textwidth=6.5in
 \textheight=9in
 \headsep=0.25in
-
+\graphicspath{{./figures/}}
 \DeclareGraphicsExtensions{.jpg,.png,.svg}
 
 \newcommand{\tab}{\hspace*{2em}}
@@ -34,9 +34,26 @@
 \maketitle 
 
 
-\section{Test Scenarios}
+\section{Testing}
 
-We present an interface between a task planner and motion planner [1]. Baxter executes a variety of tests to measure the performance of the interface layer. The tests demonstrate that the interface layer respects all of the geometric constraints. Baxter picks up objects in a reasonable order to avoid collisions.
+\subsection{Baxter Robot}
+
+We ran our test scenarios on the Baxter robot [Fig. \ref{fig:baxter}], designed by Rethink Robotics. 
+Baxter is a humanoid robot with two 7 degree of freedom arms. 
+Our tests used only the right arm with two finger gripper.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=.2\textwidth]{baxter}
+\caption{The Baxter Robot \label{fig:baxter}}
+\end{figure}
+
+\subsection{Test Scenarios}
+
+We present an interface between a task planner and motion planner [1]. 
+Baxter executes a variety of tests to measure the performance of the interface layer. 
+The tests demonstrate that the interface layer respects all of the geometric constraints. 
+Baxter picks up objects in a reasonable order to avoid collisions.
 
 The goal of the first test is to move the object at the center of a 3x3 square grid of objects to a goal surface. 
 The goal of the second test is to sort red, green, and blue blocks into separate bins.
@@ -50,7 +67,8 @@ Figure \ref{fig:scenarios} shows the setup of the different test scenarios.
 \end{figure}
 
 \section{Technical Approach}
-The three components of our combined task and motion planner system are:  \(1\) the task planner, \(2\) the motion planner, and \(3\) the interface layer. The interface layer is composed of the state update and pose generator modules [Fig. \ref{fig:blockDiagram}].
+The three components of our combined task and motion planner system are:  \(1\) the task planner, \(2\) the motion planner, and \(3\) the interface layer. 
+The interface layer is composed of the state update and pose generator modules [Fig. \ref{fig:blockDiagram}].
 
 \begin{figure}[h]
 \centering
@@ -74,7 +92,9 @@ We used the MoveIt! motion planner.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/figure4.png}
-\caption{Illustration of the interface layer’s refinement process. Action arguments have been abbreviated. Taken from [1]
+\caption{Illustration of the interface layer’s refinement process. 
+Action arguments have been abbreviated. 
+Taken from [1]
 \label{fig:figure4}}
 \end{figure}
 
@@ -121,7 +141,8 @@ In addition to returning the failed step, it returns the cause of the errors.
 The function MPErrs removes various objects from the environment until it find a plan which succeeds.  
 It then marks all of those objects which were removed as blocking objects.
 
-To find the blocking objects, we start by iterating through a randomized list of the objects.  We continue removing objects until we find a successful motion plan.  
+To find the blocking objects, we start by iterating through a randomized list of the objects.  
+We continue removing objects until we find a successful motion plan.  
 We will eventually find a successful motion plan since if there are no other objects in the world, the motion should succeed.  
 After we find this possible list of removed objects, we iterate through all of the objects we removed.  
 We attempt to add these objects in one by one, leaving added in all of those which do not obstruct our found motion plan.  
@@ -134,10 +155,12 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 
 
 When an action is infeasible because an object is blocking another object, the interface layer updates the state and calls the task planner. 
-If the object is movable, the task planner will generate a plan to move the object out of the way before moving the target object. If the object is not movable, such as the table, the interface will perform backtracking search to try to find a full plan from start to finish.
+If the object is movable, the task planner will generate a plan to move the object out of the way before moving the target object. 
+If the object is not movable, such as the table, the interface will perform backtracking search to try to find a full plan from start to finish.
 The backtracking search is over possible pose instantiations: since some poses may be infeasible and since previous choices may affect future choices, the backtracking search iterates over all possible poses in order to find a full solution if a full solution exists. 
 
-Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In our manipulation example, the interface tries to pick up blocks from all angles before giving up and assuming they must be blocked by something.  
+Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  
+In our manipulation example, the interface tries to pick up blocks from all angles before giving up and assuming they must be blocked by something.  
 
 \subsubsection{Pose Generator}
 
@@ -148,13 +171,18 @@ For the PICKUP action, it generates the following waypoints: near the object and
 The first waypoint is randomly generated and places the gripper about 15 centimeters away from the object.
 We divided the set of possible random yaw angles around the object into several distinct ranges, called \textit{slices}. 
 Each call to the pose generator generates a random angle in one of the ranges.
-The second waypoint moves the arm so that the gripper can object. The third waypoint is in the exact same position with the gripper closed. The next waypoint is directly above the previous waypoint, high enough so that the object is above all of the other objects on the table. Finally, the last waypoint goes to the standard home position for the square grid task and moves  above the correct bin for the sorting task.
+The second waypoint moves the arm so that the gripper can object. 
+The third waypoint is in the exact same position with the gripper closed. 
+The next waypoint is directly above the previous waypoint, high enough so that the object is above all of the other objects on the table. 
+Finally, the last waypoint goes to the standard home position for the square grid task and moves  above the correct bin for the sorting task.
 
 For the PUTDOWN action, the pose generator generates the following waypoints: above the target location, at the target location with the gripper closed, at the target location with the gripper open, 15 cm backed away from the target location, and the standard home position. 
 The target location is randomly generated, but the pose generator checks to make sure that no objects are at or near the target location.
 
 To reiterate, a pose is a set of waypoints. 
-The pose generator keeps track of the number of poses it has generated, at least one for each slice. Once the pose generator has generated the maximum number of poses, it returns None, to indicate that no poses are feasible. The interface layer then backtracks and resets the pose generator. 
+The pose generator keeps track of the number of poses it has generated, at least one for each slice. 
+Once the pose generator has generated the maximum number of poses, it returns None, to indicate that no poses are feasible. 
+The interface layer then backtracks and resets the pose generator. 
 The TryRefine method of the interface layer attempts to generate a feasible motion plan between each pose.  
 The motion planner is called to create this motion plan, including motion plans between waypoints.
 
