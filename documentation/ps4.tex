@@ -31,191 +31,45 @@
 
 \begin{document}
 
-\maketitle
+\maketitle 
 
-\section{Introduction}
 
-In order to achieve high level goals a robot must combine task and motion planning. 
-A robot uses task planning to determine its long term strategy and motion planning to determine the movements it  will execute to achieve the task. 
-Effectively combining task and motion planning is an open research problem. 
-We implemented an interface between the motion and task planning based on that outlined in [1]. 
-Our system uses off-the-shelf task and motion planners and makes few assumptions about their implementation.
- 
-An alternative approach to developing an interface between the task and motion planner is for the task planner to discretize the geometric state space. 
-However, the number of required discretizations to solve the problem is generally very large and results in extremely large or infeasible problems. 
-An interface allows the task planner state space to use an abstract state space which ignores geometry. 
-The interface layer translates geometric constraints and passes them to the task planner.
+\section{Test Scenarios}
 
-\section{Problem Statement}
+We present an interface between a task planner and motion planner [1]. Baxter executes a variety of tests to measure the performance of the interface layer. The tests demonstrate that the interface layer respects all of the geometric constraints. Baxter picks up objects in a reasonable order to avoid collisions.
 
-In robotics, it is often necessary to create a plan for a series of motions of the robot in order to achieve some high level objective.
-In order to find a task plan which is actually feasible, the task planner must have some knowledge of the geometry of the world.
-Without knowledge of the actual spatial configurations of objects in the world, the task planner would create plans that could not complete some actions, due to infeasible motion plans from blocking objects or interference between the robot and the environment.
+The goal of the first test is to move the object at the center of a 3x3 square grid of objects to a goal surface. 
+The goal of the second test is to sort red, green, and blue blocks into separate bins.
+Figure \ref{fig:scenarios} shows the setup of the different test scenarios. 
 
-The high level problem this implementation addresses is to create a combined task and motion planner, following that presented in [1].  
-This approach allows the motion planner to give information to the task planner and keeps continuous variables continuous, rather than discretizing.  
-This prevents a combinatorial explosion of the state space that the task planner needs to search over.
-
-The main contribution of this implementation is an interface layer.  
-This interface layer is designed to be planner-independent: that is, it can work with any motion planner and task planner, so long as the outputs from each are conformed to the interface specification.  
-The interface layer interleaves calls between the task planner and the motion planner, using geometric feasibility determined through the motion planner to affect the state given to the task planner to plan from.
-
-\section{High Level Approach}
-
-The interface layer starts by asking the task planner to generate a high level plan and has the motion planner instantiate motion plans corresponding to each action.  
-When it is not possible to generate a motion plan, the interface layer determines what geometric constraints are causing the problem and relays this back to the task planner.  
-Then, the task planner replans from that state and the process continues.  
-When necessary, backtracking occurs.
- 
-At start time, the task planner is given a PDDL domain specifying the different actions that are feasible along with their preconditions and postconditions.  
-For individual calls to the task planner, the interface layer takes an internal \textit{state} variable, converts it to PDDL format, and sends it along to be solved.  
-The task planner responds with a high level plan or a notification that finding a plan failed.  
-If finding a plan failed, the interface layer begins backtracking.  
-If a high level plan is found, the interface layer begins searching for refinements of each action as a motion plan.
-
-On each call to the motion planner, the interface layer provides the motion planner with the intended action, the world state, and a pose or set of poses corresponding to sub-parts of the action. 
-These poses are randomly generated for each action by a pose generator within the interface layer. 
-If it is possible to perform the action using the intermediary poses specified, the motion plan returns the trajectory and the updated world state.  
-If not, it returns an error message.
-
-If the motion plan does not succeed, a variety of poses are tried.  
-Again, poses are generated randomly from a pose generator.  
-If no poses are successful, the interface layer determines what is blocking the motion plan from succeeding by removing objects from the environment until a feasible motion plan is found.  
-If still no feasible motion plan is found, backtracking is required.  
-If a feasible motion plan is found with some subset of objects removed, then that information is relayed back to the task planner after the PDDL state is appropriately updated.
-This update adds predicates corresponding to the object obstructions, and the task planner is asked to replan starting from the step where we failed to find a motion plan. This whole process continues until a feasible motion plan has been found.  
-
-\subsection{Simple Example Walkthrough}
-
-\begin{figure}[t]
+\begin{figure}[h]
 \centering
-\def\svgwidth{0.5\textwidth}
-\input{figures/walkthrough.pdf_tex}
-\caption{Walkthrough Example. The goal is for the red block to be on surface S.\label{fig:walkthrough}}
+\def\svgwidth{.4\textwidth}
+\input{figures/scenarios.pdf_tex}
+\caption{Set up of test scenarios.\label{fig:scenarios}}
 \end{figure}
 
-In this environment, we have two objects, blocks 1 and 2, and our goal is to put block 1 into area S.  
-However, we cannot pick up block 1 directly since the walls and block 2 surround it.  
-Here we walk through the steps the interface layer takes when solving this problem in order to explain the details of the interface layer's construction.
+\section{Technical Approach}
+The three components of our combined task and motion planner system are:  \(1\) the task planner, \(2\) the motion planner, and \(3\) the interface layer. The interface layer is composed of the state update and pose generator modules [Fig. \ref{fig:blockDiagram}].
 
-\begin{enumerate}[i.]
+\begin{figure}[h]
+\centering
+\def\svgwidth{0.5\textwidth}
+\input{figures/blockDiagram.pdf_tex}
+\caption{System Block Diagram\label{fig:blockDiagram}}
+\end{figure}
 
-\item Call the task planner to create a high level plan.  
-In this case, the task planner has not yet inferred that block 2 is blocking block 1, so the plan is simply:
+\subsection{Task Planner}
+We used the FF task planner. 
+Our software for the task planner is the same as the previous problem set. 
+The task planner takes in a PDDL file as input and receives a state from the interface layer. 
+It generates the planned actions. 
 
-\begin{enumerate}[1.]
-\item PICKUP BLOCK1 with GRIPPER
+\subsection{Motion Planner}
+We used the MoveIt! motion planner. 
+[TODO: Alex will write this]
 
-\item PUTDOWN BLOCK1 on SURFACE S
-\end{enumerate}
-
-\item The next step is to call the motion planner to try to find a trajectory corresponding to each of these actions.  
-In this case, the motion planner fails to find a motion plan for step 1.  
-
-\item The interface layer removes objects to try to figure out which one was causing the error for that action.  
-The interface layer discovers that if it removes block 2, then the motion plan can be created just fine, so block 2 must be obstructing the path.
-
-\item We add a predicate corresponding to BLOCK2 OBSTRUCTS BLOCK1 to the planner's state.
-
-\item Now, we try to find a new high level plan.  
-Since block 2 is obstructing block 1, we cannot pick up block 1 directly, so the task planner realizes it needs to move block 2 first before moving block 1. 
-The new plan it creates is:
-
-\begin{enumerate}[1.]
-\item PICKUP BLOCK2 	with GRIPPER
-\item PUTDOWN BLOCK2 on SURFACE S
-\item PICKUP BLOCK1 with GRIPPER
-\item PUTDOWN BLOCK1 on SURFACE S
-\end{enumerate}
-
-\item Now, we again go to the motion planner and try to find a motion plan corresponding to every action.
-In this case, there are no more obstructions, so the process works!
-
-\item Ultimately, the algorithm returns the high level plan in conjunction with a motion plan trajectory for every step of the high level plan.
-
-\end{enumerate}
-
-\section{Technical Details}
-
-In this section, we discuss the key insight of the original paper: the ability to avoid discretization by representing continuous variables symbolically via references.  
-We also discuss the pose generators which propose real-world instantiations of these references.  
-Finally, we walk through the algorithm in detail.
-
-\subsection{Representing Continuous Variables Symbolically}
-
-One of the key insights of this paper is that continuous variables can be referenced symbolically in the task planner within the PDDL domain.  
-For instance, consider the pose of the robot: this is a continuous, geometric state.
-However, the task planner only keeps track of poses symbolically.  
-The task planner knows that there is some GPFG\_obj\_1 -- a Gripper Pose For Grasping -- for object 1, and it does not really care what that pose is, so long as it exists.  
-The task planner reasons over a variety of these symbolic variables, corresponding to poses and trajectories.  
-The motion planner and pose generators take these symbolic variables and associate them with corresponding real locations and motions in the world.  
-This is the key insight which allows the task planner to reason about continuous variables without discretizing.  
-
-We follow [1] in using manipulation as an example environment.  For any planning domain with some continuous variables and some discrete variables, it is possible to transform the continuous variables to discrete symbolic references to continuous positions.  For this example, we talk through the PICKUP action for a simple manipulator; the PUTDOWN action is analagous.
-
-\vspace{10pt}
-
-$PICKUP(obj_1, gripper, pose_1, pose_2, traj)$
-
-$\; precon \; EMPTY(gripper), ROBOTAT(pose_1), $
-
-$\; \; \;\; \; \; ISGPFG(pose_2, obj), ISMP(traj, pose_1, pose_2), $
-
-$\; \; \; \; \; \;\forall obj' \neg OBSTRUCTS(obj', traj, obj_1)$
-
-$\; effect \; IN(obj_1, gripper), \neg EMPTY(gripper), $
-
-$\; \; \;\; \; \; \forall obj', traj' \neg OBSTRUCTS(obj_1, traj', obj'), $
-
-$\; \; \; \; \; \;\forall obj' traj', tloc' \neg PDOBSTRUCTS(obj_1, traj', obj', tloc')$
-
-\vspace{10pt}
-
-Here, we have three continuous variables that we represent symbolically: $traj$, for each of the trajectories, and $pose_1$ and $pose_2$, representing start and end locations for the robot's gripper.
-The preconditions and effects can also iterate over all of these symbolic variables, allowing us to mark that a picked up object does not obstruct any other objects, etc. 
-We have various predicates which describe different things about both the discrete variables and the continuous variables.
-
-\vspace{10pt}
-
-$EMPTY(gripper)$ -- gripper is empty and thus available to hold a block.
-
-$ROBOTAT(pose_1)$ -- robot pose,  $pose_1$ is a symbolic reference to a continuous variable.
-
-$ISGPFG(pose, obj)$ -- $pose$ is a Gripper Pose For Grasping (GPFG) an object $obj$.
-
-$ISMP(traj, pose_1, pose_2)$ -- $traj$ is a motion plan from $pose_1$ to $pose_2$.
-
-$OBSTRUCTS(obj_1, traj, obj_2)$ -- $obj_1$ blocks $obj_2$ from being picked up along $traj$.
-
-$PDOBSTRUCTS(obj_1, traj, obj_2, tloc)$ -- $obj_1$ blocks $obj_2$ from placement at $tloc$ along $traj$.
-
-$IN(obj_1, gripper)$ -- $obj_1$ currently grasped by $gripper$.
-
-\vspace{10pt}
-
-How do we come up with all of these symbolic references?  
-We create as many as we need.  
-In this case, we need to have a pose where we can pick up each object and put each object down.  
-Neither the interface layer nor the task planner know what the poses correspond to in the real world.
-The pose generators instantiate specific poses which the motion planner verifies or discounts if it fails.
-Similarly, we have one trajectory for each potential pair of poses.  
-However, since the trajectory is not actually used in any of the effects, we actually can ignore it entirely -- it does not change the high level plan and the interface layer will still know to have the motion planner create the relevant trajectories. 
-So to make the plan more efficient, we actually cut out the $ISMP$ predicate and all references to trajectories.
-
-How do we pass geometric information from the environment back to the task planner?  
-We do this via the $OBSTRUCTS$ and $PDOBSTRUCTS$ predicates.  
-These tell the task planner that certain objects are blocking motions related to other objects.  
-This allows the task planner to have the robot first move the blocking objects so it can get to the other objects.
-
-\subsection{Pose Generators}
-
-When the pose generator is called by the interface layer, it generates a set of random poses for each action. 
-Each pose is made up of a set of waypoints. For example for the PICKUP action, it generates the following waypoints: near the cylinder and pointing towards it, touching the cylinder, lifting the cylinder, and a standard home position. 
-It passes one pose to the interface layer at a time.  
-If none of the poses are feasible, the interface layer backtracks and resets the pose generator. 
-The TryRefine method of the interface layer attempts to generate a feasible motion plan between each pose.  The motion planner is called to create this motion plan, including motion plans between waypoints.
-
-\subsection{Main Interface Layer}
+\subsection{Interface}
 
 \begin{figure}[t]
 \centering
@@ -223,25 +77,6 @@ The TryRefine method of the interface layer attempts to generate a feasible moti
 \caption{Illustration of the interface layer’s refinement process. Action arguments have been abbreviated. Taken from [1]
 \label{fig:figure4}}
 \end{figure}
-
-This figure (Fig. \ref{fig:figure4}), included with text from [1], explains the flow of control of the interface layer through a variety of situations, including more than the simple case covers.  
-The subfigures in this diagram explain on a high level the different steps the interface layer takes when solving a problem.  
-The subfigure a shows the motion planner's backtracking search when trying to instantiate motions for each of the high level actions.  
-Subfigure b shows the first possible scenario, where the backtracking search succeeds.  Subfigure c shows a second possible scenario, where the backtracking search does not succeed.  
-There are multiple options of what can happen within this scenario: subfigure d shows an option where they determine that the block2 obstructs the trajectory.  
-This triggers the behavior discussed earlier, where the state is updated for the task planner.  
-Subfigure e shows the new task plan after replanning occurs.  
-After this, the interface layer will repeat the process of attempting to refine this new plan.  
-Subfigure f shows an alternative option, where the blocking object is determined to be the table, which is not movable.  
-Then, the state is updated as before and the task planner is called, but no solution is found, so backtracking occurs.
-
-\subsubsection{Algorithm Improvements}
-
-The original version of the algorithm, as shown in (Fig. \ref{fig:algorithms}), only attempts to find partial trajectories when it replans partway through the procedure.
-Our algorithm has a slight modification. Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  
-In some scenarios, some poses will not work but others will, so it is better to try to make the simplest possible plan work before giving up and making the high level plan more complicated.  
-In our manipulation example, this turns into trying to pick up blocks from all angles before giving up and assuming they must be blocked by something.  
-An analysis of the benefits of this approach are outlined in the results section.  
 
 \subsubsection{Algorithm 1}
 
@@ -253,10 +88,8 @@ An analysis of the benefits of this approach are outlined in the results section
 	\caption{Taken from[1]\label{fig:algorithms}}
 \end{figure}
 
-The outer loop of the algorithm interfaces with the high level task planner.  
 We start with an initial state where no objects obstruct any motions.  
 From there, we look for a high level plan.  
-If the problem is not solvable even without any obstructions from the environment, then the problem is unsolvable and we immediately return that information.  
 If we do succeed at finding a high level task plan, we begin the process of attempting to find a motion corresponding to each action.
 
 First, we start by attempting to find a full refinement of the whole plan, calling the TryRefine subroutine in error-free mode.  
@@ -282,7 +115,6 @@ For our version of the algorithm, every time a new partial plan is generated, we
 In the TryRefine subroutine, the interface layer attempts to find motion plans corresponding to the various actions.  
 It has two modes: error free and partial trajectory.  
 In error free mode, it performs backtracking search to try to find a full plan from start to finish.  
-The backtracking search is over possible pose instantiations: since some poses may be infeasible and since previous choices may affect future choices, the backtracking search iterates over all possible poses in order to find a full solution if a full solution exists.  
 
 In partial trajectory mode, TryRefine goes as far as it can, but when it finds an infeasible motion plan for some action, it returns the step at which it failed.  
 In addition to returning the failed step, it returns the cause of the errors.  
@@ -298,37 +130,39 @@ However, for this set of this set of objects, no object can be added back in wit
 
 As described above in Algorithm 1, once the list of blocking objects is returned, the interface layer updates the state and attempts to replan from there.
 
+\subsubsection{State Update}
+
+
+When an action is infeasible because an object is blocking another object, the interface layer updates the state and calls the task planner. 
+If the object is movable, the task planner will generate a plan to move the object out of the way before moving the target object. If the object is not movable, such as the table, the interface will perform backtracking search to try to find a full plan from start to finish.
+The backtracking search is over possible pose instantiations: since some poses may be infeasible and since previous choices may affect future choices, the backtracking search iterates over all possible poses in order to find a full solution if a full solution exists. 
+
+Every time a new partial plan is generated, we first try to fill it completely using backtracking search before giving up and resorting to the partial trajectory finding.  In our manipulation example, the interface tries to pick up blocks from all angles before giving up and assuming they must be blocked by something.  
+
+\subsubsection{Pose Generator}
+
+When the pose generator is called by the interface layer, it generates a set of random poses for each action. 
+Each pose is made up of a set of waypoints. 
+
+For the PICKUP action, it generates the following waypoints: near the object and pointing towards it, touching the object, lifting the object, and a standard home position. 
+The first waypoint is randomly generated and places the gripper about 15 centimeters away from the object.
+We divided the set of possible random yaw angles around the object into several distinct ranges, called \textit{slices}. 
+Each call to the pose generator generates a random angle in one of the ranges.
+The second waypoint moves the arm so that the gripper can object. The third waypoint is in the exact same position with the gripper closed. The next waypoint is directly above the previous waypoint, high enough so that the object is above all of the other objects on the table. Finally, the last waypoint goes to the standard home position for the square grid task and moves  above the correct bin for the sorting task.
+
+For the PUTDOWN action, the pose generator generates the following waypoints: above the target location, at the target location with the gripper closed, at the target location with the gripper open, 15 cm backed away from the target location, and the standard home position. 
+The target location is randomly generated, but the pose generator checks to make sure that no objects are at or near the target location.
+
+To reiterate, a pose is a set of waypoints. 
+The pose generator keeps track of the number of poses it has generated, at least one for each slice. Once the pose generator has generated the maximum number of poses, it returns None, to indicate that no poses are feasible. The interface layer then backtracks and resets the pose generator. 
+The TryRefine method of the interface layer attempts to generate a feasible motion plan between each pose.  
+The motion planner is called to create this motion plan, including motion plans between waypoints.
 
 \section{Results}
-\subsection{Test Scenarios}
-\begin{figure}[t]
-\centering
-\def\svgwidth{\textwidth}
-\input{figures/scenarios.pdf_tex}
-\caption{Test Examples. The goal is to move the green block to another surface.\label{fig:scenarios}}
-
-\end{figure}
-
-Baxter executes a variety of tests to measure the performance of the interface. 
-The goal of each test is to move the cylinder at the center of an arrangment of objects, to a goal surface. 
-We tested a variety of different 3x3 object arrangements on Baxter, including a square grid, an X, a cross, a vertical line, and a horizontal line [Fig. \ref{fig:scenarios}].
-
-The most difficult scenario we tested was the square grid.
-The difficulty of a scenario depends on the number of blocks for a particular grid shape. 
-As the total number of \textit{obstructions} increases, the test difficulty increased. 
-The total number of obstructions is measured by counting the number of directions around each object that were obstructed. 
-For the ordinal directions, a neighboring object in any one of three locations obstructs the direction. 
-For example, the northeast direction of an object is obstructed by a neighboring object above, to the right or to the top right corner.
-
-During preliminary testing, the results for the original algorithm took significantly longer when tested in simulation.  
-Our modification always tries to find a perfect plan after adding a new high level plan section to the plan, rather than immediately trying to find a new partial trajectory. 
-Since our algorithm was significantly faster we used it for each of the test scenarios.
 
 We measured the performance of each test by the runtime and the number of calls to both the task planner and motion planner [Fig. \ref{benchmark}]. 
-The interface layer is designed to be independent of any specific task and motion planner libraries, therefore number of calls to the motion and task planner measures the performance of the interface layer better than the total runtime, since the actual runtime will be very dependent on the motion planner and task planner chosen.
-
-\subsection{Test Results}
-
+The interface layer is designed to be independent of any specific task and motion planner libraries, therefore the number of calls to the motion and task planner measures the performance of the interface layer better than the total runtime. 
+The actual runtime depends on the motion planner and task planner chosen.
 
 \begin{figure}
 \begin{tabular}[t]{|l|l|l|l|l|l|}
@@ -350,31 +184,9 @@ Square & 9 & 56 & ? & ? & ?\\
 \label{benchmark}
 \end{figure}
 
-\section{Limitations}
-
-It is important to note that this planner is not guaranteed to find an optimal solution, or even to find a solution at all.  
-We refer you to [1] for a proof that this algorithm is guaranteed to find a solution for problems with certain properties.  
-However, due to the random nature of the pose generators and that there are limits set on the number of iterations, a valid plan may not be found for all problems.  
-
-Furthermore, this system is not intended for online replanning.  
-It may be possible to use it for online replanning for some systems if it runs quickly on the particular problem, but it is not an intended feature of this algorithm.
-
-Finally, the runtime of this algorithm is based on the speed of the motion planner and the task planner used within it.  
-If the motion planner and task planner are not efficient, the interface layer will not produce answers quickly.  
-In particular, the number of calls to the motion planner is very large in order to gather the environmental information needed to pass on to the task planner.  
-So in particular, the running time of this algorithm will depend on the running time of the motion planner.
-
-\section{Open Questions}
-
-The two immediately relevant open questions are whether it is possible to design a similar interface between task and motion plans which returns optimal plans or which can be used to do online planning.
-Currently, the interface layer works only in deterministic, fully observable environments.  
-It would be very interesting to develop similar algorithms to work in non-deterministic or partially observable environments as well.
-
-Other interesting and relevant extensions could include the addition of more grasp primitives, for instance, push grasp primitives.
-
 \section{References}
 
-[1] S. Srivastava, E. Fang, L. Riano, R. Chitnis, S. Russell, P. Abbeel. "Combined Task and Motion Planning Through an Extensible Planner-Independent Interface Layer". IEEE International Conference on Robotics and Automation (ICRA), 2014.
+[1] S. Srivastava, E. Fang, L. Riano, R. Chitnis, S. Russell, P. Abbeel. \"Combined Task and Motion Planning Through an Extensible Planner-Independent Interface Layer\". IEEE International Conference on Robotics and Automation (ICRA), 2014.
 
 \end{document}
 
