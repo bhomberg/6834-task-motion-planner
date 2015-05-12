@@ -203,6 +203,10 @@ Using the full backtracking search on each new high level plan avoids this probl
 
 \subsection{Motion Planner Heuristic}
 
+We added a heuristic to avoid motion planner calls in cases where we could easily determine that it would fail.
+Specifically, the motion planner service would use the world geometry and basic collision geometry to determine if the pose obviously would cause the robot arm to intersect with obstacles.
+This greatly increased the efficiency for planning in crowded environments since it enabled the motion planner to return a fail much more quickly, rather than trying the full planning procedure when the end goal wasn't reachable. 
+
 \subsection{O(n) Identification of Obstructions}
 
 To find the blocking objects, we start by iterating through a randomized list of the objects.  
