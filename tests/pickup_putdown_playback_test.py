@@ -99,8 +99,8 @@ def putdown(state, motion_server, poseGen):
 if __name__ == "__main__":
     rospy.wait_for_service('motion_server_service')
     motion_server = rospy.ServiceProxy('motion_server_service', motion_service)
-    '''
-    poseGen = PoseGenerator()
+    
+    poseGen = PoseGenerator(20,20)
     
     start_state = setup_start_state()
     state = setup_start_state()
@@ -116,10 +116,10 @@ if __name__ == "__main__":
         full_plan.append(plan)
         
         state = plan.state
-    '''    
+        
     filename = os.path.abspath(os.path.dirname(__file__) + '/../playback/') + '/pickup_putdown_test2.bag'
-    #record(filename, start_state, full_plan)
+    record(filename, start_state, full_plan)
     
-    baxter = BaxterPlayback(filename)
-    baxter.run()
+    #baxter = BaxterPlayback(filename)
+    #baxter.run()
     

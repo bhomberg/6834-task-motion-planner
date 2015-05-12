@@ -4,19 +4,21 @@ import roslib
 import rospy
 from geometry_msgs.msg import *
 from task_motion_planner.msg import *
+from copy import deepcopy
 import math
 import random
 import copy
 import re
 
 BOUND = math.pi/2.0
+sort = True
 
 # Generates a set of gripper poses given an action and a world description
 # The motion planner verifies that the set of candidate poses is valid 
 # (not obstructed by objects & objects are reachable) 
 class PoseGenerator:
 
-    def __init__(self, SLICES=10, GRIPPER_OFFSET = .015):
+    def __init__(self, SLICES=10, MAX_COUNT=10, GRIPPER_OFFSET = .015):
         self.counter = dict()
         self.putdown_pt = dict()
         self.putdown_pt_num = dict()
@@ -24,15 +26,15 @@ class PoseGenerator:
         self.DIST_FROM_CYLINDER = .1
         self.GRIPPER_OFFSET = GRIPPER_OFFSET
         self.SLICES = SLICES
-        self.sliceSize = 2 * math.pi/self.SLICES
+        self.sliceSize = 2 * BOUND/self.SLICES
         self.pickup_ub = dict()
         self.putdown_ub = dict()
         self.pickup_lb = dict()
         self.putdown_lb = dict()
-        self.MAX_COUNT = SLICES
+        self.MAX_COUNT = MAX_COUNT
         self.MAX_PUTDOWN_POINTS = 3
         self.MAX_POINT_ATTEMPTS = 100
-        self.OBJ_DIST_CUTOFF = .2
+        self.OBJ_DIST_CUTOFF = .1
 
     # Generates a gripper pose given an action and a world description
     # action = a string containing (action, arm, object_name)
@@ -52,9 +54,11 @@ class PoseGenerator:
         print "posegen action:", action
         if action[0] == ' ':
             return None
-        obj = self._search_for_object(action[1], objects)
-        height = obj.primitives[0].dimensions[0]
-        radius = obj.primitives[0].dimensions[1]
+            
+        if not sort or action[0] == 'PICKUP':
+            obj = self._search_for_object(action[1], objects)
+            height = obj.primitives[0].dimensions[0]
+            radius = obj.primitives[0].dimensions[1]
 
         if not action in self.counter:
             self.counter[action] = 0
@@ -74,18 +78,33 @@ class PoseGenerator:
                 pose = obj.primitive_poses[0]
                 return self.pickup(pose,height,radius,action)
         elif action[0] == 'PUTDOWN':
-            if self.counter[action] < self.MAX_COUNT:
-                self.counter[action] += 1
-                table = self._search_for_object(action[-1], surfaces)
-                if self.putdown_pt[action] == None:
-                    self.putdown_pt[action] = self.get_putdown_pt(table, world)
-                return self.putdown(table, height, radius, self.putdown_pt[action],action)
-            elif self.putdown_pt_num[action] < self.MAX_PUTDOWN_POINTS:
-                self.putdown_pt_num[action] += 1
-                self.putdown_ub[action] = -BOUND
-                table = self._search_for_object(action[-1], surfaces)
-                self.putdown_pt[action] = self.get_putdown_pt(table, world)
-                return self.putdown(table, height, radius, self.putdown_pt[action],action)
+            world_copy = deepcopy(world)
+            for i, obj in enumerate(objects):
+                if obj.id == action[1]:
+                    world_copy.world.movable_objects = objects[0:i] + objects[i+1:len(objects)]
+                    break
+            if not sort:
+                if self.counter[action] < self.MAX_COUNT:
+                    self.counter[action] += 1
+                    table = self._search_for_object(action[-1], surfaces)
+                    if self.putdown_pt[action] == None:
+                        self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
+                    return self.putdown(table, height, radius, self.putdown_pt[action],action)
+                elif self.putdown_pt_num[action] < self.MAX_PUTDOWN_POINTS:
+                    print "\nAdding new point"
+                    self.putdown_pt_num[action] += 1
+                    self.counter[action] = 0
+                    self.putdown_ub[action] = -BOUND
+                    table = self._search_for_object(action[-1], surfaces)
+                    self.putdown_pt[action] = self.get_putdown_pt(table, world_copy)
+                    return self.putdown(table, height, radius, self.putdown_pt[action],action)
+            else:
+                if self.counter[action] < 1:
+                    self.counter[action] += 1
+                    table = self._search_for_object(action[-1], surfaces)
+                    
+                    return self.sort_putdown(table)
+             
         print "returning none :("
         return None
 
@@ -161,7 +180,7 @@ class PoseGenerator:
         # objects in a standard position
         poseGen4 = pose()
         poseGen4.pose.position.x = .8
-        poseGen4.pose.position.y = .8
+        poseGen4.pose.position.y = -.8
         poseGen4.pose.position.z = CLEARANCE_HEIGHT
         poseGen4.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen4.gripperOpen = False
@@ -186,14 +205,14 @@ class PoseGenerator:
 
     def max_obs_dist(self, x, y, world):
         objects = world.world.movable_objects
-        d = None
+        d = float('inf')
         for o in objects:
             o_x = o.primitive_poses[0].position.x
             o_y = o.primitive_poses[0].position.y
             t = math.sqrt(pow(x - o_x,2) + pow(y - o_y,2))
-            if d == None or t < d:
+            if t < d:
                 d = t
-        return t
+        return d
 
     # Generates a set of gripper poses for a putting down a cylinder,
     # given an area in which to place the object
@@ -215,11 +234,11 @@ class PoseGenerator:
         table_center = table.primitive_poses[0].position
         table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
         # x1, y1 = bottom left corner of putdown area (from top view)
-        x1 = table_center.x - (table.primitives[0].dimensions[0]/2.0 - self.GRIPPER_OFFSET - radius)
-        y1 = table_center.y - (table.primitives[0].dimensions[1]/2.0 - self.GRIPPER_OFFSET - radius)
+        x1 = table_center.x - ((table.primitives[0].dimensions[0]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius)
+        y1 = table_center.y - ((table.primitives[0].dimensions[1]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius)
         # x2, y2 = top right corner of putdown area (from top view)
-        x2 = table_center.x + table.primitives[0].dimensions[0]/2.0 - self.GRIPPER_OFFSET - radius
-        y2 = table_center.y + table.primitives[0].dimensions[1]/2.0 - self.GRIPPER_OFFSET - radius
+        x2 = table_center.x + (table.primitives[0].dimensions[0]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius
+        y2 = table_center.y + (table.primitives[0].dimensions[1]/2.0) - (2.0*self.GRIPPER_OFFSET) - radius
         
         CLEARANCE_HEIGHT = table_height + height
         r = radius + self.DIST_FROM_CYLINDER
@@ -257,14 +276,29 @@ class PoseGenerator:
             
         # Move out of the way to the standard position
         poseGen5 = pose()
-        poseGen5.pose.position.x = .6
-        poseGen5.pose.position.y = .6
+        poseGen5.pose.position.x = .8
+        poseGen5.pose.position.y = -.8
         poseGen5.pose.position.z = CLEARANCE_HEIGHT
         poseGen5.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
         poseGen5.gripperOpen = True
 
         # Return array of custom pose messages
         return [poseGen1,poseGen2,poseGen3,poseGen4]#,poseGen5]
+        
+    def sort_putdown(self, table):
+        table_center = table.primitive_poses[0].position
+        table_height = table.primitive_poses[0].position.z + table.primitives[0].dimensions[2]/2.0
+        
+        CLEARANCE_HEIGHT = table_height + 0.2
+        
+        sortPose = pose()
+        sortPose.pose.position = deepcopy(table_center)
+        sortPose.pose.position.x -= 0.05
+        sortPose.pose.position.z = CLEARANCE_HEIGHT
+        sortPose.pose.orientation = self._rpy_to_orientation(math.pi/2.0,0,0)
+        sortPose.gripperOpen = True
+        
+        return [sortPose]
 
     # Gets an objects index from a list given the object's name
     # obj_name = object's name

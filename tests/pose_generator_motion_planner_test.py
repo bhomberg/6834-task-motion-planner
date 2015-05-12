@@ -60,7 +60,7 @@ def pickupTest(action, motion_server, poseGen):
     primitive.dimensions = [.25, .02]
     obj2.primitives.append(primitive)
     pose = Pose()
-    pose.position.x = 0.75
+    pose.position.x = 0.7
     pose.position.y = 0.15
     pose.position.z = 0.16
     pose.orientation.w = 1
@@ -77,7 +77,7 @@ def pickupTest(action, motion_server, poseGen):
     obj3.primitives.append(primitive)
     pose = Pose()
     pose.position.x = 0.8
-    pose.position.y = 0.1
+    pose.position.y = 0.05
     pose.position.z = 0.16
     pose.orientation.w = 1
     obj3.primitive_poses.append(pose)
@@ -93,7 +93,7 @@ def pickupTest(action, motion_server, poseGen):
     obj4.primitives.append(primitive)
     pose = Pose()
     pose.position.x = 0.8
-    pose.position.y = 0.2
+    pose.position.y = 0.25
     pose.position.z = 0.16
     pose.orientation.w = 1
     obj4.primitive_poses.append(pose)
@@ -108,7 +108,7 @@ def pickupTest(action, motion_server, poseGen):
     primitive.dimensions = [.25, .02]
     obj5.primitives.append(primitive)
     pose = Pose()
-    pose.position.x = 0.85
+    pose.position.x = 0.9
     pose.position.y = 0.15
     pose.position.z = 0.16
     pose.orientation.w = 1
@@ -202,19 +202,21 @@ def putdownTest(action, motion_server, poseGen):
     
     resp = motion_server(msg)
     #print resp.plan.success
+    #print resp.plan.success
     #print resp.plan.state.world.movable_objects
     
 if __name__ == "__main__":
     rospy.wait_for_service('motion_server_service')
     motion_server = rospy.ServiceProxy('motion_server_service', motion_service)
     
-    poseGen = PoseGenerator()
+    poseGen = PoseGenerator(5,5)
     
     # (pickup,obj1,left_arm,pose1,pose2)
-    for i in range(8):
-        pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
+    #for i in range(40):
+    #    pickupTest('(PICKUP,obj1,left_arm,pose1,pose2)', motion_server, poseGen)
     
     # (putdown,obj1,left_arm,pose1,pose2,tloc)
-    #for i in range(8):
-    #  putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
+    for i in range(15):
+      print i
+      putdownTest('(PUTDOWN,obj1,left_arm,pose1,pose2,surf1)', motion_server, poseGen)
       

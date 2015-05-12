@@ -21,9 +21,9 @@ from motion_plan_playback import *
 DIR_6834 = os.path.abspath(os.path.dirname(__file__) + '/../') + '/'
 
 if __name__ == '__main__':
-    poseGen = PoseGenerator()
+    poseGen = PoseGenerator(20,20)
     
-    filepath = DIR_6834+"states/SQUARE_3"	
+    filepath = DIR_6834+"states/SORTING_STATE_2"	
     f = open(filepath,'r')
     init_state_string = f.read()
     state = [[]]*3
@@ -40,5 +40,5 @@ if __name__ == '__main__':
     interfaceLayer = InterfaceLayer('task_server_service', 'motion_server_service', poseGen, mockStateUpdate, DIR_6834)
     (plan, traj) = interfaceLayer.run(state, world, pose)
     
-    record(DIR_6834+'playback/square_test.bag', world, plan, traj)
+    record(DIR_6834+'playback/sort_test.bag', world, plan, traj)
     

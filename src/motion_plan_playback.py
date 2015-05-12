@@ -54,7 +54,7 @@ class BaxterPlayback(object):
         world_start_state = msg.start_state.world
         robot_start_state = msg.start_state.robot
     
-        group = moveit_commander.MoveGroupCommander(robot_start_state.id)
+        group = moveit_commander.MoveGroupCommander('right_arm')#(robot_start_state.id)
     
         # Set up robot in start configuration
         curr_state = robot_start_state.state
@@ -80,7 +80,7 @@ class BaxterPlayback(object):
         for seq in msg.motion:
             for traj in seq.trajectory.trajectory:    
                 group.execute(traj)
-                rospy.sleep(2.0)
+                rospy.sleep(5.0)
         
             if prev_gripper_state != seq.gripperOpen:
                 action_idx += 1
@@ -103,6 +103,6 @@ class BaxterPlayback(object):
         bag.close()
         
 if __name__ == "__main__":
-    baxter = BaxterPlayback(DIR_6834+'playback/square_test.bag')
+    baxter = BaxterPlayback(DIR_6834+'playback/sort_test.bag')
     baxter.run()
                         
