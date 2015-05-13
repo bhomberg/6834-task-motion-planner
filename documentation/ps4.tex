@@ -50,9 +50,9 @@ Our tests used only the right arm with two finger gripper.
 \caption{The Baxter Robot \label{fig:baxter}}
 \end{figure}
 
-\subsection{Test Scenarios}
+\subsection{Test Scenarios} \label{tests}
 
-We present an interface between a task planner and motion planner [1]. 
+We present an interface between a task planner and motion planner [2]. 
 Baxter executes a variety of tests to measure the performance of the interface layer. 
 The tests demonstrate that the interface layer respects all of the geometric constraints. 
 Baxter picks up objects in a reasonable order to avoid collisions.
@@ -69,8 +69,14 @@ Figure \ref{fig:scenarios} shows the setup of the different test scenarios.
 \end{figure}
 
 \section{Technical Approach}
-The three components of our combined task and motion planner system are:  \(1\) the task planner, \(2\) the motion planner, and \(3\) the interface layer. 
-The interface layer is composed of the state update and pose generator modules [Fig. \ref{fig:blockDiagram}].
+Through the use of the interface layer implemented in the previous problem set, a task planner can operate in a geometry-independent abstract state space while handling geometric constraint discovery and requisite replanning via communication between the interface layer and the task and motion planners. 
+
+The interface layer was implemented in python as a ROS package, which is set up to communicate with user-implemented task and motion planners via the client/server paradigm. More specifically, the task and motion planners were implemented as ROS services. The interface layer acts as client to both of these services. Figure \ref{fig:blockDiagram} diagrams the system framework.
+
+Given that the pose generation and state update vary between domains, we implement domain specific pose generator class and state update function for the scenarios described in section \ref{tests}.
+
+%The three components of our combined task and motion planner system are:  \(1\) the task planner, \(2\) the motion planner, and \(3\) the interface layer. 
+%The interface layer is composed of the state update and pose generator modules [Fig. \ref{fig:blockDiagram}].
 
 \begin{figure}[h]
 \centering
@@ -80,15 +86,16 @@ The interface layer is composed of the state update and pose generator modules [
 \end{figure}
 
 \subsection{Task Planner}
-We used the FF task planner. 
+We used the FF task planner [1]. 
 Our software for the task planner is the same as the previous problem set. 
 The task planner is instantiated with a given PDDL domain file.  
 As a ROS service, it takes in a PDDL problem specification of current state and goal from the interface layer. 
 It returns a set of actions leading to the desired goal state. 
 
 \subsection{Motion Planner}
-We used the MoveIt! motion planner. 
-[TODO: Alex will write this]
+We used the MoveIt! motion planner [3]. We implenented a ROS service wrapper for this off-the-shelf motion planner so as to comply with the API.
+It takes as input the state of the world, the action to be performed, and a pose goal (i.e. a series of waypoints to perform the action).
+MoveIt! is then used to instantiate motion plans between these waypoints. The motion planner service returns a boolean specifying the success/failure of the instantiation of the motion plan, the motion plan itself, and the updated world state (which can be unchanged if the action failed).
 
 \subsection{Interface}
 
@@ -97,7 +104,7 @@ We used the MoveIt! motion planner.
 \includegraphics[width=\textwidth]{figures/figure4.png}
 \caption{Illustration of the interface layer’s refinement process. 
 Action arguments have been abbreviated. 
-Taken from [1]
+Taken from [2]
 \label{fig:figure4}}
 \end{figure}
 
@@ -108,7 +115,7 @@ Taken from [1]
 	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm1}}
 	\qquad
 	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm2}}
-	\caption{Taken from[1]\label{fig:algorithms}}
+	\caption{Pseudo-code for the underlying algorithms of the interface layer. Taken from [2]\label{fig:algorithms}}
 \end{figure}
 
 We start with an initial state where no objects obstruct any motions.  
@@ -171,7 +178,7 @@ For the PICKUP action, it generates the following waypoints: near the object and
 The first waypoint is randomly generated and places the gripper about 15 centimeters away from the object.
 We divided the set of possible random yaw angles around the object into several distinct ranges, called \textit{slices}. 
 Each call to the pose generator generates a random angle in one of the ranges.
-The second waypoint moves the arm so that the gripper can object. 
+The second waypoint moves the arm so that the object is in the gripper. 
 The third waypoint is in the exact same position with the gripper closed. 
 The next waypoint is directly above the previous waypoint, high enough so that the object is above all of the other objects on the table. 
 Finally, the last waypoint goes to the standard home position for the square grid task and moves  above the correct bin for the sorting task.
@@ -201,7 +208,7 @@ Partial trajectory mode will only try the first pose before giving up and identi
 If partial trajectory mode is continually used, then often the plans created are much longer than necessary just because an invalid first pose is chosen when other options would have worked fine.
 Using the full backtracking search on each new high level plan avoids this problem.
 
-\subsection{Motion Planner Heuristic}
+\subsection{Motion Planner Collision Heuristic}
 
 We added a heuristic to avoid motion planner calls in cases where we could easily determine that it would fail.
 Specifically, the motion planner service would use the world geometry and basic collision geometry to determine if the pose obviously would cause the robot arm to intersect with obstacles.
@@ -215,7 +222,7 @@ We will eventually find a successful motion plan since if there are no other obj
 After we find this possible list of removed objects, we iterate through all of the objects we removed.  
 We attempt to add these objects in one by one, leaving added in all of those which do not obstruct our found motion plan.  
 This leaves us with a local minimum of removed objects: it may be possible to find another smaller set of objects that, if removed, allow a valid motion plan.  
-However, for this set of this set of objects, no object can be added back in without obstructing the motion plan.
+However, for this set of objects, no object can be added back in without obstructing the motion plan.
 This algorithm for determining obstructing objects is $O(n)$.
 
 The paper originally describes an $O(n^2)$ algorithm for determining obstructing objects, starting by removing each individual object, then pairs of objects, etc.  
@@ -253,10 +260,10 @@ A video of the successful test trial can be found at \url{http://youtu.be/445_t_
 \begin{tabular}[t]{|l|l|l|l|l|l|l|}
 \hline
 
-Shape & Blocks & \shortstack{Goal Number of\\Blocks to Move} & Obstructions & \shortstack{Motion Planner\\Calls} & \shortstack{Task Planner\\Calls} & Runtime \\ \hline
-Square & 9 & 56 & ? & ? & ?& ? \\
+Task & \shortstack{Number of \\Blocks} & \shortstack{Blocks to Move} & \shortstack{Number of \\TP Calls} & \shortstack{Number of \\MP Calls} & Runtime \\ \hline
+Square Grid & 9 & 1 & ? & ? & ?\\
 \hline
-Sorting & 9 & 56 & ? & ? & ?& ?\\
+Sorting & 9 & 9 & ? & ? & ?\\
 \hline
 
 \end {tabular}
@@ -268,11 +275,15 @@ Sorting & 9 & 56 & ? & ? & ?& ?\\
 
 The interface does not scale well to large object state spaces, as this increases the number of geometric constraints. 
 This increase in geometric constraints causes the number of motion planner calls to explode, slowing down the planning stage. 
-In addition, in its current implementation it only works within deterministic, fully-observable environments and is infeasible for online replanning.
+In addition, in its current implementation it only works within deterministic, fully-observable environments and is not suitable for online replanning.
 
 \section{References}
 
-[1] S. Srivastava, E. Fang, L. Riano, R. Chitnis, S. Russell, P. Abbeel. \"Combined Task and Motion Planning Through an Extensible Planner-Independent Interface Layer\". IEEE International Conference on Robotics and Automation (ICRA), 2014.
+[1] J. Hoffmann, B. Nebel. ``The FF planning system: fast plan generation through heuristic search''. J. Artif. Int. Res. 14, 1, 253-302, 2001.
+
+[2] S. Srivastava, E. Fang, L. Riano, R. Chitnis, S. Russell, P. Abbeel. ``Combined Task and Motion Planning Through an Extensible Planner-Independent Interface Layer''. IEEE International Conference on Robotics and Automation (ICRA), 2014.
+
+[3] I. A. Sucan and Sachin Chitta, ``MoveIt!''. [Online] Available: http://moveit.ros.org
 
 \end{document}
 
