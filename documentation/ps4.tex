@@ -41,7 +41,7 @@
 \subsection{Baxter Robot}
 
 We ran our test scenarios on the Baxter robot [Fig. \ref{fig:baxter}], designed by Rethink Robotics. 
-Baxter is a humanoid robot with two 7 degree of freedom arms. 
+Baxter is a humanoid robot with two 7 degree of freedom arms and a fixed based. 
 Our tests used only the right arm with the two finger gripper.
 
 \begin{figure}[h]
@@ -52,13 +52,15 @@ Our tests used only the right arm with the two finger gripper.
 
 \subsection{Test Scenarios} \label{tests}
 
-We present an interface between a task planner and motion planner [2]. 
+We present an interface between a task planner and a motion planner [2]. 
 Baxter executes a variety of tests to measure the performance of the interface layer. 
 The tests demonstrate that the interface layer respects all of the geometric constraints. 
 Baxter picks up objects in a reasonable order to avoid collisions.
 
-The goal of the first test is to move the object at the center of a 3x3 square grid of objects to a goal surface. 
+The goal of the first test is to move the object at the center of a $3\times3$ square grid of objects to a goal surface. 
+In order to achieve the goal, Baxter must move some of the blocks surrounding the center block before placing the center block on the target surface.
 The goal of the second test is to sort red, green, and blue blocks into separate bins.
+For this task, the high level plan must ensure that Baxter does not try to pick up a block that is surrounded by other blocks.
 Figure \ref{fig:scenarios} shows the setup of the different test scenarios. 
 
 \begin{figure}[h]
@@ -71,16 +73,19 @@ Figure \ref{fig:scenarios} shows the setup of the different test scenarios.
 \section{Technical Approach}
 Through the use of the interface layer implemented in the previous problem set, a task planner can operate in a geometry-independent abstract state space while handling geometric constraint discovery and requisite replanning via communication between the interface layer and the task and motion planners. 
 
-The interface layer was implemented in python as a ROS package, which is set up to communicate with user-implemented task and motion planners via the client/server paradigm. More specifically, the task and motion planners were implemented as ROS services. The interface layer acts as client to both of these services. Figure \ref{fig:blockDiagram} diagrams the system framework.
+The interface layer was implemented in python as a ROS package, which is set up to communicate with user-implemented task and motion planners via the client/server paradigm. 
+More specifically, the task and motion planners were implemented as ROS services. 
+The interface layer acts as client to both of these services. 
+Figure \ref{fig:blockDiagram} diagrams the system framework.
 
-Given that the pose generation and state update vary between domains, we implement domain specific pose generator class and state update function for the scenarios described in section \ref{tests}.
+Given that the pose generation and state update vary between domains, we implement domain specific pose generator class and state update function for the scenarios described in Section \ref{tests}.
 
 %The three components of our combined task and motion planner system are:  \(1\) the task planner, \(2\) the motion planner, and \(3\) the interface layer. 
 %The interface layer is composed of the state update and pose generator modules [Fig. \ref{fig:blockDiagram}].
 
 \begin{figure}[h]
 \centering
-\def\svgwidth{0.5\textwidth}
+\def\svgwidth{0.7\textwidth}
 \input{figures/blockDiagram.pdf_tex}
 \caption{System Block Diagram\label{fig:blockDiagram}}
 \end{figure}
@@ -93,15 +98,17 @@ As a ROS service, it takes in a PDDL problem specification of current state and 
 It returns a set of actions leading to the desired goal state. 
 
 \subsection{Motion Planner}
-We used the MoveIt! motion planner [3]. We implenented a ROS service wrapper for this off-the-shelf motion planner so as to comply with the API.
+We used the MoveIt! motion planner [3]. 
+We implenented a ROS service wrapper for this off-the-shelf motion planner so as to comply with the API.
 It takes as input the state of the world, the action to be performed, and a pose goal (i.e. a series of waypoints to perform the action).
-MoveIt! is then used to instantiate motion plans between these waypoints. The motion planner service returns a boolean specifying the success/failure of the instantiation of the motion plan, the motion plan itself, and the updated world state (which can be unchanged if the action failed).
+MoveIt! is then used to instantiate motion plans between these waypoints. 
+The motion planner service returns a boolean specifying the success or failure of the instantiation of the motion plan, the motion plan itself, and the updated world state (which can be unchanged if the action failed).
 
 \subsection{Interface}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/figure4.png}
+\includegraphics[width=\textwidth]{figure4}
 \caption{Illustration of the interface layer’s refinement process. 
 Action arguments have been abbreviated. 
 Taken from [2]
@@ -112,15 +119,15 @@ Taken from [2]
 
 \begin{figure}[t]
 	\centering
-	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm1}}
+	\subfloat{\includegraphics[width=.45\linewidth]{algorithm1}}
 	\qquad
-	\subfloat{\includegraphics[width=.45\linewidth]{figures/algorithm2}}
+	\subfloat{\includegraphics[width=.45\linewidth]{algorithm2}}
 	\caption{Pseudo-code for the underlying algorithms of the interface layer. Taken from [2]\label{fig:algorithms}}
 \end{figure}
 
 We start with an initial state where no objects obstruct any motions.  
 From there, we look for a high level plan.  
-If we do succeed at finding a high level task plan, we begin the process of attempting to find a motion corresponding to each action.
+If we succeed at finding a high level task plan, we begin the process of attempting to find a motion corresponding to each action.
 
 First, we start by attempting to find a full refinement of the whole plan, calling the TryRefine subroutine in error-free mode.  
 If that succeeds, then we return the plan.  
@@ -154,7 +161,6 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 
 \subsubsection{State Update}
 
-
 When an action is infeasible because an object is blocking another object, the interface layer updates the state and calls the task planner. 
 The interface layer, as described above, determines a list of obstructing objects.
 The state update function goes through a section of a high level plan, performing all of the actions and updating the current state of the world.
@@ -173,17 +179,18 @@ For instance, for the PICKUP action, the state update functions confirms that th
 
 When the pose generator is called by the interface layer, it generates a set of random poses for each action. 
 Each pose is made up of a set of waypoints. 
+We generate multiple waypoints for an action to ensure that the motions avoid collisions.
 
-For the PICKUP action, it generates the following waypoints: near the object and pointing towards it, touching the object, lifting the object, and a standard home position. 
-The first waypoint is randomly generated and places the gripper about 15 centimeters away from the object.
+For the PICKUP action, it generates the following waypoints: a pre-grasp near the object and pointing towards it, touching the object, grasping the object, lifting the object, and a standard home position. 
+The pre-grasp is randomly generated and places the gripper about 15 centimeters away from the object.
 We divided the set of possible random yaw angles around the object into several distinct ranges, called \textit{slices}. 
 Each call to the pose generator generates a random angle in one of the ranges.
 The second waypoint moves the arm so that the object is in the gripper. 
-The third waypoint is in the exact same position with the gripper closed. 
-The next waypoint is directly above the previous waypoint, high enough so that the object is above all of the other objects on the table. 
-Finally, the last waypoint goes to the standard home position for the square grid task and moves  above the correct bin for the sorting task.
+The grasping waypoint is in the exact same position with the gripper closed. 
+The lifting waypoint is directly above the grasping waypoint, high enough so that the object is above all of the other objects on the table. 
+Finally, the last waypoint goes to the standard home position. 
 
-For the PUTDOWN action, the pose generator generates the following waypoints: above the target location, at the target location with the gripper closed, at the target location with the gripper open, 15 cm backed away from the target location, and the standard home position. 
+For the PUTDOWN action, the pose generator generates the following waypoints: above the target location, a set down position with the gripper closed, a set down position with the gripper open, 15 cm backed away from the target location, and the standard home position. 
 The target location is randomly generated, but the pose generator checks to make sure that no objects are at or near the target location.
 
 For the sorting task, the PUTDOWN pose generator behaves slightly differently, since objects are dropped into bins rather than placed.
@@ -206,7 +213,7 @@ The original version of the algorithm, as shown in \ref{fig:algorithms}, only at
 For our version of the algorithm, every time a new partial plan is generated, we first try to instantiate it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding. 
 
 This enables us to find plans a lot more quickly: whenever a plan is possible, we find it by backtracking search.  
-Often, the first pose that's tried won't be viable but another pose will.  
+Often, the first pose that is tried will not be viable but another pose will.  
 Partial trajectory mode will only try the first pose before giving up and identifying blocking objects.
 If partial trajectory mode is continually used, then often the plans created are much longer than necessary just because an invalid first pose is chosen when other options would have worked fine.
 Using the full backtracking search on each new high level plan avoids this problem.
@@ -249,7 +256,8 @@ The actual runtime depends on the motion planner and task planner chosen.
 We ran the square grid scenario on a simulated Baxter robot.
 The planner took approximately an hour to find a feasible plan. 
 In simulation, Baxter successfully moves blocks to reach the target center block and places the center block on the target surface.
-A video of the successful test trial in simulation can be found at [TODO: link here].  We did not run this test on the real Baxter robot.
+A video of the successful test trial in simulation can be found at [TODO: link here].  
+We did not run this test on the real Baxter robot.
 
 \subsection{Sorting}
 We ran the sorting task in simulation and on the physical Baxter robot.
