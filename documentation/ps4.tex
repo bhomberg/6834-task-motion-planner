@@ -42,7 +42,7 @@
 
 We ran our test scenarios on the Baxter robot [Fig. \ref{fig:baxter}], designed by Rethink Robotics. 
 Baxter is a humanoid robot with two 7 degree of freedom arms. 
-Our tests used only the right arm with two finger gripper.
+Our tests used only the right arm with the two finger gripper.
 
 \begin{figure}[h]
 \centering
@@ -158,7 +158,7 @@ As described above in Algorithm 1, once the list of blocking objects is returned
 When an action is infeasible because an object is blocking another object, the interface layer updates the state and calls the task planner. 
 The interface layer, as described above, determines a list of obstructing objects.
 The state update function goes through a section of a high level plan, performing all of the actions and updating the current state of the world.
-Once the state update function reaches the step where the tryRefine function failed, the state update function adds predicates to the state describing which blocks obstruct other blocks.
+Once the state update function reaches the step where the TryRefine function failed, the state update function adds predicates to the state describing which blocks obstruct other blocks.
 The state function updates each action based on the preconditions and postconditions of each action: it confirms that all of the preconditions are satisfied and then adds true postconditions and removes falsified postconditions.  
 
 For instance, for the PICKUP action, the state update functions confirms that the gripper is empty, adds the postcondition that the gripper is full and that the object is in the gripper and removes the postcondition that the object is on whichever surface it started on.
@@ -186,6 +186,9 @@ Finally, the last waypoint goes to the standard home position for the square gri
 For the PUTDOWN action, the pose generator generates the following waypoints: above the target location, at the target location with the gripper closed, at the target location with the gripper open, 15 cm backed away from the target location, and the standard home position. 
 The target location is randomly generated, but the pose generator checks to make sure that no objects are at or near the target location.
 
+For the sorting task, the PUTDOWN pose generator behaves slightly differently, since objects are dropped into bins rather than placed.
+In this case, the pose generator had a fixed specified location to drop the object and had no randomization.
+
 To reiterate, a pose is a set of waypoints. 
 The pose generator keeps track of the number of poses it has generated, at least one for each slice. 
 Once the pose generator has generated the maximum number of poses, it returns None, to indicate that no poses are feasible. 
@@ -200,7 +203,7 @@ We implemented a number of improvements in order to increase the efficiency of t
 \subsection{Error-free mode}
 
 The original version of the algorithm, as shown in \ref{fig:algorithms}, only attempts to find partial trajectories when it replans partway through the procedure.  
-For our version of the algorithm, every time a new partial plan is generated, we first try to fill it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding. 
+For our version of the algorithm, every time a new partial plan is generated, we first try to instantiate it completely using backtracking search (calling TryRefine in error-free mode) before giving up and resorting to the partial trajectory finding. 
 
 This enables us to find plans a lot more quickly: whenever a plan is possible, we find it by backtracking search.  
 Often, the first pose that's tried won't be viable but another pose will.  
@@ -246,13 +249,14 @@ The actual runtime depends on the motion planner and task planner chosen.
 We ran the square grid scenario on a simulated Baxter robot.
 The planner took approximately an hour to find a feasible plan. 
 In simulation, Baxter successfully moves blocks to reach the target center block and places the center block on the target surface.
-A video of the successful test trial in simulation can be found at [TODO: link here].
+A video of the successful test trial in simulation can be found at [TODO: link here].  We did not run this test on the real Baxter robot.
 
 \subsection{Sorting}
 We ran the sorting task in simulation and on the physical Baxter robot.
-The planner took approximately an hour to find a feasible plan. 
+The planner took approximately twenty minutes to find a feasible plan. 
 We ran many test trials to achieve a successful run because the system was open-loop with respect to the environment.
 It had feedback on the world position of the arms, but not on the position of the arms relative to the objects. This mean that drift accumulated over time.
+Additionally, the Baxter arm is shaky, and without very much room for error in the motion plans, Baxter sometimes hit adjacent objects due to wobbling outside of the planned motion.
 Baxter successfully sorts green, red, and blue blocks into different bins. 
 A video of the successful test trial can be found at \url{http://youtu.be/445_t_lUBdU}.
 
@@ -279,7 +283,7 @@ In addition, in its current implementation it only works within deterministic, f
 
 \section{References}
 
-[1] J. Hoffmann, B. Nebel. ``The FF planning system: fast plan generation through heuristic search''. J. Artif. Int. Res. 14, 1, 253-302, 2001.
+\hspace{.25in}[1] J. Hoffmann, B. Nebel. ``The FF planning system: fast plan generation through heuristic search''. J. Artif. Int. Res. 14, 1, 253-302, 2001.
 
 [2] S. Srivastava, E. Fang, L. Riano, R. Chitnis, S. Russell, P. Abbeel. ``Combined Task and Motion Planning Through an Extensible Planner-Independent Interface Layer''. IEEE International Conference on Robotics and Automation (ICRA), 2014.
 
